@@ -10,16 +10,16 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
-    default: "Rise",
-    template: "%s | Rise",
+    default: "RISE",
+    template: "%s | RISE",
   },
   description:
-    "Mapa interactivo de casos de adaptacion al cambio climatico en Latinoamerica.",
+    "Plataforma regional de medidas de adaptacion e historias de resiliencia lideradas por juventudes en America Latina.",
   openGraph: {
-    title: "Rise",
+    title: "RISE",
     description:
-      "Explora casos de adaptacion al cambio climatico en Latinoamerica.",
-    siteName: "Rise",
+      "Explora casos, perfiles nacionales e historias de resiliencia en America Latina.",
+    siteName: "RISE",
     type: "website",
   },
   twitter: {

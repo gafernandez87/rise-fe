@@ -35,9 +35,27 @@ export function CasesMap({ cases }: { cases: MapCase[] }) {
                 />
               ) : null}
               <p className="text-sm font-semibold">{item.title}</p>
-              <p className="text-xs">{item.shortDescription}</p>
+              <p className="text-xs text-slate-600">{item.shortDescription}</p>
+              <dl className="grid gap-1 text-xs">
+                <div>
+                  <dt className="font-semibold">Pais</dt>
+                  <dd>{item.country ?? "TBD"}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold">Medida</dt>
+                  <dd>{item.category.name}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold">Organizacion</dt>
+                  <dd>Por completar</dd>
+                </div>
+              </dl>
               <Link href={`/casos/${item.slug}`} className="text-xs font-semibold">
-                Ver detalle
+                Ver ficha completa
+              </Link>
+              <br />
+              <Link href={`/perfiles/${item.country?.toLowerCase() ?? ""}`} className="text-xs font-semibold">
+                Ver perfil de pais
               </Link>
             </div>
           </Popup>

@@ -11,6 +11,7 @@
   --color-primary-strong: #123820;
   --color-accent: #78a65a;
   --color-border: #d8e4d4;
+  --color-white: #ffffff;
   --font-sans: var(--font-inter);
   --space-page-x: clamp(1rem, 4vw, 4rem);
   --radius-sm: 0.375rem;
@@ -22,6 +23,7 @@
 @theme inline {
   --color-background: var(--color-background);
   --color-foreground: var(--color-text);
+  --color-white: var(--color-white);
   --font-sans: var(--font-sans);
 }
 
@@ -48,6 +50,240 @@ a {
 .page-shell {
   width: min(1180px, calc(100% - (var(--space-page-x) * 2)));
   margin-inline: auto;
+}
+
+.claac-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  isolation: isolate;
+  min-height: 136px;
+  overflow: hidden;
+  border-bottom: 5px solid #0c1320;
+  background: rgb(238 238 238 / 72%);
+  backdrop-filter: blur(2px);
+  color: #737373;
+}
+
+.claac-header__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgb(255 255 255 / 16%);
+}
+
+.claac-header__content {
+  display: grid;
+  grid-template-columns: minmax(188px, 18%) 1fr;
+  align-items: center;
+  width: min(100%, 1920px);
+  min-height: 136px;
+  margin-inline: auto;
+  padding: 20px clamp(24px, 2.65vw, 58px);
+  column-gap: clamp(36px, 4vw, 70px);
+}
+
+.claac-header__brand {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+}
+
+.claac-header__logo {
+  display: block;
+  width: clamp(208px, 12.4vw, 270px);
+  height: auto;
+}
+
+.claac-header__nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  font-family: "Century Gothic", var(--font-sans), Arial, Helvetica, sans-serif;
+  font-size: clamp(0.72rem, 0.82vw, 0.96rem);
+  font-weight: 700;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.claac-header__link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 12px clamp(12px, 1.05vw, 20px);
+  color: #777777;
+  white-space: nowrap;
+  transition: color 180ms ease;
+}
+
+.claac-header__nav > .claac-header__link:not(:last-child)::before,
+.claac-header__nav > .claac-header__menu:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 2px;
+  height: 22px;
+  background: #7f7f7f;
+  transform: translateY(-50%);
+}
+
+.claac-header__menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.claac-header__menu-trigger {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-transform: inherit;
+}
+
+.claac-header__link::after {
+  content: "";
+  position: absolute;
+  right: clamp(12px, 1.05vw, 20px);
+  bottom: 0;
+  left: clamp(12px, 1.05vw, 20px);
+  height: 4px;
+  background: #174f9f;
+  opacity: 0;
+  transform: scaleX(0.72);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.claac-header__link:hover,
+.claac-header__link:focus-visible,
+.claac-header__link--active {
+  color: #174f9f;
+}
+
+.claac-header__link:hover::after,
+.claac-header__link:focus-visible::after,
+.claac-header__link--active::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.claac-header__caret {
+  width: 0;
+  height: 0;
+  margin-left: 9px;
+  border-top: 6px solid currentColor;
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+  opacity: 0.72;
+}
+
+.claac-header__submenu {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 12px;
+  min-width: 168px;
+  padding: 8px 0;
+  background: rgb(255 255 255 / 92%);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 14%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.claac-header__menu:hover .claac-header__submenu,
+.claac-header__menu:focus-within .claac-header__submenu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.claac-header__submenu-link {
+  display: block;
+  padding: 11px 18px;
+  color: #777777;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition:
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.claac-header__submenu-link:hover,
+.claac-header__submenu-link:focus-visible {
+  background: #174f9f;
+  color: #ffffff;
+}
+
+@media (max-width: 1120px) {
+  .claac-header__content {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    row-gap: 8px;
+  }
+
+  .claac-header__brand {
+    justify-self: center;
+  }
+
+  .claac-header__nav {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 720px) {
+  .claac-header,
+  .claac-header__content {
+    min-height: 0;
+  }
+
+  .claac-header__content {
+    padding: 18px 16px;
+  }
+
+  .claac-header__logo {
+    width: min(230px, 78vw);
+  }
+
+  .claac-header__nav {
+    width: 100%;
+    font-size: 0.76rem;
+  }
+
+  .claac-header__link {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .claac-header__menu {
+    width: 100%;
+  }
+
+  .claac-header__menu-trigger {
+    justify-content: center;
+  }
+
+  .claac-header__submenu {
+    position: static;
+    width: 100%;
+    box-shadow: none;
+    text-align: center;
+    transform: none;
+  }
+
+  .claac-header__nav > .claac-header__link:not(:last-child)::before,
+  .claac-header__nav > .claac-header__menu:not(:last-child)::before {
+    display: none;
+  }
 }
 
 .focus-ring {
@@ -83,4 +319,9 @@ a {
   width: 8px;
   border-radius: 999px;
   background: white;
+}
+
+
+.text-white {
+  color: var(--color-white);
 }

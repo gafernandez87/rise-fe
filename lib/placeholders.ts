@@ -3,19 +3,19 @@ import type { AdaptationCase, Category, MapCase } from "@/types/cases";
 export const placeholderCategories: Category[] = [
   {
     id: "water",
-    name: "Gestion del agua",
+    name: "Gestion comunitaria del agua",
     slug: "gestion-del-agua",
     description: "Placeholder de categoria.",
   },
   {
     id: "cities",
-    name: "Ciudades resilientes",
+    name: "Infraestructura verde",
     slug: "ciudades-resilientes",
     description: "Placeholder de categoria.",
   },
   {
     id: "food",
-    name: "Sistemas alimentarios",
+    name: "Agricultura resiliente",
     slug: "sistemas-alimentarios",
     description: "Placeholder de categoria.",
   },
@@ -24,18 +24,18 @@ export const placeholderCategories: Category[] = [
 export const placeholderCases: AdaptationCase[] = [
   {
     id: "andes-water",
-    title: "Restauracion de humedales altoandinos",
-    slug: "restauracion-humedales-altoandinos",
+    title: "Gestion comunitaria del agua en contexto de sequia",
+    slug: "gestion-comunitaria-agua-sequia",
     shortDescription:
-      "Caso placeholder sobre recuperacion de ecosistemas para mejorar resiliencia hidrica.",
+      "Caso placeholder sobre gobernanza local del agua y resiliencia hidrica en territorios expuestos a sequia.",
     fullDescription:
       "Contenido placeholder. Esta pagina quedara conectada al backoffice para mostrar informacion completa, imagenes, fuentes y datos complementarios del caso.",
     severity: "high",
     status: "published",
-    latitude: -16.5,
-    longitude: -68.15,
-    country: "Bolivia",
-    region: "La Paz",
+    latitude: -32.88,
+    longitude: -71.25,
+    country: "Chile",
+    region: "Region de Valparaiso",
     sourceUrl: null,
     category: placeholderCategories[0],
     images: [
@@ -53,7 +53,7 @@ export const placeholderCases: AdaptationCase[] = [
     title: "Corredores verdes contra islas de calor",
     slug: "corredores-verdes-islas-calor",
     shortDescription:
-      "Caso placeholder sobre infraestructura verde urbana y adaptacion climatica.",
+      "Caso placeholder sobre infraestructura verde urbana y adaptacion frente al calor extremo.",
     fullDescription:
       "Contenido placeholder. Luego se reemplazara por el relato completo del caso, ubicacion, imagenes y datos institucionales.",
     severity: "medium",
@@ -76,18 +76,18 @@ export const placeholderCases: AdaptationCase[] = [
   },
   {
     id: "coastal-food",
-    title: "Agricultura costera adaptada a sequias",
-    slug: "agricultura-costera-adaptada-sequias",
+    title: "Agricultura resiliente frente a inundaciones",
+    slug: "agricultura-resiliente-inundaciones",
     shortDescription:
-      "Caso placeholder sobre practicas productivas resilientes ante variabilidad climatica.",
+      "Caso placeholder sobre practicas productivas resilientes ante inundaciones y variabilidad climatica.",
     fullDescription:
       "Contenido placeholder. El backoffice permitira editar esta informacion y administrar multiples imagenes.",
     severity: "critical",
     status: "published",
-    latitude: -12.04,
-    longitude: -77.03,
-    country: "Peru",
-    region: "Lima",
+    latitude: 14.08,
+    longitude: -87.21,
+    country: "Honduras",
+    region: "Francisco Morazan",
     sourceUrl: null,
     category: placeholderCategories[2],
     images: [

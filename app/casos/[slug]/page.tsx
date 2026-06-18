@@ -109,8 +109,87 @@ export default async function CasePage({ params }: CasePageProps) {
           </div>
         </section>
         <section className="page-shell pb-14">
-          <div className="rounded-lg bg-white p-6 leading-8 text-[color:var(--color-muted)]">
-            {item.fullDescription}
+          <div className="grid gap-6 lg:grid-cols-[0.7fr_1.3fr]">
+            <aside className="h-fit rounded-lg border border-[color:var(--color-border)] bg-white p-5">
+              <h2 className="text-xl font-semibold">Clasificacion de la medida</h2>
+              <dl className="mt-4 grid gap-3 text-sm">
+                <div>
+                  <dt className="font-semibold">Localidad</dt>
+                  <dd className="text-[color:var(--color-muted)]">{item.region ?? "Por completar"}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold">Pais</dt>
+                  <dd className="text-[color:var(--color-muted)]">{item.country ?? "Por completar"}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold">Amenaza</dt>
+                  <dd className="text-[color:var(--color-muted)]">{item.severity}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold">Sector / tipo de medida</dt>
+                  <dd className="text-[color:var(--color-muted)]">{item.category.name}</dd>
+                </div>
+                <div>
+                  <dt className="font-semibold">Fuente</dt>
+                  <dd className="text-[color:var(--color-muted)]">
+                    {item.sourceUrl ? (
+                      <a href={item.sourceUrl} className="text-[color:var(--color-primary)]">
+                        Ver fuente
+                      </a>
+                    ) : (
+                      "Por completar"
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            </aside>
+
+            <div className="space-y-6">
+              <section className="rounded-lg border border-[color:var(--color-border)] bg-white p-6">
+                <h2 className="text-2xl font-semibold">Informacion base</h2>
+                <div className="mt-5 grid gap-5">
+                  <div>
+                    <h3 className="font-semibold">Resumen de la medida</h3>
+                    <p className="mt-2 leading-8 text-[color:var(--color-muted)]">{item.fullDescription}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Objetivos de la medida</h3>
+                    <p className="mt-2 leading-8 text-[color:var(--color-muted)]">
+                      Reducir riesgos climaticos, fortalecer la resiliencia territorial y visibilizar
+                      aprendizajes que puedan orientar acciones similares en otros contextos.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Comunidades beneficiarias</h3>
+                    <p className="mt-2 leading-8 text-[color:var(--color-muted)]">
+                      Comunidades locales, juventudes y organizaciones territoriales vinculadas al
+                      caso. El detalle cuantitativo queda preparado para la base editorial completa.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-lg border border-[color:var(--color-border)] bg-white p-6">
+                <h2 className="text-2xl font-semibold">Informacion complementaria</h2>
+                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                  {[
+                    "Problemática climatica local",
+                    "Alianzas estrategicas",
+                    "Factores habilitantes y condicionantes",
+                    "Co-beneficios",
+                    "Escalabilidad",
+                    "Sostenibilidad en el tiempo",
+                  ].map((title) => (
+                    <article key={title} className="rounded-md bg-[color:var(--color-surface-muted)] p-4">
+                      <h3 className="font-semibold">{title}</h3>
+                      <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                        Contenido por completar con datos de la ficha tecnica y fuentes del caso.
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            </div>
           </div>
         </section>
       </main>
