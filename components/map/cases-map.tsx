@@ -4,6 +4,7 @@ import L from "leaflet";
 import Image from "next/image";
 import Link from "next/link";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import { getDictionary, localizedPath, type Locale } from "@/lib/i18n";
 import type { MapCase } from "@/types/cases";
 
 const markerIcon = L.divIcon({
@@ -13,7 +14,9 @@ const markerIcon = L.divIcon({
   popupAnchor: [0, -14],
 });
 
-export function CasesMap({ cases }: { cases: MapCase[] }) {
+export function CasesMap({ cases, locale }: { cases: MapCase[]; locale: Locale }) {
+  const dict = getDictionary(locale);
+
   return (
     <MapContainer center={[-15, -60]} zoom={4} scrollWheelZoom>
       <TileLayer
@@ -35,27 +38,33 @@ export function CasesMap({ cases }: { cases: MapCase[] }) {
                 />
               ) : null}
               <p className="text-sm font-semibold">{item.title}</p>
-              <p className="text-xs text-slate-600">{item.shortDescription}</p>
+              <p className="text-xs text-[color:var(--color-muted)]">{item.shortDescription}</p>
               <dl className="grid gap-1 text-xs">
                 <div>
-                  <dt className="font-semibold">Pais</dt>
-                  <dd>{item.country ?? "TBD"}</dd>
+                  <dt className="font-semibold">{dict.mapPopup.country}</dt>
+                  <dd>{item.country ?? dict.common.tbd}</dd>
                 </div>
                 <div>
-                  <dt className="font-semibold">Medida</dt>
+                  <dt className="font-semibold">{dict.mapPopup.measure}</dt>
                   <dd>{item.category.name}</dd>
                 </div>
                 <div>
-                  <dt className="font-semibold">Organizacion</dt>
-                  <dd>Por completar</dd>
+                  <dt className="font-semibold">{dict.mapPopup.organization}</dt>
+                  <dd>{dict.common.toComplete}</dd>
                 </div>
               </dl>
-              <Link href={`/casos/${item.slug}`} className="text-xs font-semibold">
-                Ver ficha completa
+              <Link
+                href={localizedPath(`/casos/${item.slug}`, locale)}
+                className="text-xs font-semibold text-[color:var(--color-primary)]"
+              >
+                {dict.mapPopup.viewFullCase}
               </Link>
               <br />
-              <Link href={`/perfiles/${item.country?.toLowerCase() ?? ""}`} className="text-xs font-semibold">
-                Ver perfil de pais
+              <Link
+                href={localizedPath(`/perfiles/${item.country?.toLowerCase() ?? ""}`, locale)}
+                className="text-xs font-semibold text-[color:var(--color-primary)]"
+              >
+                {dict.mapPopup.viewCountryProfile}
               </Link>
             </div>
           </Popup>

@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import type { Locale } from "@/lib/i18n";
 import type { MapCase } from "@/types/cases";
 
 const CasesMap = dynamic(
@@ -15,6 +16,6 @@ const CasesMap = dynamic(
   },
 );
 
-export function MapLoader({ cases }: { cases: MapCase[] }) {
-  return <CasesMap cases={cases} />;
+export function MapLoader({ cases, locale }: { cases: MapCase[]; locale: Locale }) {
+  return <CasesMap cases={cases} locale={locale} />;
 }

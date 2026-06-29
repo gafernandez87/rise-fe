@@ -4,44 +4,36 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { MapLoader } from "@/components/map/map-loader";
 import {
-  adaptationMeasureTypes,
-  actors,
-  climateRisks,
-  projectCountries,
-  territories,
-} from "@/lib/rise-content";
+  getDictionary,
+  getLocalizedContentLists,
+  getLocalizedCountries,
+  localizedPath,
+  type Locale,
+} from "@/lib/i18n";
 import type { Category, MapCase } from "@/types/cases";
 
 type MapExplorerProps = {
   cases: MapCase[];
   categories: Category[];
+  locale: Locale;
 };
 
-const contentStatus = ["Perfil disponible", "Historia disponible", "Video disponible", "Informe disponible"];
-
-const severityLabels: Record<MapCase["severity"], string> = {
-  low: "Baja",
-  medium: "Media",
-  high: "Alta",
-  critical: "Critica",
-};
-
-function getCaseRisk(item: MapCase) {
-  if (item.severity === "critical") return "Crisis hidrica";
-  if (item.severity === "high") return "Sequia";
-  if (item.severity === "medium") return "Calor extremo";
-  return "Inundacion";
+function getCaseRisk(item: MapCase, locale: Locale) {
+  const dict = getDictionary(locale);
+  return dict.mapExplorer.riskBySeverity[item.severity];
 }
 
 function SelectFilter({
   label,
   value,
   options,
+  allLabel,
   onChange,
 }: {
   label: string;
   value: string;
   options: string[];
+  allLabel: string;
   onChange: (value: string) => void;
 }) {
   return (
@@ -52,7 +44,7 @@ function SelectFilter({
         onChange={(event) => onChange(event.target.value)}
         className="rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-normal"
       >
-        <option value="">Todos</option>
+        <option value="">{allLabel}</option>
         {options.map((option) => (
           <option key={option} value={option}>
             {option}
@@ -63,7 +55,10 @@ function SelectFilter({
   );
 }
 
-export function MapExplorer({ cases, categories }: MapExplorerProps) {
+export function MapExplorer({ cases, categories, locale }: MapExplorerProps) {
+  const dict = getDictionary(locale);
+  const content = getLocalizedContentLists(locale);
+  const countries = getLocalizedCountries(locale);
   const [query, setQuery] = useState("");
   const [country, setCountry] = useState("");
   const [risk, setRisk] = useState("");
@@ -85,24 +80,24 @@ export function MapExplorer({ cases, categories }: MapExplorerProps) {
           .includes(normalizedQuery);
 
       const countryMatch = !country || item.country === country;
-      const riskMatch = !risk || getCaseRisk(item) === risk;
+      const riskMatch = !risk || getCaseRisk(item, locale) === risk;
       const measureMatch = !measure || item.category.name === measure;
 
       return textMatch && countryMatch && riskMatch && measureMatch;
     });
-  }, [cases, country, measure, query, risk]);
+  }, [cases, country, locale, measure, query, risk]);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
       <section className="space-y-4">
         <div className="overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white shadow-sm">
-          <MapLoader cases={filteredCases} />
+          <MapLoader cases={filteredCases} locale={locale} />
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           {filteredCases.map((item) => (
             <article key={item.id} className="rounded-lg border border-[color:var(--color-border)] bg-white p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
-                {item.country ?? "Pais TBD"} · {getCaseRisk(item)}
+                {item.country ?? dict.mapExplorer.countryTbd} · {getCaseRisk(item, locale)}
               </p>
               <h2 className="mt-2 text-lg font-semibold">{item.title}</h2>
               <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
@@ -110,19 +105,19 @@ export function MapExplorer({ cases, categories }: MapExplorerProps) {
               </p>
               <dl className="mt-4 grid gap-2 text-xs text-[color:var(--color-muted)]">
                 <div>
-                  <dt className="font-semibold text-[color:var(--color-text)]">Medida</dt>
+                  <dt className="font-semibold text-[color:var(--color-text)]">{dict.mapExplorer.measure}</dt>
                   <dd>{item.category.name}</dd>
                 </div>
                 <div>
-                  <dt className="font-semibold text-[color:var(--color-text)]">Territorio</dt>
-                  <dd>{item.region ?? "Territorio por completar"}</dd>
+                  <dt className="font-semibold text-[color:var(--color-text)]">{dict.mapExplorer.territory}</dt>
+                  <dd>{item.region ?? dict.mapExplorer.territoryFallback}</dd>
                 </div>
               </dl>
               <Link
-                href={`/casos/${item.slug}`}
+                href={localizedPath(`/casos/${item.slug}`, locale)}
                 className="mt-4 inline-flex rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
               >
-                Ver ficha completa
+                {dict.mapExplorer.viewFullCase}
               </Link>
             </article>
           ))}
@@ -133,47 +128,63 @@ export function MapExplorer({ cases, categories }: MapExplorerProps) {
         <div className="space-y-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
-              Filtros
+              {dict.mapExplorer.filters}
             </p>
             <p className="mt-1 text-sm text-[color:var(--color-muted)]">
-              {filteredCases.length} de {cases.length} casos visibles
+              {filteredCases.length} {dict.mapExplorer.of} {cases.length} {dict.mapExplorer.visibleCases}
             </p>
           </div>
           <label className="grid gap-1 text-sm font-medium">
-            Buscar
+            {dict.mapExplorer.search}
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               className="rounded-md border border-[color:var(--color-border)] px-3 py-2 text-sm font-normal"
-              placeholder="Caso, territorio o medida"
+              placeholder={dict.mapExplorer.searchPlaceholder}
             />
           </label>
           <SelectFilter
-            label="Pais"
+            label={dict.mapExplorer.country}
             value={country}
-            options={projectCountries.map((item) => item.name)}
+            options={countries.map((item) => item.name)}
+            allLabel={dict.mapExplorer.all}
             onChange={setCountry}
           />
           <SelectFilter
-            label="Riesgo climatico"
+            label={dict.mapExplorer.climateRisk}
             value={risk}
-            options={climateRisks}
+            options={content.climateRisks}
+            allLabel={dict.mapExplorer.all}
             onChange={setRisk}
           />
           <SelectFilter
-            label="Tipo de medida"
+            label={dict.mapExplorer.measureType}
             value={measure}
-            options={[...new Set([...categories.map((item) => item.name), ...adaptationMeasureTypes])]}
+            options={[...new Set([...categories.map((item) => item.name), ...content.adaptationMeasureTypes])]}
+            allLabel={dict.mapExplorer.all}
             onChange={setMeasure}
           />
           <SelectFilter
-            label="Ecosistema o territorio"
+            label={dict.mapExplorer.ecosystem}
             value={territory}
-            options={territories}
+            options={content.territories}
+            allLabel={dict.mapExplorer.all}
             onChange={setTerritory}
           />
-          <SelectFilter label="Actor impulsor" value={actor} options={actors} onChange={setActor} />
-          <SelectFilter label="Estado del contenido" value={status} options={contentStatus} onChange={setStatus} />
+          <SelectFilter
+            label={dict.mapExplorer.actor}
+            value={actor}
+            options={content.actors}
+            allLabel={dict.mapExplorer.all}
+            onChange={setActor}
+          />
+          <SelectFilter
+            label={dict.mapExplorer.contentStatus}
+            value={status}
+            options={[...dict.mapExplorer.statusOptions]}
+            allLabel={dict.mapExplorer.all}
+            onChange={setStatus}
+          />
           <button
             type="button"
             onClick={() => {
@@ -187,15 +198,13 @@ export function MapExplorer({ cases, categories }: MapExplorerProps) {
             }}
             className="w-full rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"
           >
-            Limpiar filtros
+            {dict.mapExplorer.clearFilters}
           </button>
           <div className="rounded-md bg-[color:var(--color-surface-muted)] p-3 text-xs leading-5 text-[color:var(--color-muted)]">
-            Los filtros de territorio, actor y estado quedan preparados para la base editorial completa.
+            {dict.mapExplorer.preparedFilters}
           </div>
         </div>
       </aside>
     </div>
   );
 }
-
-export { severityLabels };

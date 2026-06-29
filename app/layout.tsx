@@ -1,10 +1,47 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
+const outfit = localFont({
+  src: [
+    {
+      path: "./fonts/Outfit-Thin.ttf",
+      weight: "100",
+      style: "normal",
+    },
+    {
+      path: "./fonts/Outfit-Light.ttf",
+      weight: "300",
+      style: "normal",
+    },
+    {
+      path: "./fonts/Outfit-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "./fonts/Outfit-Medium.ttf",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "./fonts/Outfit-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "./fonts/Outfit-ExtraBold.ttf",
+      weight: "800",
+      style: "normal",
+    },
+    {
+      path: "./fonts/Outfit-Black.ttf",
+      weight: "900",
+      style: "normal",
+    },
+  ],
+  variable: "--font-outfit",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -33,7 +70,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={inter.variable}>
+    <html lang="es" className={outfit.variable}>
       <body>{children}</body>
     </html>
   );
