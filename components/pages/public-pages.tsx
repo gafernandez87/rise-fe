@@ -32,7 +32,51 @@ function PublicChrome({ locale, currentPath, children }: PublicPageProps & { chi
       <SiteHeader />
       <LanguageSwitcher locale={locale} currentPath={currentPath} />
       {children}
+      <SiteFooter locale={locale} />
     </>
+  );
+}
+
+function InstagramIcon() {
+  return (
+    <svg aria-hidden="true" className="h-5 w-5" fill="none" viewBox="0 0 24 24">
+      <rect width="18" height="18" x="3" y="3" stroke="currentColor" strokeWidth="2" rx="5" />
+      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
+      <circle cx="17.25" cy="6.75" r="1.25" fill="currentColor" />
+    </svg>
+  );
+}
+
+function SiteFooter({ locale }: { locale: Locale }) {
+  const dict = getDictionary(locale);
+
+  return (
+    <footer className="bg-[color:var(--color-text)] py-8 text-[color:var(--color-brand-cream)]">
+      <div className="page-shell flex flex-wrap items-center justify-between gap-5">
+        <Link href="https://www.somosclaac.org/" aria-label="CLAAC">
+          <Image
+            src="https://www.somosclaac.org/wp-content/uploads/2025/05/Fondos.png"
+            alt="CLAAC - Coalicion para Latinoamerica de Accion Climatica"
+            width={1920}
+            height={1080}
+            className="h-auto w-40"
+            style={{ filter: "brightness(0) invert(1)" }}
+          />
+        </Link>
+        <div className="flex items-center gap-3 text-sm font-semibold">
+          <span>{dict.footer.findUsOn}</span>
+          <Link
+            href="https://www.instagram.com/claac_latam/"
+            target="_blank"
+            rel="noreferrer"
+            className="grid h-10 w-10 place-items-center rounded-full border border-current text-[color:var(--color-brand-cream)]"
+            aria-label="Instagram CLAAC"
+          >
+            <InstagramIcon />
+          </Link>
+        </div>
+      </div>
+    </footer>
   );
 }
 
@@ -108,22 +152,29 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
                 </Link>
               </div>
             </div>
-            <div className="hidden overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white shadow-sm md:block">
-              <div className="grid aspect-[4/3] grid-cols-2 grid-rows-[1fr_1fr_auto]">
-                <div className="bg-[color:var(--color-earth)]" aria-hidden="true" />
-                <div className="bg-[color:var(--color-water)]" aria-hidden="true" />
-                <div className="bg-[color:var(--color-fire-warm)]" aria-hidden="true" />
-                <div className="bg-[color:var(--color-air)]" aria-hidden="true" />
-                <div className="col-span-2 border-t border-[color:var(--color-border)] bg-[color:var(--color-brand-cream)] p-5">
-                  <p className="text-sm font-semibold text-[color:var(--color-primary)]">
-                    {dict.common.latinAmerica}
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-[color:var(--color-text)]">
-                    {dict.home.mapCardTitle}
-                  </p>
-                </div>
+            <Link
+              href={localizedPath("/mapa", locale)}
+              className="hidden overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white shadow-sm md:block"
+              aria-label={dict.home.ctaMap}
+            >
+              <div className="relative aspect-[4/3] bg-[#a9d7e6]">
+                <Image
+                  src="/mapa landing.png"
+                  alt={dict.home.mapCardTitle}
+                  width={548}
+                  height={696}
+                  className="h-full w-full object-contain"
+                />
               </div>
-            </div>
+              <div className="border-t border-[color:var(--color-border)] bg-[color:var(--color-brand-cream)] p-5">
+                <p className="text-sm font-semibold text-[color:var(--color-primary)]">
+                  {dict.common.latinAmerica}
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-[color:var(--color-text)]">
+                  {dict.home.mapCardTitle}
+                </p>
+              </div>
+            </Link>
           </div>
         </section>
 
@@ -293,13 +344,20 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
 
         <section className="border-t border-[color:var(--color-border)] bg-white py-14">
           <div className="page-shell space-y-8">
-            <div>
+            <div className="flex flex-wrap items-center justify-center gap-6 text-center sm:justify-start sm:text-left">
               <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
-                {dict.home.organizationsEyebrow}
+                {dict.home.projectBy}
               </p>
-              <h2 className="mt-2 text-3xl font-semibold">{dict.home.organizationsTitle}</h2>
+              <Link href="https://www.somosclaac.org/" aria-label="CLAAC">
+                <Image
+                  src="https://www.somosclaac.org/wp-content/uploads/2025/05/Fondos.png"
+                  alt="CLAAC - Coalicion para Latinoamerica de Accion Climatica"
+                  width={1920}
+                  height={1080}
+                  className="h-auto w-44"
+                />
+              </Link>
             </div>
-            <LogoGroup title={dict.home.leading} items={organizations.leading} />
             <LogoGroup title={dict.home.support} items={organizations.support} />
             <LogoGroup title={dict.home.participants} items={organizations.participants} />
           </div>
@@ -317,7 +375,7 @@ export async function MapPageView({ locale, currentPath }: PublicPageProps) {
 
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
-      <main className="page-shell space-y-8 py-10">
+      <main className="mx-auto w-full max-w-[1440px] space-y-8 px-[var(--space-page-x)] py-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">

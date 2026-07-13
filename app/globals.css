@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
+@import "react-leaflet-cluster/dist/assets/MarkerCluster.css";
 
 :root {
   --color-brand-red: #fe3e34;
@@ -107,19 +108,19 @@ a {
 .language-switcher__panel::after {
   content: "";
   position: absolute;
-  right: 43px;
-  bottom: -12px;
+  right: 50px;
+  bottom: -9px;
   width: 0;
   height: 0;
   border-inline: 11px solid transparent;
-  border-top: 12px solid #d5d4d4;
+  border-top: 12px solid #ffffff;
 }
 
 .language-switcher__flag {
   display: grid;
   place-items: center;
   overflow: hidden;
-  font-size: 20px;
+  font-size: 25px;
   line-height: 1;
   filter: saturate(1.08);
   transition:
@@ -140,7 +141,7 @@ a {
   box-shadow: 0 6px 14px rgb(0 0 0 / 28%);
   cursor: pointer;
   font-family: Arial;
-  font-size: 16px; /*clamp(1.35rem, 5vw, 1.9rem);*/
+  font-size: 19px; /*clamp(1.35rem, 5vw, 1.9rem);*/
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0;
@@ -463,6 +464,26 @@ a {
   z-index: 0;
 }
 
+.leaflet-container.rise-map img.leaflet-tile,
+.leaflet-container.rise-map .leaflet-tile {
+  border: 0;
+  height: 257px !important;
+  margin: -0.5px;
+  mix-blend-mode: normal !important;
+  outline: 0;
+  width: 257px !important;
+}
+
+.leaflet-container.rise-map .rise-map-tile-layer {
+  background: #a9d7e6;
+}
+
+.leaflet-container.rise-map.leaflet-cluster-anim .leaflet-marker-icon,
+.leaflet-container.rise-map.leaflet-cluster-anim .leaflet-marker-shadow,
+.leaflet-container.rise-map .leaflet-cluster-spider-leg {
+  transition: none;
+}
+
 .rise-marker {
   display: grid;
   height: 28px;
@@ -480,6 +501,28 @@ a {
   width: 8px;
   border-radius: 999px;
   background: var(--color-brand-cream);
+}
+
+.rise-marker-cluster {
+  display: grid;
+  place-items: center;
+  border: 3px solid var(--color-brand-cream);
+  border-radius: 999px;
+  background: var(--color-primary);
+  box-shadow:
+    0 0 0 5px rgb(198 24 41 / 22%),
+    0 0 0 10px rgb(198 24 41 / 14%),
+    0 0 0 15px rgb(198 24 41 / 8%),
+    0 8px 20px rgb(198 24 41 / 28%);
+  color: var(--color-brand-cream);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 800;
+  transition: none;
+}
+
+.rise-marker-cluster span {
+  line-height: 1;
 }
 
 

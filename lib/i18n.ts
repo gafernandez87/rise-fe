@@ -421,6 +421,9 @@ const dictionaries = {
       involvedActors: "Actores involucrados",
       youthCommunityAllies: "Juventudes, comunidad local y organizaciones aliadas",
     },
+    footer: {
+      findUsOn: "Encuéntranos en:",
+    },
     home: {
       eyebrow: "Adaptacion climatica liderada por juventudes",
       intro:
@@ -475,6 +478,7 @@ const dictionaries = {
       ],
       methodologyEyebrow: "Metodologia",
       methodologyTitle: "Como se documenta RISE",
+      projectBy: "Un proyecto de:",
       organizationsEyebrow: "Organizaciones",
       organizationsTitle: "Esta iniciativa es impulsada por",
       leading: "Impulsan",
@@ -619,6 +623,8 @@ const dictionaries = {
       ecosystem: "Ecosistema o territorio",
       actor: "Actor impulsor",
       contentStatus: "Estado del contenido",
+      showFilters: "Mostrar filtros",
+      hideFilters: "Ocultar filtros",
       clearFilters: "Limpiar filtros",
       preparedFilters: "Los filtros de territorio, actor y estado quedan preparados para la base editorial completa.",
       countryTbd: "Pais TBD",
@@ -671,6 +677,9 @@ const dictionaries = {
       involvedActors: "Actors involved",
       youthCommunityAllies: "Youth, local community and partner organizations",
     },
+    footer: {
+      findUsOn: "Find us on:",
+    },
     home: {
       eyebrow: "Youth-led climate adaptation",
       intro:
@@ -713,6 +722,7 @@ const dictionaries = {
       ],
       methodologyEyebrow: "Methodology",
       methodologyTitle: "How RISE is documented",
+      projectBy: "A project by:",
       organizationsEyebrow: "Organizations",
       organizationsTitle: "This initiative is driven by",
       leading: "Led by",
@@ -845,6 +855,8 @@ const dictionaries = {
       ecosystem: "Ecosystem or territory",
       actor: "Leading actor",
       contentStatus: "Content status",
+      showFilters: "Show filters",
+      hideFilters: "Hide filters",
       clearFilters: "Clear filters",
       preparedFilters: "Territory, actor and status filters are prepared for the full editorial database.",
       countryTbd: "Country TBD",
@@ -890,6 +902,9 @@ const dictionaries = {
       involvedActors: "Atores envolvidos",
       youthCommunityAllies: "Juventudes, comunidade local e organizacoes aliadas",
     },
+    footer: {
+      findUsOn: "Encontre-nos em:",
+    },
     home: {
       eyebrow: "Adaptacao climatica liderada por juventudes",
       intro:
@@ -932,6 +947,7 @@ const dictionaries = {
       ],
       methodologyEyebrow: "Metodologia",
       methodologyTitle: "Como RISE e documentado",
+      projectBy: "Um projeto de:",
       organizationsEyebrow: "Organizacoes",
       organizationsTitle: "Esta iniciativa e impulsionada por",
       leading: "Impulsionam",
@@ -1064,6 +1080,8 @@ const dictionaries = {
       ecosystem: "Ecossistema ou territorio",
       actor: "Ator impulsor",
       contentStatus: "Estado do conteudo",
+      showFilters: "Mostrar filtros",
+      hideFilters: "Ocultar filtros",
       clearFilters: "Limpar filtros",
       preparedFilters: "Os filtros de territorio, ator e estado ficam preparados para a base editorial completa.",
       countryTbd: "Pais TBD",

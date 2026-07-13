@@ -100,6 +100,32 @@ export const placeholderCases: AdaptationCase[] = [
       },
     ],
   },
+  {
+    id: "coastal-food-2",
+    title: "Agricultura resiliente frente a inundaciones",
+    slug: "agricultura-resiliente-inundaciones",
+    shortDescription:
+      "Caso placeholder sobre practicas productivas resilientes ante inundaciones y variabilidad climatica.",
+    fullDescription:
+      "Contenido placeholder. El backoffice permitira editar esta informacion y administrar multiples imagenes.",
+    severity: "critical",
+    status: "published",
+    latitude: 14.08,
+    longitude: -88.21,
+    country: "Honduras",
+    region: "Francisco Morazan",
+    sourceUrl: null,
+    category: placeholderCategories[2],
+    images: [
+      {
+        id: "coastal-food-cover",
+        url: "https://images.unsplash.com/photo-1500382017468-9049fed747ef",
+        altText: "Campo agricola usado como imagen placeholder.",
+        sortOrder: 0,
+        isCover: true,
+      },
+    ],
+  },
 ];
 
 export const placeholderMapCases: MapCase[] = placeholderCases.map((item) => ({

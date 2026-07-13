@@ -16,6 +16,14 @@ const CasesMap = dynamic(
   },
 );
 
-export function MapLoader({ cases, locale }: { cases: MapCase[]; locale: Locale }) {
-  return <CasesMap cases={cases} locale={locale} />;
+export function MapLoader({
+  cases,
+  layoutSignal,
+  locale,
+}: {
+  cases: MapCase[];
+  layoutSignal: boolean;
+  locale: Locale;
+}) {
+  return <CasesMap cases={cases} layoutSignal={layoutSignal} locale={locale} />;
 }
