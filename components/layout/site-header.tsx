@@ -39,7 +39,7 @@ export function SiteHeader() {
           onClick={closeMenus}
         >
           <Image
-            src="https://www.somosclaac.org/wp-content/uploads/2025/05/Fondos.png"
+            src="/brand/organizations/claac.png"
             alt="CLAAC - Coalicion para Latinoamerica de Accion Climatica"
             width={1920}
             height={1080}

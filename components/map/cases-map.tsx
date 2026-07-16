@@ -119,7 +119,7 @@ export function CasesMap({
                   </div>
                   <div>
                     <dt className="font-semibold">{dict.mapPopup.measure}</dt>
-                    <dd>{item.category.name}</dd>
+                    <dd>{item.measureType ?? item.category.name}</dd>
                   </div>
                   <div>
                     <dt className="font-semibold">{dict.mapPopup.organization}</dt>

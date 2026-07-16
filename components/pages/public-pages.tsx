@@ -19,7 +19,7 @@ import {
   localizedPath,
   type Locale,
 } from "@/lib/i18n";
-import { organizations } from "@/lib/rise-content";
+import { organizations, type OrganizationLogo } from "@/lib/rise-content";
 
 type PublicPageProps = {
   locale: Locale;
@@ -55,7 +55,7 @@ function SiteFooter({ locale }: { locale: Locale }) {
       <div className="page-shell flex flex-wrap items-center justify-between gap-5">
         <Link href="https://www.somosclaac.org/" aria-label="CLAAC">
           <Image
-            src="https://www.somosclaac.org/wp-content/uploads/2025/05/Fondos.png"
+            src="/brand/organizations/claac.png"
             alt="CLAAC - Coalicion para Latinoamerica de Accion Climatica"
             width={1920}
             height={1080}
@@ -80,7 +80,7 @@ function SiteFooter({ locale }: { locale: Locale }) {
   );
 }
 
-function LogoGroup({ title, items }: { title: string; items: string[] }) {
+function LogoGroup({ title, items }: { title: string; items: OrganizationLogo[] }) {
   return (
     <div>
       <h3 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
@@ -89,11 +89,18 @@ function LogoGroup({ title, items }: { title: string; items: string[] }) {
       <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((item) => (
           <div
-            key={item}
-            className="grid min-h-20 place-items-center rounded-lg border border-[color:var(--color-border)] bg-white px-4 py-3 text-center text-sm font-semibold"
-            aria-label={`Logo de ${item}`}
+            key={item.name}
+            className="grid min-h-24 place-items-center rounded-lg border border-[color:var(--color-border)] bg-white px-5 py-4"
+            aria-label={`Logo de ${item.name}`}
           >
-            {item}
+            <Image
+              src={item.logo}
+              alt={item.name}
+              width={240}
+              height={120}
+              className="max-h-16 w-auto max-w-full object-contain"
+              unoptimized={item.logo.endsWith(".svg")}
+            />
           </div>
         ))}
       </div>
@@ -350,7 +357,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
               </p>
               <Link href="https://www.somosclaac.org/" aria-label="CLAAC">
                 <Image
-                  src="https://www.somosclaac.org/wp-content/uploads/2025/05/Fondos.png"
+                  src="/brand/organizations/claac.png"
                   alt="CLAAC - Coalicion para Latinoamerica de Accion Climatica"
                   width={1920}
                   height={1080}

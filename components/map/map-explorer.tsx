@@ -21,7 +21,15 @@ type MapExplorerProps = {
 
 function getCaseRisk(item: MapCase, locale: Locale) {
   const dict = getDictionary(locale);
-  return dict.mapExplorer.riskBySeverity[item.severity];
+  return item.threat ?? dict.mapExplorer.riskBySeverity[item.severity];
+}
+
+function getCaseMeasure(item: MapCase) {
+  return item.measureType ?? item.category.name;
+}
+
+function getCaseTerritory(item: MapCase) {
+  return item.ecoregion ?? item.locality ?? item.region;
 }
 
 function SelectFilter({
@@ -75,7 +83,16 @@ export function MapExplorer({ cases, categories, locale }: MapExplorerProps) {
     return cases.filter((item) => {
       const textMatch =
         !normalizedQuery ||
-        [item.title, item.shortDescription, item.country, item.region, item.category.name]
+        [
+          item.title,
+          item.shortDescription,
+          item.country,
+          item.region,
+          item.locality,
+          item.ecoregion,
+          item.threat,
+          getCaseMeasure(item),
+        ]
           .filter(Boolean)
           .join(" ")
           .toLowerCase()
@@ -83,11 +100,21 @@ export function MapExplorer({ cases, categories, locale }: MapExplorerProps) {
 
       const countryMatch = !country || item.country === country;
       const riskMatch = !risk || getCaseRisk(item, locale) === risk;
-      const measureMatch = !measure || item.category.name === measure;
+      const measureMatch = !measure || getCaseMeasure(item) === measure;
+      const territoryMatch = !territory || getCaseTerritory(item) === territory;
+      const actorMatch = !actor || Boolean(item.youthRole?.toLowerCase().includes(actor.toLowerCase()));
 
-      return textMatch && countryMatch && riskMatch && measureMatch;
+      return textMatch && countryMatch && riskMatch && measureMatch && territoryMatch && actorMatch;
     });
-  }, [cases, country, locale, measure, query, risk]);
+  }, [actor, cases, country, locale, measure, query, risk, territory]);
+
+  const threatOptions = [...new Set([...cases.map((item) => getCaseRisk(item, locale)), ...content.climateRisks])];
+  const measureOptions = [
+    ...new Set([...categories.map((item) => item.name), ...cases.map(getCaseMeasure), ...content.adaptationMeasureTypes]),
+  ];
+  const territoryOptions = [
+    ...new Set([...cases.map(getCaseTerritory).filter((item): item is string => Boolean(item)), ...content.territories]),
+  ];
 
   return (
     <div className={filtersVisible ? "grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]" : "grid gap-6"}>
@@ -122,11 +149,11 @@ export function MapExplorer({ cases, categories, locale }: MapExplorerProps) {
               <dl className="mt-4 grid gap-2 text-xs text-[color:var(--color-muted)]">
                 <div>
                   <dt className="font-semibold text-[color:var(--color-text)]">{dict.mapExplorer.measure}</dt>
-                  <dd>{item.category.name}</dd>
+                  <dd>{getCaseMeasure(item)}</dd>
                 </div>
                 <div>
                   <dt className="font-semibold text-[color:var(--color-text)]">{dict.mapExplorer.territory}</dt>
-                  <dd>{item.region ?? dict.mapExplorer.territoryFallback}</dd>
+                  <dd>{getCaseTerritory(item) ?? dict.mapExplorer.territoryFallback}</dd>
                 </div>
               </dl>
               <Link
@@ -179,21 +206,21 @@ export function MapExplorer({ cases, categories, locale }: MapExplorerProps) {
             <SelectFilter
               label={dict.mapExplorer.climateRisk}
               value={risk}
-              options={content.climateRisks}
+              options={threatOptions}
               allLabel={dict.mapExplorer.all}
               onChange={setRisk}
             />
             <SelectFilter
               label={dict.mapExplorer.measureType}
               value={measure}
-              options={[...new Set([...categories.map((item) => item.name), ...content.adaptationMeasureTypes])]}
+              options={measureOptions}
               allLabel={dict.mapExplorer.all}
               onChange={setMeasure}
             />
             <SelectFilter
               label={dict.mapExplorer.ecosystem}
               value={territory}
-              options={content.territories}
+              options={territoryOptions}
               allLabel={dict.mapExplorer.all}
               onChange={setTerritory}
             />

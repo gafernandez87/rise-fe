@@ -29,6 +29,31 @@ export type AdaptationCase = {
   longitude: number;
   country?: string | null;
   region?: string | null;
+  locality?: string | null;
+  subnationalJurisdiction?: string | null;
+  ecoregion?: string | null;
+  implementationDate?: string | null;
+  photoUrl?: string | null;
+  threat?: string | null;
+  measureType?: string | null;
+  scope?: string | null;
+  adaptationFocus?: string | null;
+  nationalVulnerabilityProfile?: string | null;
+  objectives?: string | null;
+  proposedSolutions?: string | null;
+  beneficiaryCommunities?: string | null;
+  youthRole?: string | null;
+  results?: string | null;
+  contact?: string | null;
+  financingType?: string | null;
+  localClimateProblem?: string | null;
+  nationalSocioPoliticalContext?: string | null;
+  strategicAlliances?: string | null;
+  enablingFactors?: string | null;
+  coBenefits?: string | null;
+  scalability?: string | null;
+  longTermSustainability?: string | null;
+  downloadableDocuments?: string | null;
   sourceUrl?: string | null;
   category: Category;
   images: CaseImage[];
@@ -45,6 +70,14 @@ export type MapCase = Pick<
   | "longitude"
   | "country"
   | "region"
+  | "locality"
+  | "subnationalJurisdiction"
+  | "ecoregion"
+  | "threat"
+  | "measureType"
+  | "scope"
+  | "adaptationFocus"
+  | "youthRole"
 > & {
   category: Category;
   coverImageUrl?: string | null;

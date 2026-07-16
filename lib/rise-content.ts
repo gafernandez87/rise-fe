@@ -133,14 +133,30 @@ export const methodologySteps = [
   },
 ];
 
+export type OrganizationLogo = {
+  name: string;
+  logo: string;
+};
+
 export const organizations = {
-  leading: ["CLAAC"],
-  support: ["Uno Punto Cinco", "EcoHouse", "Sustentabilidad Sin Fronteras", "Climalab"],
+  leading: [{ name: "CLAAC", logo: "/brand/organizations/claac.png" }],
+  support: [
+    { name: "Uno Punto Cinco", logo: "/brand/organizations/uno-punto-cinco.svg" },
+    { name: "Eco House", logo: "/brand/organizations/eco-house.png" },
+    {
+      name: "Sustentabilidad Sin Fronteras",
+      logo: "/brand/organizations/sustentabilidad-sin-fronteras.png",
+    },
+    { name: "Climalab", logo: "/brand/organizations/climalab.png" },
+  ],
   participants: [
-    "Jovenes por el Clima Argentina",
-    "Nuestro Futuro",
-    "Sustenta Honduras",
-    "Palmares Lab",
+    {
+      name: "Jovenes por el Clima Argentina",
+      logo: "/brand/organizations/jovenes-por-el-clima.png",
+    },
+    { name: "Nuestro Futuro", logo: "/brand/organizations/nuestro-futuro.png" },
+    { name: "Sustenta Honduras", logo: "/brand/organizations/sustenta-honduras.png" },
+    { name: "Palmares Lab", logo: "/brand/organizations/palmares-lab.png" },
   ],
 };
 
