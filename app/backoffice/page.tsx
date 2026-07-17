@@ -6,6 +6,9 @@ import type { AdaptationCase, CaseSeverity, CaseStatus } from "@/types/cases";
 import { createMeasure, deleteMeasure, loginBackoffice, logoutBackoffice, updateMeasure } from "./actions";
 import { SubmitButton } from "./submit-button";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 type BackofficePageProps = {
   searchParams: Promise<{
     created?: string;

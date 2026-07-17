@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { backofficeTokenCookie, getBackofficeToken } from "@/lib/backoffice-api";
+import { backofficeTokenCookie, fetchBackofficeApi, getBackofficeToken } from "@/lib/backoffice-api";
 import { siteConfig } from "@/lib/site";
 import type { CaseSeverity, CaseStatus } from "@/types/cases";
 
@@ -143,7 +143,7 @@ export async function loginBackoffice(formData: FormData) {
   let response: Response;
 
   try {
-    response = await fetch(`${siteConfig.apiUrl}/auth/login`, {
+    response = await fetchBackofficeApi(`${siteConfig.apiUrl}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -190,15 +190,21 @@ export async function createMeasure(formData: FormData) {
     redirect(`${backofficePath}?save=missing`);
   }
 
-  const response = await fetch(`${siteConfig.apiUrl}/admin/cases`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-    cache: "no-store",
-  });
+  let response: Response;
+
+  try {
+    response = await fetchBackofficeApi(`${siteConfig.apiUrl}/admin/cases`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+  } catch {
+    redirect(`${backofficePath}?save=error`);
+  }
 
   if (response.status === 401) {
     await clearBackofficeSession();
@@ -221,15 +227,21 @@ export async function updateMeasure(id: string, formData: FormData) {
     redirect(`${backofficePath}?save=missing`);
   }
 
-  const response = await fetch(`${siteConfig.apiUrl}/admin/cases/${id}`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-    cache: "no-store",
-  });
+  let response: Response;
+
+  try {
+    response = await fetchBackofficeApi(`${siteConfig.apiUrl}/admin/cases/${id}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+  } catch {
+    redirect(`${backofficePath}?save=error`);
+  }
 
   if (response.status === 401) {
     await clearBackofficeSession();
@@ -246,13 +258,19 @@ export async function updateMeasure(id: string, formData: FormData) {
 
 export async function deleteMeasure(id: string) {
   const token = await requireBackofficeToken();
-  const response = await fetch(`${siteConfig.apiUrl}/admin/cases/${id}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    cache: "no-store",
-  });
+  let response: Response;
+
+  try {
+    response = await fetchBackofficeApi(`${siteConfig.apiUrl}/admin/cases/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+  } catch {
+    redirect(`${backofficePath}?save=delete-error`);
+  }
 
   if (response.status === 401) {
     await clearBackofficeSession();

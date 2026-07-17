@@ -3,6 +3,21 @@ import { siteConfig } from "@/lib/site";
 import type { AdaptationCase } from "@/types/cases";
 
 export const backofficeTokenCookie = "rise_backoffice_token";
+const backofficeRequestTimeoutMs = 12_000;
+
+export async function fetchBackofficeApi(input: string, init: RequestInit = {}) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), backofficeRequestTimeoutMs);
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 export async function getBackofficeToken() {
   return (await cookies()).get(backofficeTokenCookie)?.value;
@@ -10,7 +25,7 @@ export async function getBackofficeToken() {
 
 export async function getBackofficeCases(token: string) {
   try {
-    const response = await fetch(`${siteConfig.apiUrl}/admin/cases`, {
+    const response = await fetchBackofficeApi(`${siteConfig.apiUrl}/admin/cases`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

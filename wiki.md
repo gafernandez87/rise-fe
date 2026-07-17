@@ -97,6 +97,8 @@ Caracteristicas actuales:
 - Expone un boton superior para crear una medida nueva.
 - Permite editar desde cada fila de la tabla.
 - Los formularios muestran estado de carga mientras envian acciones.
+- Fuerza runtime Node dinamico en Vercel para evitar prerender del panel protegido.
+- Las llamadas administrativas al backend tienen timeout para no colgar la funcion si Render esta despertando.
 - Crea medidas con `POST /admin/cases`.
 - Edita medidas existentes con `PATCH /admin/cases/:id`.
 - Elimina medidas existentes con `DELETE /admin/cases/:id` y confirmacion por checkbox.
