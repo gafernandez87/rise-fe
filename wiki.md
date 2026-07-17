@@ -47,10 +47,13 @@ types/
 Copiar `.env.example` a `.env.local` para desarrollo local.
 
 ```bash
+API_URL=http://localhost:3001
 NEXT_PUBLIC_API_URL=http://localhost:3001
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 BACKOFFICE_ADMIN_EMAIL=backoffice@rise.local
 ```
+
+`API_URL` es la URL server-side preferida para que las Server Actions y los fetches del frontend en Vercel lleguen al backend. `NEXT_PUBLIC_API_URL` se mantiene como alias publico y compatibilidad local.
 
 `BACKOFFICE_ADMIN_EMAIL` se usa solo en servidor para el login del backoffice. La password no se guarda en el frontend.
 
@@ -191,3 +194,20 @@ Deberian aparecer en el mapa si el backend esta disponible y `NEXT_PUBLIC_API_UR
 - Mantener Server Actions con verificacion de sesion antes de mutar datos.
 - No duplicar tipos si pueden centralizarse en `types/`.
 - Mantener SEO y accesibilidad en paginas publicas.
+
+## Troubleshooting deploy
+
+Si el login de `/backoffice` devuelve `303 See Other`, eso es normal en Server Actions de Next.js: el problema real esta en la URL a la que redirige. Si vuelve a `/backoffice?error=unavailable`, el frontend desplegado no pudo conectarse al backend.
+
+Revisar en Vercel:
+
+- `API_URL=https://rise-be-aojn.onrender.com`
+- `NEXT_PUBLIC_API_URL=https://rise-be-aojn.onrender.com`
+- `NEXT_PUBLIC_SITE_URL=https://<dominio-vercel>`
+- `BACKOFFICE_ADMIN_EMAIL=backoffice@rise.local`
+
+Revisar en Render:
+
+- Que `https://rise-be-aojn.onrender.com/health` responda `{ ok: true }`.
+- Que `BACKOFFICE_ADMIN_EMAIL` y `BACKOFFICE_ADMIN_PASSWORD` coincidan con el usuario sembrado.
+- Que `CORS_ORIGIN` incluya el dominio de Vercel si se hacen llamadas directas desde navegador.
