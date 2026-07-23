@@ -45,6 +45,7 @@ export function SiteHeader() {
             height={1080}
             priority
             className="claac-header__logo"
+            loading="eager"
           />
         </Link>
         <button

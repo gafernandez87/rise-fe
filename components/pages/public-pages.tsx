@@ -26,6 +26,8 @@ type PublicPageProps = {
   currentPath: string;
 };
 
+const collaboratorOrganizations = [...organizations.support, ...organizations.participants];
+
 function PublicChrome({ locale, currentPath, children }: PublicPageProps & { children: ReactNode }) {
   return (
     <>
@@ -61,6 +63,7 @@ function SiteFooter({ locale }: { locale: Locale }) {
             height={1080}
             className="h-auto w-40"
             style={{ filter: "brightness(0) invert(1)" }}
+            loading="eager"
           />
         </Link>
         <div className="flex items-center gap-3 text-sm font-semibold">
@@ -90,7 +93,7 @@ function LogoGroup({ title, items }: { title: string; items: OrganizationLogo[] 
         {items.map((item) => (
           <div
             key={item.name}
-            className="grid min-h-24 place-items-center rounded-lg border border-[color:var(--color-border)] bg-white px-5 py-4"
+            className="grid min-h-24 place-items-center px-5 py-4"
             aria-label={`Logo de ${item.name}`}
           >
             <Image
@@ -117,7 +120,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
       <main>
-        <section className="bg-white">
+        <section className="rise-hero bg-white">
           <div className="page-shell grid gap-10 py-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
             <div className="space-y-7">
               <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
@@ -126,12 +129,13 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
               <div className="space-y-3">
                 <h1>
                   <Image
-                    src="/brand/rise-logo-primary-horizontal.png"
+                    src="/brand/elements/rise-logo.svg"
                     alt="RISE - Resilience through Innovation, Science and Empowerment"
-                    width={554}
-                    height={251}
+                    width={1164}
+                    height={407}
                     priority
                     className="h-auto w-full max-w-[430px]"
+                    unoptimized
                   />
                 </h1>
               </div>
@@ -161,7 +165,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
             </div>
             <Link
               href={localizedPath("/mapa", locale)}
-              className="hidden overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white shadow-sm md:block"
+              className="rise-map-card hidden overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white shadow-sm md:block"
               aria-label={dict.home.ctaMap}
             >
               <div className="relative aspect-[4/3] bg-[#a9d7e6]">
@@ -185,7 +189,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
           </div>
         </section>
 
-        <section id="sobre-rise" className="page-shell grid gap-8 pb-14 pt-6 lg:grid-cols-[0.85fr_1.15fr]">
+        <section id="sobre-rise" className="rise-section rise-section--about page-shell grid gap-8 pb-14 pt-6 lg:grid-cols-[0.85fr_1.15fr]">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
               {dict.home.aboutEyebrow}
@@ -216,7 +220,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
           </div>
         </section>
 
-        <section className="page-shell space-y-6 py-14">
+        <section className="rise-section rise-section--profiles page-shell space-y-6 py-14">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
@@ -247,7 +251,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
           </div>
         </section>
 
-        <section className="bg-[color:var(--color-primary-strong)] py-14 text-white">
+        <section className="rise-section rise-section--stories bg-[color:var(--color-primary-strong)] py-14 text-white">
           <div className="page-shell space-y-6">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
@@ -263,7 +267,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {countries.map((country) => (
                 <article key={country.slug} className="rounded-lg border border-white/15 p-4">
-                  <div className="aspect-video rounded-md bg-white/10" />
+                  <div className="rise-story-thumbnail aspect-video rounded-md bg-white/10" />
                   <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-white/70">
                     {country.name}
                   </p>
@@ -275,7 +279,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
           </div>
         </section>
 
-        <section className="page-shell space-y-6 py-14">
+        <section className="rise-section rise-section--cases page-shell space-y-6 py-14">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
@@ -294,7 +298,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
           </div>
         </section>
 
-        <section className="border-y border-[color:var(--color-border)] bg-white py-14">
+        <section className="rise-report-band border-y border-[color:var(--color-border)] bg-white py-14">
           <div className="page-shell grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
@@ -329,7 +333,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
           </div>
         </section>
 
-        <section className="page-shell space-y-6 py-14">
+        <section className="rise-section rise-section--methodology page-shell space-y-6 py-14">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
               {dict.home.methodologyEyebrow}
@@ -362,11 +366,11 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
                   width={1920}
                   height={1080}
                   className="h-auto w-44"
+                  loading="eager"
                 />
               </Link>
             </div>
-            <LogoGroup title={dict.home.support} items={organizations.support} />
-            <LogoGroup title={dict.home.participants} items={organizations.participants} />
+            <LogoGroup title={dict.home.collaborators} items={collaboratorOrganizations} />
           </div>
         </section>
       </main>
@@ -383,7 +387,7 @@ export async function MapPageView({ locale, currentPath }: PublicPageProps) {
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
       <main className="mx-auto w-full max-w-[1440px] space-y-8 px-[var(--space-page-x)] py-10">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="rise-page-hero flex flex-wrap items-end justify-between gap-4">
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
               {dict.map.eyebrow}
@@ -411,7 +415,7 @@ export function StoriesPageView({ locale, currentPath }: PublicPageProps) {
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
       <main className="page-shell space-y-8 py-10">
-        <div className="max-w-3xl">
+        <div className="rise-page-hero max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
             {dict.stories.eyebrow}
           </p>
@@ -424,7 +428,7 @@ export function StoriesPageView({ locale, currentPath }: PublicPageProps) {
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {countries.map((country) => (
             <article key={country.slug} className="overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white">
-              <div className="grid aspect-video place-items-center bg-[color:var(--color-surface-muted)] text-sm font-semibold text-[color:var(--color-muted)]">
+              <div className="rise-story-thumbnail grid aspect-video place-items-center bg-[color:var(--color-surface-muted)] text-sm font-semibold text-[color:var(--color-muted)]">
                 {dict.stories.videoPlaceholder}
               </div>
               <div className="p-5">
@@ -462,7 +466,7 @@ export function StoryPageView({ locale, currentPath, slug }: PublicPageProps & {
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
       <main>
-        <section className="bg-white">
+        <section className="rise-detail-hero bg-white">
           <div className="page-shell grid gap-8 py-10 lg:grid-cols-[0.95fr_1.05fr]">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
@@ -473,7 +477,7 @@ export function StoryPageView({ locale, currentPath, slug }: PublicPageProps & {
                 {dict.stories.heroTextPrefix} {country.mainRisk.toLowerCase()}.
               </p>
             </div>
-            <div className="grid aspect-video place-items-center rounded-lg bg-[color:var(--color-surface-muted)] text-sm font-semibold text-[color:var(--color-muted)]">
+            <div className="rise-media-placeholder grid aspect-video place-items-center rounded-lg bg-[color:var(--color-surface-muted)] text-sm font-semibold text-[color:var(--color-muted)]">
               {dict.stories.mediaPlaceholder}
             </div>
           </div>
@@ -530,7 +534,7 @@ export function CountryProfilesPageView({ locale, currentPath }: PublicPageProps
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
       <main className="page-shell space-y-8 py-10">
-        <div className="max-w-3xl">
+        <div className="rise-page-hero max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
             {dict.profiles.eyebrow}
           </p>
@@ -583,7 +587,7 @@ export function CountryProfilePageView({ locale, currentPath, slug }: PublicPage
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
       <main>
-        <section className="bg-white">
+        <section className="rise-detail-hero bg-white">
           <div className="page-shell grid gap-8 py-10 lg:grid-cols-[0.95fr_1.05fr]">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
@@ -649,7 +653,7 @@ export function RegionalReportPageView({ locale, currentPath }: PublicPageProps)
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
       <main>
-        <section className="bg-white">
+        <section className="rise-detail-hero bg-white">
           <div className="page-shell grid gap-8 py-10 lg:grid-cols-[0.9fr_1.1fr]">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
@@ -674,8 +678,17 @@ export function RegionalReportPageView({ locale, currentPath }: PublicPageProps)
                 </a>
               </div>
             </div>
-            <div className="grid aspect-[3/4] place-items-center rounded-lg bg-[color:var(--color-surface-muted)] p-8 text-center">
-              <div>
+            <div className="rise-report-cover grid aspect-[3/4] place-items-center rounded-lg bg-[color:var(--color-surface-muted)] p-8 text-center">
+              <Image
+                src="/brand/elements/rise-logo.svg"
+                alt=""
+                width={1164}
+                height={407}
+                className="rise-report-cover__logo h-auto w-full max-w-[320px]"
+                aria-hidden="true"
+                unoptimized
+              />
+              <div className="rise-report-cover__content">
                 <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
                   {dict.report.cover}
                 </p>
@@ -730,7 +743,7 @@ export function MethodologyPageView({ locale, currentPath }: PublicPageProps) {
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
       <main className="page-shell space-y-10 py-10">
-        <div className="max-w-3xl">
+        <div className="rise-page-hero max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
             {dict.methodology.eyebrow}
           </p>
@@ -809,7 +822,7 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <section className="page-shell grid gap-8 py-10 lg:grid-cols-[0.95fr_1.05fr]">
+        <section className="rise-detail-hero page-shell grid gap-8 py-10 lg:grid-cols-[0.95fr_1.05fr]">
           {cover ? (
             <Image
               className="aspect-[4/3] w-full rounded-lg object-cover"

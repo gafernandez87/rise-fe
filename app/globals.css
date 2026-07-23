@@ -25,6 +25,7 @@
   --color-border: #f2cfc5;
   --color-white: #ffffff;
   --font-sans: var(--font-outfit);
+  --page-max-width: 1180px;
   --space-page-x: clamp(1rem, 4vw, 4rem);
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
@@ -78,8 +79,230 @@ a {
 }
 
 .page-shell {
-  width: min(1180px, calc(100% - (var(--space-page-x) * 2)));
+  width: min(var(--page-max-width), calc(100% - (var(--space-page-x) * 2)));
   margin-inline: auto;
+}
+
+.rise-section.page-shell,
+.rise-detail-hero.page-shell {
+  width: 100%;
+  margin-inline: 0;
+  padding-inline: max(var(--space-page-x), calc((100% - var(--page-max-width)) / 2));
+}
+
+.rise-hero,
+.rise-section,
+.rise-report-band,
+.rise-detail-hero,
+.rise-page-hero,
+.rise-map-card,
+.rise-story-thumbnail,
+.rise-media-placeholder,
+.rise-report-cover {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.rise-hero > .page-shell,
+.rise-section > *,
+.rise-report-band > .page-shell,
+.rise-detail-hero > *,
+.rise-page-hero > *,
+.rise-map-card > *,
+.rise-story-thumbnail > *,
+.rise-media-placeholder > *,
+.rise-report-cover > * {
+  position: relative;
+  z-index: 1;
+}
+
+.rise-hero::before,
+.rise-section--about::before,
+.rise-section--profiles::before,
+.rise-section--stories::before,
+.rise-section--cases::before,
+.rise-report-band::before,
+.rise-detail-hero::before,
+.rise-hero::after,
+.rise-section--cases::after,
+.rise-report-band::after,
+.rise-detail-hero::after,
+.rise-page-hero::after,
+.rise-media-placeholder::after,
+.rise-report-cover::after,
+.rise-map-card::before,
+.rise-report-cover::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.rise-hero::before {
+  top: 0%;
+  left: -4.25rem;
+  width: clamp(8rem, 11vw, 12rem);
+  aspect-ratio: 370.1 / 1355.91;
+  background-image: url("/brand/elements/shapes-vertical.svg");
+  background-position: left center;
+  opacity: 0.8;
+}
+
+/* .rise-hero::after {
+  right: clamp(2rem, 14vw, 12rem);
+  bottom: 1rem;
+  width: min(30rem, 52vw);
+  aspect-ratio: 460.51 / 65.78;
+  background-image: url("/brand/elements/wave-horizontal.svg");
+  opacity: 0.14;
+} */
+
+.rise-section--about::before {
+  top: 0.5rem;
+  right: -3.75rem;
+  width: clamp(7rem, 10vw, 10rem);
+  aspect-ratio: 166.37 / 357.52;
+  background-image: url("/brand/elements/waves-multiple.svg");
+  background-position: right center;
+  opacity: 0.12;
+}
+
+/* .rise-section--about::after {
+  right: clamp(1rem, 9vw, 7rem);
+  bottom: 0.75rem;
+  width: min(13rem, 32vw);
+  aspect-ratio: 165.77 / 59.22;
+  background-image: url("/brand/elements/wave-pronounced.svg");
+  opacity: 0.12;
+} */
+
+.rise-section--profiles::before {
+  top: 2rem;
+  left: -2.75rem;
+  width: clamp(4.5rem, 7vw, 6.5rem);
+  aspect-ratio: 189.64 / 488.84;
+  background-image: url("/brand/elements/stripes.svg");
+  background-position: left center;
+  opacity: 0.095;
+}
+
+.rise-section--cases::before {
+  top: 0.5rem;
+  left: -3.5rem;
+  width: clamp(6rem, 9vw, 8rem);
+  aspect-ratio: 166.37 / 357.52;
+  background-image: url("/brand/elements/waves-multiple.svg");
+  background-position: left center;
+  opacity: 0.08;
+  transform: scaleX(-1);
+}
+
+.rise-report-band::before {
+  top: 1.5rem;
+  right: -2rem;
+  width: clamp(4.75rem, 7vw, 6.75rem);
+  aspect-ratio: 189.64 / 488.84;
+  background-image: url("/brand/elements/stripes.svg");
+  background-position: right center;
+  opacity: 0.085;
+}
+
+.rise-detail-hero::before {
+  top: 1rem;
+  left: -2.75rem;
+  width: clamp(4.5rem, 7vw, 6rem);
+  aspect-ratio: 189.64 / 488.84;
+  background-image: url("/brand/elements/stripes.svg");
+  background-position: left center;
+  opacity: 0.055;
+}
+
+.rise-detail-hero::after,
+.rise-page-hero::after {
+  right: 1rem;
+  bottom: 0.5rem;
+  width: min(11rem, 36vw);
+  aspect-ratio: 460.51 / 65.78;
+  background-image: url("/brand/elements/wave-horizontal.svg");
+  opacity: 0.1;
+}
+
+.rise-media-placeholder::after {
+  right: 1.25rem;
+  bottom: 1rem;
+  width: min(14rem, 70%);
+  aspect-ratio: 460.51 / 65.78;
+  background-image: url("/brand/elements/wave-horizontal.svg");
+  opacity: 0.14;
+}
+
+.rise-report-cover::after {
+  right: 1.25rem;
+  bottom: 1.25rem;
+  width: min(14rem, 54%);
+  aspect-ratio: 165.77 / 59.22;
+  background-image: url("/brand/elements/wave-pronounced.svg");
+  opacity: 0.11;
+}
+
+.rise-map-card::before,
+.rise-report-cover::before {
+  width: 4.6rem;
+  aspect-ratio: 136.41 / 139.69;
+  background-image: url("/brand/elements/dots-9.svg");
+  opacity: 0.14;
+}
+
+.rise-map-card::before {
+  top: 1rem;
+  right: 1rem;
+}
+
+.rise-report-cover::before {
+  top: 1rem;
+  left: 1rem;
+}
+
+@media (max-width: 1180px) {
+  .rise-hero::before,
+  .rise-section--about::before,
+  .rise-section--profiles::before,
+  .rise-section--stories::before,
+  .rise-section--cases::before,
+  .rise-report-band::before {
+    opacity: 0.055;
+  }
+}
+
+@media (max-width: 900px) {
+  .rise-hero::before,
+  .rise-section--about::before,
+  .rise-section--profiles::before,
+  .rise-section--stories::before,
+  .rise-section--cases::before,
+  .rise-report-band::before,
+  .rise-detail-hero::before {
+    display: none;
+  }
+
+  .rise-hero::after {
+    right: 1.25rem;
+    width: 18rem;
+    opacity: 0.1;
+  }
+
+  .rise-section--about::after,
+  .rise-section--cases::after,
+  .rise-report-band::after,
+  .rise-detail-hero::after,
+  .rise-page-hero::after {
+    width: 9rem;
+    opacity: 0.075;
+  }
 }
 
 .language-switcher {
@@ -153,22 +376,22 @@ a {
 }
 
 .claac-header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 1000;
   isolation: isolate;
+  width: 100%;
   min-height: 136px;
   overflow: visible;
-  background: rgb(238 238 238 / 72%);
+  background: #eeeeee;
   color: #737373;
-  backdrop-filter: blur(2px);
+  box-shadow: 0 1px 10px rgb(0 0 0 / 8%);
 }
 
 .claac-header__overlay {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: rgb(255 255 255 / 16%);
+  background: transparent;
 }
 
 .claac-header__content {

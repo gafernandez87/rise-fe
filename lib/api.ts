@@ -3,6 +3,10 @@ import { siteConfig } from "@/lib/site";
 import type { AdaptationCase, Category, MapCase } from "@/types/cases";
 
 async function getJson<T>(path: string, fallback: T): Promise<T> {
+  if (!siteConfig.apiUrl) {
+    return fallback;
+  }
+
   try {
     const response = await fetch(`${siteConfig.apiUrl}${path}`, {
       next: { revalidate: 60 },
