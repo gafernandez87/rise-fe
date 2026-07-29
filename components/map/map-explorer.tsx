@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { CountryLabel } from "@/components/countries/country-label";
 import { MapLoader } from "@/components/map/map-loader";
 import {
   getDictionary,
@@ -13,6 +14,7 @@ import {
   type Locale,
 } from "@/lib/i18n";
 import type { MapInitialFilters } from "@/lib/map-filters";
+import { formatCountryNameWithFlag } from "@/lib/rise-content";
 import type { Category, MapCase } from "@/types/cases";
 
 type MapExplorerProps = {
@@ -82,12 +84,14 @@ function SelectFilter({
   options,
   allLabel,
   onChange,
+  formatOption,
 }: {
   label: string;
   value: string;
   options: string[];
   allLabel: string;
   onChange: (value: string) => void;
+  formatOption?: (option: string) => string;
 }) {
   return (
     <label className="grid gap-1 text-sm font-medium">
@@ -100,7 +104,7 @@ function SelectFilter({
         <option value="">{allLabel}</option>
         {options.map((option) => (
           <option key={option} value={option}>
-            {option}
+            {formatOption ? formatOption(option) : option}
           </option>
         ))}
       </select>
@@ -128,14 +132,19 @@ export function MapExplorer({ cases, categories, initialFilters, locale }: MapEx
       ]),
     [cases, categories, content.adaptationMeasureTypes, initialFilters?.measure],
   );
+  const countryOptions = useMemo(
+    () => uniqueFilterOptions([...countries.map((item) => item.name), ...cases.map((item) => item.country), initialFilters?.country]),
+    [cases, countries, initialFilters?.country],
+  );
   const territoryOptions = useMemo(
     () => uniqueFilterOptions([...cases.map(getCaseTerritory), ...content.territories]),
     [cases, content.territories],
   );
+  const initialCountry = resolveFilterOption(countryOptions, initialFilters?.country);
   const initialRisk = resolveFilterOption(threatOptions, initialFilters?.risk);
   const initialMeasure = resolveFilterOption(measureOptions, initialFilters?.measure);
   const [query, setQuery] = useState("");
-  const [country, setCountry] = useState("");
+  const [country, setCountry] = useState(initialCountry);
   const [risk, setRisk] = useState(initialRisk);
   const [measure, setMeasure] = useState(initialMeasure);
   const [territory, setTerritory] = useState("");
@@ -169,7 +178,7 @@ export function MapExplorer({ cases, categories, initialFilters, locale }: MapEx
           .toLowerCase()
           .includes(normalizedQuery);
 
-      const countryMatch = !country || item.country === country;
+      const countryMatch = !country || Boolean(item.country && filtersMatch(item.country, country));
       const riskMatch = !risk || filtersMatch(caseRisk, risk);
       const measureMatch = !measure || caseMeasureLabels.some((label) => filtersMatch(label, measure));
       const territoryMatch = !territory || getCaseTerritory(item) === territory;
@@ -214,7 +223,11 @@ export function MapExplorer({ cases, categories, initialFilters, locale }: MapEx
           {filteredCases.map((item) => (
             <article key={item.id} className="rounded-lg border border-[color:var(--color-border)] bg-white p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
-                {item.country ?? dict.mapExplorer.countryTbd} · {getCaseRisk(item, locale)}
+                <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <CountryLabel country={item.country} fallback={dict.mapExplorer.countryTbd} />
+                  <span aria-hidden="true">·</span>
+                  <span>{getCaseRisk(item, locale)}</span>
+                </span>
               </p>
               <h2 className="mt-2 text-lg font-semibold">{item.title}</h2>
               <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
@@ -273,9 +286,10 @@ export function MapExplorer({ cases, categories, initialFilters, locale }: MapEx
             <SelectFilter
               label={dict.mapExplorer.country}
               value={country}
-              options={countries.map((item) => item.name)}
+              options={countryOptions}
               allLabel={dict.mapExplorer.all}
               onChange={setCountry}
+              formatOption={formatCountryNameWithFlag}
             />
             <SelectFilter
               label={dict.mapExplorer.climateRisk}

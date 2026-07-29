@@ -507,6 +507,14 @@ const dictionaries = {
       viewCountryProfile: "Ver perfil del pais",
       viewOtherStories: "Ver otras historias",
       exploreMap: "Explorar mapa",
+      relatedMeasuresEyebrow: "Medidas vinculadas",
+      relatedMeasuresTitle: "Medidas de adaptacion relacionadas",
+      relatedMeasuresText:
+        "Estas fichas comparten el pais de la historia y permiten revisar la medida documentada con mas detalle.",
+      relatedMeasuresFallback:
+        "Aun no hay fichas publicadas para este pais, pero puedes explorar el mapa para encontrar medidas similares.",
+      viewRelatedMeasure: "Ver medida",
+      viewCountryMeasures: "Ver medidas del pais",
       sections: [
         {
           title: "El desafio",
@@ -600,6 +608,15 @@ const dictionaries = {
       beneficiaryCommunities: "Comunidades beneficiarias",
       beneficiaryCommunitiesText:
         "Comunidades locales, juventudes y organizaciones territoriales vinculadas al caso. El detalle cuantitativo queda preparado para la base editorial completa.",
+      relatedStoryEyebrow: "Historia vinculada",
+      relatedStoryTitle: "Historia de resiliencia relacionada",
+      relatedStoryText:
+        "Esta historia comparte el pais de la medida y suma contexto narrativo sobre juventudes, comunidades y aprendizajes.",
+      relatedStoryFallbackTitle: "Historia de resiliencia por vincular",
+      relatedStoryFallbackText:
+        "Aun no hay una historia publicada para este pais. Puedes explorar las historias disponibles mientras se completa la relacion editorial.",
+      viewRelatedStory: "Leer historia",
+      viewStories: "Ver historias",
       complementaryInfo: "Informacion complementaria",
       complementaryPlaceholder: "Contenido por completar con datos de la ficha tecnica y fuentes del caso.",
       complementarySections: [
@@ -752,6 +769,14 @@ const dictionaries = {
       viewCountryProfile: "View country profile",
       viewOtherStories: "View other stories",
       exploreMap: "Explore map",
+      relatedMeasuresEyebrow: "Linked measures",
+      relatedMeasuresTitle: "Related adaptation measures",
+      relatedMeasuresText:
+        "These factsheets share the story country and let readers review the documented measure in more detail.",
+      relatedMeasuresFallback:
+        "There are no published factsheets for this country yet, but you can explore the map to find similar measures.",
+      viewRelatedMeasure: "View measure",
+      viewCountryMeasures: "View country measures",
       sections: [
         { title: "The challenge", text: "Describe the climate risk facing the territory, who is affected and which factors increase vulnerability." },
         { title: "The response", text: "Present the adaptation measure, who drove it and how the community organized." },
@@ -833,6 +858,15 @@ const dictionaries = {
       beneficiaryCommunities: "Beneficiary communities",
       beneficiaryCommunitiesText:
         "Local communities, youth and territorial organizations linked to the case. Quantitative details are prepared for the full editorial database.",
+      relatedStoryEyebrow: "Linked story",
+      relatedStoryTitle: "Related resilience story",
+      relatedStoryText:
+        "This story shares the measure country and adds narrative context about youth, communities and lessons learned.",
+      relatedStoryFallbackTitle: "Resilience story to link",
+      relatedStoryFallbackText:
+        "There is no published story for this country yet. You can explore the available stories while the editorial link is completed.",
+      viewRelatedStory: "Read story",
+      viewStories: "View stories",
       complementaryInfo: "Complementary information",
       complementaryPlaceholder: "Content to be completed with factsheet data and case sources.",
       complementarySections: [
@@ -978,6 +1012,14 @@ const dictionaries = {
       viewCountryProfile: "Ver perfil do pais",
       viewOtherStories: "Ver outras historias",
       exploreMap: "Explorar mapa",
+      relatedMeasuresEyebrow: "Medidas vinculadas",
+      relatedMeasuresTitle: "Medidas de adaptacao relacionadas",
+      relatedMeasuresText:
+        "Estas fichas compartilham o pais da historia e permitem revisar a medida documentada com mais detalhe.",
+      relatedMeasuresFallback:
+        "Ainda nao ha fichas publicadas para este pais, mas voce pode explorar o mapa para encontrar medidas semelhantes.",
+      viewRelatedMeasure: "Ver medida",
+      viewCountryMeasures: "Ver medidas do pais",
       sections: [
         { title: "O desafio", text: "Descreve qual risco climatico o territorio enfrenta, quem e afetado e quais fatores aumentam a vulnerabilidade." },
         { title: "A resposta", text: "Apresenta a medida de adaptacao, quem a impulsionou e como a comunidade se organizou." },
@@ -1059,6 +1101,15 @@ const dictionaries = {
       beneficiaryCommunities: "Comunidades beneficiarias",
       beneficiaryCommunitiesText:
         "Comunidades locais, juventudes e organizacoes territoriais vinculadas ao caso. O detalhe quantitativo fica preparado para a base editorial completa.",
+      relatedStoryEyebrow: "Historia vinculada",
+      relatedStoryTitle: "Historia de resiliencia relacionada",
+      relatedStoryText:
+        "Esta historia compartilha o pais da medida e acrescenta contexto narrativo sobre juventudes, comunidades e aprendizados.",
+      relatedStoryFallbackTitle: "Historia de resiliencia a vincular",
+      relatedStoryFallbackText:
+        "Ainda nao ha uma historia publicada para este pais. Voce pode explorar as historias disponiveis enquanto a relacao editorial e completada.",
+      viewRelatedStory: "Ler historia",
+      viewStories: "Ver historias",
       complementaryInfo: "Informacao complementar",
       complementaryPlaceholder: "Conteudo a completar com dados da ficha tecnica e fontes do caso.",
       complementarySections: [

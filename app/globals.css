@@ -1031,3 +1031,14 @@ a {
 .text-white {
   color: var(--color-white);
 }
+
+
+button {
+  cursor: pointer;
+}
+
+button:hover {
+  /* Move the button up slightly when hovered */
+  transform: translateY(-1px);
+  transition: transform 0.3s ease;
+}

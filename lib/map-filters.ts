@@ -1,6 +1,7 @@
 import { localizedPath, type Locale } from "@/lib/i18n";
 
 export type MapInitialFilters = {
+  country?: string;
   risk?: string;
   measure?: string;
 };
@@ -8,6 +9,7 @@ export type MapInitialFilters = {
 export type SearchParamsRecord = Record<string, string | string[] | undefined>;
 
 const mapFilterAliases = {
+  country: ["country", "pais"],
   risk: ["risk", "riesgo"],
   measure: ["measure", "medida", "category", "categoria"],
 } as const;
@@ -36,6 +38,7 @@ function readAliasedSearchParam(
 
 export function readMapInitialFilters(searchParams: SearchParamsRecord): MapInitialFilters {
   return {
+    country: readAliasedSearchParam(searchParams, mapFilterAliases.country),
     risk: readAliasedSearchParam(searchParams, mapFilterAliases.risk),
     measure: readAliasedSearchParam(searchParams, mapFilterAliases.measure),
   };

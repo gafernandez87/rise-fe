@@ -73,6 +73,53 @@ export const projectCountries = [
   },
 ] as const;
 
+export type ProjectCountrySlug = (typeof projectCountries)[number]["slug"];
+
+const projectCountryFlags: Record<ProjectCountrySlug, string> = {
+  argentina: "🇦🇷",
+  brasil: "🇧🇷",
+  chile: "🇨🇱",
+  colombia: "🇨🇴",
+  honduras: "🇭🇳",
+  mexico: "🇲🇽",
+};
+
+const countrySlugByNormalizedName: Record<string, ProjectCountrySlug> = {
+  argentina: "argentina",
+  brasil: "brasil",
+  brazil: "brasil",
+  chile: "chile",
+  colombia: "colombia",
+  honduras: "honduras",
+  mexico: "mexico",
+};
+
+function normalizeCountryName(country?: string | null) {
+  return country
+    ?.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
+export function getCountrySlugFromName(country?: string | null) {
+  const normalizedCountry = normalizeCountryName(country);
+
+  return normalizedCountry ? countrySlugByNormalizedName[normalizedCountry] : undefined;
+}
+
+export function getCountryFlag(country?: string | null) {
+  const slug = getCountrySlugFromName(country);
+
+  return slug ? projectCountryFlags[slug] : undefined;
+}
+
+export function formatCountryNameWithFlag(country: string) {
+  const flag = getCountryFlag(country);
+
+  return flag ? `${flag} ${country}` : country;
+}
+
 export const adaptationMeasureTypes = [
   "Infraestructura verde",
   "Soluciones basadas en la naturaleza",

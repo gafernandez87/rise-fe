@@ -6,7 +6,9 @@ import Image from "next/image";
 import Link from "next/link";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import { CountryLabel } from "@/components/countries/country-label";
 import { getDictionary, localizedPath, type Locale } from "@/lib/i18n";
+import { getCountrySlugFromName } from "@/lib/rise-content";
 import type { MapCase } from "@/types/cases";
 
 const markerIcon = L.divIcon({
@@ -107,6 +109,7 @@ function CaseMarker({
   locale: Locale;
 }) {
   const map = useMap();
+  const countrySlug = getCountrySlugFromName(item.country);
 
   return (
     <Marker
@@ -143,7 +146,9 @@ function CaseMarker({
             <dl className="rise-map-popup__meta">
               <div>
                 <dt>{dict.mapPopup.country}</dt>
-                <dd>{item.country ?? dict.common.tbd}</dd>
+                <dd>
+                  <CountryLabel country={item.country} fallback={dict.common.tbd} />
+                </dd>
               </div>
               <div>
                 <dt>{dict.mapPopup.measure}</dt>
@@ -158,9 +163,11 @@ function CaseMarker({
               <Link href={localizedPath(`/casos/${item.slug}`, locale)}>
                 {dict.mapPopup.viewFullCase}
               </Link>
-              <Link href={localizedPath(`/perfiles/${item.country?.toLowerCase() ?? ""}`, locale)}>
-                {dict.mapPopup.viewCountryProfile}
-              </Link>
+              {countrySlug ? (
+                <Link href={localizedPath(`/perfiles/${countrySlug}`, locale)}>
+                  {dict.mapPopup.viewCountryProfile}
+                </Link>
+              ) : null}
             </div>
           </div>
         </div>

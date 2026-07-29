@@ -1,8 +1,24 @@
 import type { ReactNode } from "react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  BookOpen,
+  BookOpenText,
+  Droplets,
+  Flame,
+  Handshake,
+  Leaf,
+  Mountain,
+  Sprout,
+  UsersRound,
+  Waves,
+  type LucideIcon,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CaseCard } from "@/components/cases/case-card";
+import { CountryLabel } from "@/components/countries/country-label";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MapPreviewLoader } from "@/components/map/map-loader";
@@ -29,7 +45,7 @@ import {
   type Locale,
 } from "@/lib/i18n";
 import { mapFilterPath, type MapInitialFilters } from "@/lib/map-filters";
-import { organizations, type OrganizationLogo } from "@/lib/rise-content";
+import { getCountrySlugFromName, organizations, type OrganizationLogo } from "@/lib/rise-content";
 import type { CountryProfile } from "@/types/country-profiles";
 import type { ResilienceStory } from "@/types/stories";
 import type { AdaptationCase } from "@/types/cases";
@@ -38,6 +54,8 @@ type PublicPageProps = {
   locale: Locale;
   currentPath: string;
 };
+
+type StorySection = ReturnType<typeof getDictionary>["stories"]["sections"][number];
 
 function uniqueLabels(labels: Array<string | null | undefined>) {
   return labels.filter((label, index): label is string => Boolean(label) && labels.indexOf(label) === index);
@@ -53,7 +71,75 @@ function getCaseMeasureLabels(item: AdaptationCase) {
   return uniqueLabels([item.measureType, item.category.name]);
 }
 
+function normalizeText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function normalizeLinkedLabel(value?: string | null) {
+  const normalizedValue = value?.trim();
+
+  return normalizedValue ? normalizeText(normalizedValue) : undefined;
+}
+
+function getCountryLinkKey(value?: string | null) {
+  return getCountrySlugFromName(value) ?? normalizeLinkedLabel(value);
+}
+
+function getRelatedStoryForCase(item: AdaptationCase, stories: ResilienceStory[]) {
+  const caseCountryKey = getCountryLinkKey(item.country);
+
+  if (!caseCountryKey) {
+    return undefined;
+  }
+
+  return stories.find((story) => getCountryLinkKey(story.country) === caseCountryKey);
+}
+
+function getRelatedCasesForStory(story: ResilienceStory, cases: AdaptationCase[]) {
+  const storyCountryKey = getCountryLinkKey(story.country);
+
+  if (!storyCountryKey) {
+    return [];
+  }
+
+  return cases.filter((item) => getCountryLinkKey(item.country) === storyCountryKey);
+}
+
+function StoryThemeIcon({ story }: { story: ResilienceStory }) {
+  const context = normalizeText([story.title, story.summary, story.mainRisk, story.territory].filter(Boolean).join(" "));
+  const iconProps = { "aria-hidden": true, size: 30, strokeWidth: 1.7 } as const;
+
+  if (/(agua|hidric|water|seca|sequia|drought)/.test(context)) {
+    return <Droplets {...iconProps} />;
+  }
+
+  if (/(inund|flood|enchente)/.test(context)) {
+    return <Waves {...iconProps} />;
+  }
+
+  if (/(calor|heat|incend|fire|queimad)/.test(context)) {
+    return <Flame {...iconProps} />;
+  }
+
+  if (/(desliz|landslide|montan|mountain)/.test(context)) {
+    return <Mountain {...iconProps} />;
+  }
+
+  if (/(biodivers|restaur|nature|naturaleza|natureza|verde)/.test(context)) {
+    return <Leaf {...iconProps} />;
+  }
+
+  return <UsersRound {...iconProps} />;
+}
+
 const collaboratorOrganizations = [...organizations.support, ...organizations.participants];
+const homeIntroCardIcons = [BookOpen, Leaf, AlertTriangle] as const;
+const homeCardActionClassName =
+  "inline-flex w-full items-center justify-center rounded-md border border-[color:var(--color-border)] bg-white px-5 py-3 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-surface-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-primary)]";
+const storySectionIcons: LucideIcon[] = [AlertTriangle, Handshake, BookOpenText, Sprout];
 
 function PublicChrome({ locale, currentPath, children }: PublicPageProps & { children: ReactNode }) {
   return (
@@ -216,6 +302,26 @@ function StoryBody({ story }: { story: ResilienceStory }) {
   );
 }
 
+function StorySectionHighlights({ sections }: { sections: readonly StorySection[] }) {
+  return (
+    <section className="page-shell grid gap-4 py-10 md:grid-cols-2 lg:grid-cols-4">
+      {sections.map((section, index) => {
+        const Icon = storySectionIcons[index] ?? BookOpenText;
+
+        return (
+          <article key={section.title} className="rounded-lg border border-[color:var(--color-border)] bg-white p-5 shadow-sm">
+            <div className="grid h-12 w-12 place-items-center rounded-md bg-[color:var(--color-surface-muted)] text-[color:var(--color-primary)]">
+              <Icon aria-hidden="true" size={24} strokeWidth={1.8} />
+            </div>
+            <h2 className="mt-4 text-lg font-semibold leading-snug">{section.title}</h2>
+            <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">{section.text}</p>
+          </article>
+        );
+      })}
+    </section>
+  );
+}
+
 export async function HomePageView({ locale, currentPath }: PublicPageProps) {
   const dict = getDictionary(locale);
   const content = getLocalizedContentLists(locale);
@@ -301,16 +407,23 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
 
         <section className="border-y border-[color:var(--color-border)] bg-white py-14">
           <div className="page-shell grid gap-5 md:grid-cols-3">
-            {dict.home.introCards.map((card) => (
-              <Link
-                key={card.title}
-                href={localizedPath(card.href, locale)}
-                className="rounded-lg border border-[color:var(--color-border)] p-5 transition hover:border-[color:var(--color-primary)]"
-              >
-                <h3 className="text-xl font-semibold">{card.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">{card.text}</p>
-              </Link>
-            ))}
+            {dict.home.introCards.map((card, index) => {
+              const Icon = homeIntroCardIcons[index] ?? BookOpen;
+
+              return (
+                <Link
+                  key={card.title}
+                  href={localizedPath(card.href, locale)}
+                  className="group rounded-lg border border-[color:var(--color-border)] p-5 transition hover:border-[color:var(--color-primary)] hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-primary)]"
+                >
+                  <span className="mb-4 grid h-12 w-12 place-items-center rounded-md bg-[color:var(--color-surface-muted)] text-[color:var(--color-primary)] transition group-hover:bg-[color:var(--color-primary)] group-hover:text-white">
+                    <Icon aria-hidden="true" className="h-7 w-7" strokeWidth={1.8} />
+                  </span>
+                  <h3 className="text-xl font-semibold">{card.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">{card.text}</p>
+                </Link>
+              );
+            })}
           </div>
         </section>
 
@@ -328,18 +441,22 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {countries.map((country) => (
-              <article key={country.slug} className="rounded-lg border border-[color:var(--color-border)] bg-white p-5">
+              <article key={country.slug} className="flex h-full flex-col rounded-lg border border-[color:var(--color-border)] bg-white p-5">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
                   {country.mainRisk}
                 </p>
-                <h3 className="mt-2 text-xl font-semibold">{country.name}</h3>
+                <h3 className="mt-2 text-xl font-semibold">
+                  <CountryLabel country={country.name} />
+                </h3>
                 <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">{country.summary}</p>
-                <Link
-                  href={localizedPath(`/perfiles/${country.slug}`, locale)}
-                  className="mt-4 inline-flex text-sm font-semibold text-[color:var(--color-primary)]"
-                >
-                  {dict.home.viewProfile}
-                </Link>
+                <div className="mt-auto pt-5">
+                  <Link
+                    href={localizedPath(`/perfiles/${country.slug}`, locale)}
+                    className={homeCardActionClassName}
+                  >
+                    {dict.home.viewProfile}
+                  </Link>
+                </div>
               </article>
             ))}
           </div>
@@ -363,7 +480,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
                 <article key={story.id} className="rounded-lg border border-white/15 p-4">
                   <div className="rise-story-thumbnail aspect-video rounded-md bg-white/10" />
                   <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-white/70">
-                    {story.country ?? dict.common.latinAmerica}
+                    <CountryLabel country={story.country} fallback={dict.common.latinAmerica} />
                   </p>
                   <h3 className="mt-2 font-semibold">{story.title}</h3>
                   <p className="mt-2 text-sm leading-6 text-white/75">{story.mainRisk ?? story.summary}</p>
@@ -387,7 +504,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
           </div>
           <div className="grid gap-5 md:grid-cols-3">
             {cases.slice(0, 3).map((item) => (
-              <CaseCard key={item.id} item={item} locale={locale} />
+              <CaseCard key={item.id} item={item} locale={locale} actionVariant="button" />
             ))}
           </div>
         </section>
@@ -513,7 +630,7 @@ export async function MapPageView({
         </div>
 
         <MapExplorer
-          key={`${initialFilters?.risk ?? ""}:${initialFilters?.measure ?? ""}`}
+          key={`${initialFilters?.country ?? ""}:${initialFilters?.risk ?? ""}:${initialFilters?.measure ?? ""}`}
           cases={localizedCases}
           categories={localizedCategories}
           initialFilters={initialFilters}
@@ -547,7 +664,7 @@ export async function StoriesPageView({ locale, currentPath }: PublicPageProps) 
               <StoryMedia fallbackLabel={dict.stories.videoPlaceholder} story={story} />
               <div className="p-5">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
-                  {story.country ?? dict.common.latinAmerica}
+                  <CountryLabel country={story.country} fallback={dict.common.latinAmerica} />
                 </p>
                 <h2 className="mt-2 text-xl font-semibold">{story.title}</h2>
                 <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">
@@ -570,15 +687,18 @@ export async function StoriesPageView({ locale, currentPath }: PublicPageProps) 
 
 export async function StoryPageView({ locale, currentPath, slug }: PublicPageProps & { slug: string }) {
   const dict = getDictionary(locale);
-  const story = await getStoryBySlug(slug);
+  const [story, publishedCases] = await Promise.all([getStoryBySlug(slug), getPublishedCases()]);
 
   if (!story) {
     notFound();
   }
 
-  const profileCountry = story.country
-    ? getLocalizedCountries(locale).find((country) => country.name.toLowerCase() === story.country?.toLowerCase())
+  const profileCountrySlug = getCountrySlugFromName(story.country);
+  const profileCountry = profileCountrySlug
+    ? getLocalizedCountries(locale).find((country) => country.slug === profileCountrySlug)
     : undefined;
+  const relatedCases = getRelatedCasesForStory(story, localizeCases(publishedCases, locale));
+  const countryMeasuresHref = story.country ? mapFilterPath(locale, "country", story.country) : localizedPath("/mapa", locale);
 
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
@@ -587,8 +707,19 @@ export async function StoryPageView({ locale, currentPath, slug }: PublicPagePro
           <div className="page-shell grid gap-8 py-10 lg:grid-cols-[0.95fr_1.05fr]">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
-                {[story.country, story.territory].filter(Boolean).join(" · ") || dict.stories.eyebrow}
+                {story.country || story.territory ? (
+                  <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+                    {story.country ? <CountryLabel country={story.country} /> : null}
+                    {story.country && story.territory ? <span aria-hidden="true">·</span> : null}
+                    {story.territory ? <span>{story.territory}</span> : null}
+                  </span>
+                ) : (
+                  dict.stories.eyebrow
+                )}
               </p>
+              <div className="mt-5 grid h-14 w-14 place-items-center rounded-md bg-[color:var(--color-surface-muted)] text-[color:var(--color-primary)]">
+                <StoryThemeIcon story={story} />
+              </div>
               <h1 className="mt-2 text-4xl font-semibold">{story.title}</h1>
               <p className="mt-4 text-lg leading-8 text-[color:var(--color-muted)]">
                 {story.summary}
@@ -600,8 +731,59 @@ export async function StoryPageView({ locale, currentPath, slug }: PublicPagePro
           </div>
         </section>
 
+        <StorySectionHighlights sections={dict.stories.sections} />
+
         <section className="page-shell py-10">
           <StoryBody story={story} />
+        </section>
+
+        <section className="border-y border-[color:var(--color-border)] bg-white py-10">
+          <div className="page-shell grid gap-6 lg:grid-cols-[0.75fr_1.25fr]">
+            <div className="space-y-4">
+              <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
+                {dict.stories.relatedMeasuresEyebrow}
+              </p>
+              <h2 className="text-2xl font-semibold">{dict.stories.relatedMeasuresTitle}</h2>
+              <p className="text-sm leading-6 text-[color:var(--color-muted)]">
+                {relatedCases.length > 0 ? dict.stories.relatedMeasuresText : dict.stories.relatedMeasuresFallback}
+              </p>
+              <Link
+                href={countryMeasuresHref}
+                className="inline-flex items-center gap-2 rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
+              >
+                {dict.stories.viewCountryMeasures}
+                <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            </div>
+            {relatedCases.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                {relatedCases.slice(0, 4).map((relatedCase) => (
+                  <article key={relatedCase.id} className="rounded-lg border border-[color:var(--color-border)] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
+                      <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <CountryLabel country={relatedCase.country} fallback={dict.common.latinAmerica} />
+                        <span aria-hidden="true">·</span>
+                        <span>{getCaseRiskLabel(relatedCase, locale)}</span>
+                      </span>
+                    </p>
+                    <h3 className="mt-2 text-lg font-semibold">{relatedCase.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                      {relatedCase.shortDescription}
+                    </p>
+                    <Link
+                      href={localizedPath(`/casos/${relatedCase.slug}`, locale)}
+                      className="mt-4 inline-flex items-center gap-2 rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-primary)]"
+                    >
+                      {dict.stories.viewRelatedMeasure}
+                      <ArrowRight size={16} aria-hidden="true" />
+                    </Link>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              null
+            )}
+          </div>
         </section>
 
         <section className="page-shell pb-12">
@@ -610,7 +792,9 @@ export async function StoryPageView({ locale, currentPath, slug }: PublicPagePro
             <dl className="mt-4 grid gap-4 text-sm md:grid-cols-3">
               <div>
                 <dt className="font-semibold">{dict.common.country}</dt>
-                <dd className="text-[color:var(--color-muted)]">{story.country ?? dict.common.latinAmerica}</dd>
+                <dd className="text-[color:var(--color-muted)]">
+                  <CountryLabel country={story.country} fallback={dict.common.latinAmerica} />
+                </dd>
               </div>
               <div>
                 <dt className="font-semibold">{dict.common.mainRisk}</dt>
@@ -669,7 +853,9 @@ export async function CountryProfilesPageView({ locale, currentPath }: PublicPag
               <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
                 {country.territory}
               </p>
-              <h2 className="mt-2 text-2xl font-semibold">{country.name}</h2>
+              <h2 className="mt-2 text-2xl font-semibold">
+                <CountryLabel country={country.name} />
+              </h2>
               <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">{country.summary}</p>
               <dl className="mt-4 grid gap-3 text-sm">
                 <div>
@@ -712,7 +898,9 @@ export async function CountryProfilePageView({ locale, currentPath, slug }: Publ
               <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
                 {dict.profiles.nationalProfile}
               </p>
-              <h1 className="mt-2 text-4xl font-semibold">{country.name}</h1>
+              <h1 className="mt-2 text-4xl font-semibold">
+                <CountryLabel country={country.name} />
+              </h1>
               <p className="mt-4 text-lg leading-8 text-[color:var(--color-muted)]">{country.summary}</p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
@@ -757,7 +945,13 @@ export async function CountryProfilePageView({ locale, currentPath, slug }: Publ
         <section className="page-shell grid gap-5 py-10 md:grid-cols-2">
           {dict.profiles.sections.map((section, index) => (
             <article key={section} className="rounded-lg border border-[color:var(--color-border)] bg-white p-5">
-              <h2 className="text-xl font-semibold">{section}</h2>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-xl font-semibold">{section}</h2>
+                <CountryLabel
+                  country={country.name}
+                  className="text-sm font-semibold text-[color:var(--color-primary)]"
+                />
+              </div>
               <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">
                 {profileSectionContent(country, index, dict)}
               </p>
@@ -847,7 +1041,7 @@ export function RegionalReportPageView({ locale, currentPath }: PublicPageProps)
                   href={localizedPath(`/perfiles/${country.slug}`, locale)}
                   className="rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"
                 >
-                  {country.name}
+                  <CountryLabel country={country.name} />
                 </Link>
               ))}
             </div>
@@ -909,7 +1103,9 @@ export function MethodologyPageView({ locale, currentPath }: PublicPageProps) {
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {countries.map((country) => (
               <div key={country.slug} className="rounded-lg border border-[color:var(--color-border)] bg-white p-4">
-                <h3 className="font-semibold">{country.name}</h3>
+                <h3 className="font-semibold">
+                  <CountryLabel country={country.name} />
+                </h3>
                 <p className="mt-2 text-sm text-[color:var(--color-muted)]">{country.mainRisk}</p>
               </div>
             ))}
@@ -922,7 +1118,8 @@ export function MethodologyPageView({ locale, currentPath }: PublicPageProps) {
 
 export async function CasePageView({ locale, currentPath, slug }: PublicPageProps & { slug: string }) {
   const dict = getDictionary(locale);
-  const item = localizeCase(await getCaseBySlug(slug), locale);
+  const [caseItem, stories] = await Promise.all([getCaseBySlug(slug), getPublishedStories()]);
+  const item = localizeCase(caseItem, locale);
 
   if (!item) {
     notFound();
@@ -931,6 +1128,7 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
   const cover = item.images.find((image) => image.isCover) ?? item.images[0];
   const caseRisk = getCaseRiskLabel(item, locale);
   const measureLabels = getCaseMeasureLabels(item);
+  const relatedStory = getRelatedStoryForCase(item, stories);
   const classificationChips = [
     { href: mapFilterPath(locale, "risk", caseRisk), label: caseRisk },
     ...measureLabels.map((label) => ({ href: mapFilterPath(locale, "measure", label), label })),
@@ -965,7 +1163,13 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
           ) : null}
           <div className="space-y-5">
             <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
-              {item.category.name} · {caseRisk}
+              <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+                {item.country ? <CountryLabel country={item.country} /> : null}
+                {item.country ? <span aria-hidden="true">·</span> : null}
+                <span>
+                  {item.category.name} · {caseRisk}
+                </span>
+              </span>
             </p>
             <h1 className="text-4xl font-semibold leading-tight">{item.title}</h1>
             <p className="text-lg leading-8 text-[color:var(--color-muted)]">
@@ -985,7 +1189,9 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
             <dl className="grid gap-3 rounded-lg border border-[color:var(--color-border)] bg-white p-5 text-sm md:grid-cols-2">
               <div>
                 <dt className="font-semibold">{dict.common.country}</dt>
-                <dd className="text-[color:var(--color-muted)]">{item.country ?? dict.common.tbd}</dd>
+                <dd className="text-[color:var(--color-muted)]">
+                  <CountryLabel country={item.country} fallback={dict.common.tbd} />
+                </dd>
               </div>
               <div>
                 <dt className="font-semibold">{dict.common.region}</dt>
@@ -1013,7 +1219,9 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                 </div>
                 <div>
                   <dt className="font-semibold">{dict.common.country}</dt>
-                  <dd className="text-[color:var(--color-muted)]">{item.country ?? dict.common.toComplete}</dd>
+                  <dd className="text-[color:var(--color-muted)]">
+                    <CountryLabel country={item.country} fallback={dict.common.toComplete} />
+                  </dd>
                 </div>
                 <div>
                   <dt className="font-semibold">{dict.case.threat}</dt>
@@ -1076,6 +1284,44 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                     </p>
                   </div>
                 </div>
+              </section>
+
+              <section className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)] p-6">
+                <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
+                  {dict.case.relatedStoryEyebrow}
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold">
+                  {relatedStory ? dict.case.relatedStoryTitle : dict.case.relatedStoryFallbackTitle}
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">
+                  {relatedStory ? dict.case.relatedStoryText : dict.case.relatedStoryFallbackText}
+                </p>
+                {relatedStory ? (
+                  <div className="mt-5">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
+                      <CountryLabel country={relatedStory.country} fallback={dict.common.latinAmerica} />
+                    </p>
+                    <h3 className="mt-2 text-lg font-semibold">{relatedStory.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
+                      {relatedStory.summary}
+                    </p>
+                    <Link
+                      href={localizedPath(`/historias/${relatedStory.slug}`, locale)}
+                      className="mt-4 inline-flex items-center gap-2 rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
+                    >
+                      <BookOpen size={16} aria-hidden="true" />
+                      {dict.case.viewRelatedStory}
+                    </Link>
+                  </div>
+                ) : (
+                  <Link
+                    href={localizedPath("/historias", locale)}
+                    className="mt-5 inline-flex items-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--color-primary)]"
+                  >
+                    {dict.case.viewStories}
+                    <ArrowRight size={16} aria-hidden="true" />
+                  </Link>
+                )}
               </section>
 
               <section className="rounded-lg border border-[color:var(--color-border)] bg-white p-6">
