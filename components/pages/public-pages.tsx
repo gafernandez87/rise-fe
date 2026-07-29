@@ -5,13 +5,22 @@ import { notFound } from "next/navigation";
 import { CaseCard } from "@/components/cases/case-card";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { SiteHeader } from "@/components/layout/site-header";
+import { MapPreviewLoader } from "@/components/map/map-loader";
 import { MapExplorer } from "@/components/map/map-explorer";
-import { getCategories, getCaseBySlug, getMapCases, getPublishedCases } from "@/lib/api";
+import {
+  getCategories,
+  getCaseBySlug,
+  getCountryProfileBySlug,
+  getMapCases,
+  getPublishedCountryProfiles,
+  getPublishedCases,
+  getPublishedStories,
+  getStoryBySlug,
+} from "@/lib/api";
 import {
   getDictionary,
   getLocalizedContentLists,
   getLocalizedCountries,
-  getLocalizedCountryBySlug,
   localizeCase,
   localizeCases,
   localizeCategories,
@@ -19,19 +28,37 @@ import {
   localizedPath,
   type Locale,
 } from "@/lib/i18n";
+import { mapFilterPath, type MapInitialFilters } from "@/lib/map-filters";
 import { organizations, type OrganizationLogo } from "@/lib/rise-content";
+import type { CountryProfile } from "@/types/country-profiles";
+import type { ResilienceStory } from "@/types/stories";
+import type { AdaptationCase } from "@/types/cases";
 
 type PublicPageProps = {
   locale: Locale;
   currentPath: string;
 };
 
+function uniqueLabels(labels: Array<string | null | undefined>) {
+  return labels.filter((label, index): label is string => Boolean(label) && labels.indexOf(label) === index);
+}
+
+function getCaseRiskLabel(item: AdaptationCase, locale: Locale) {
+  const dict = getDictionary(locale);
+
+  return item.threat ?? dict.mapExplorer.riskBySeverity[item.severity];
+}
+
+function getCaseMeasureLabels(item: AdaptationCase) {
+  return uniqueLabels([item.measureType, item.category.name]);
+}
+
 const collaboratorOrganizations = [...organizations.support, ...organizations.participants];
 
 function PublicChrome({ locale, currentPath, children }: PublicPageProps & { children: ReactNode }) {
   return (
     <>
-      <SiteHeader />
+      <SiteHeader locale={locale} currentPath={currentPath} />
       <LanguageSwitcher locale={locale} currentPath={currentPath} />
       {children}
       <SiteFooter locale={locale} />
@@ -83,27 +110,49 @@ function SiteFooter({ locale }: { locale: Locale }) {
   );
 }
 
+function fallbackProfileContent(country: CountryProfile, dict: ReturnType<typeof getDictionary>) {
+  return `${dict.profiles.placeholderPrefix} ${country.name}. ${dict.profiles.placeholderSuffix}`;
+}
+
+function profileSectionContent(country: CountryProfile, sectionIndex: number, dict: ReturnType<typeof getDictionary>) {
+  const fallback = fallbackProfileContent(country, dict);
+  const contents = [
+    country.summary,
+    country.climateThreats ?? country.risks.join(", "),
+    country.exposureAndVulnerabilities,
+    country.riskAnalysis,
+    null,
+    country.sector,
+    country.territory,
+    country.adaptationMeasures,
+    country.featuredStory ?? country.storyTitle,
+    country.sources,
+  ];
+
+  return contents[sectionIndex] || fallback;
+}
+
 function LogoGroup({ title, items }: { title: string; items: OrganizationLogo[] }) {
   return (
-    <div>
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
-        {title}
+    <div className="rise-logo-group">
+      <h3 className="rise-logo-group__heading text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
+        <span>{title}</span>
       </h3>
-      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="rise-logo-grid">
         {items.map((item) => (
           <div
             key={item.name}
-            className="grid min-h-24 place-items-center px-5 py-4"
-            aria-label={`Logo de ${item.name}`}
+            className="rise-logo-tile"
           >
             <Image
               src={item.logo}
               alt={item.name}
               width={240}
               height={120}
-              className="max-h-16 w-auto max-w-full object-contain"
+              className="rise-logo-tile__image"
               unoptimized={item.logo.endsWith(".svg")}
             />
+            <p className="rise-logo-tile__name">{item.name}</p>
           </div>
         ))}
       </div>
@@ -111,11 +160,73 @@ function LogoGroup({ title, items }: { title: string; items: OrganizationLogo[] 
   );
 }
 
+function isLikelyImageUrl(url: string) {
+  return /\.(avif|gif|jpe?g|png|webp)(\?.*)?$/i.test(url);
+}
+
+function StoryMedia({
+  fallbackLabel,
+  story,
+}: {
+  fallbackLabel: string;
+  story: ResilienceStory;
+}) {
+  if (story.mediaUrl && isLikelyImageUrl(story.mediaUrl)) {
+    return (
+      <div
+        aria-label={story.mediaAlt ?? story.title}
+        className="rise-story-thumbnail aspect-video bg-[color:var(--color-surface-muted)] bg-cover bg-center"
+        role="img"
+        style={{ backgroundImage: `url("${story.mediaUrl.replace(/"/g, '\\"')}")` }}
+      />
+    );
+  }
+
+  if (story.mediaUrl) {
+    return (
+      <div className="rise-story-thumbnail grid aspect-video place-items-center bg-[color:var(--color-surface-muted)] text-sm font-semibold text-[color:var(--color-muted)]">
+        <Link href={story.mediaUrl} target="_blank" rel="noreferrer" className="text-[color:var(--color-primary)]">
+          {fallbackLabel}
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rise-story-thumbnail grid aspect-video place-items-center bg-[color:var(--color-surface-muted)] text-sm font-semibold text-[color:var(--color-muted)]">
+      {fallbackLabel}
+    </div>
+  );
+}
+
+function StoryBody({ story }: { story: ResilienceStory }) {
+  const paragraphs = story.content
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+
+  return (
+    <article className="rounded-lg border border-[color:var(--color-border)] bg-white p-5">
+      <div className="space-y-4 text-base leading-8 text-[color:var(--color-muted)]">
+        {paragraphs.map((paragraph) => (
+          <p key={paragraph}>{paragraph}</p>
+        ))}
+      </div>
+    </article>
+  );
+}
+
 export async function HomePageView({ locale, currentPath }: PublicPageProps) {
   const dict = getDictionary(locale);
   const content = getLocalizedContentLists(locale);
   const countries = getLocalizedCountries(locale);
-  const cases = localizeCases(await getPublishedCases(), locale);
+  const [publishedCases, stories, mapCases] = await Promise.all([
+    getPublishedCases(),
+    getPublishedStories(),
+    getMapCases(),
+  ]);
+  const cases = localizeCases(publishedCases, locale);
+  const localizedMapCases = localizeMapCases(mapCases, locale);
 
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
@@ -142,40 +253,14 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
               <p className="max-w-2xl text-lg leading-8 text-[color:var(--color-muted)]">
                 {dict.home.intro}
               </p>
-              <div className="flex flex-wrap gap-3">
-                <Link
-                  href={localizedPath("/mapa", locale)}
-                  className="rounded-md bg-[color:var(--color-primary)] px-5 py-3 text-sm font-semibold text-white"
-                >
-                  {dict.home.ctaMap}
-                </Link>
-                <Link
-                  href={localizedPath("/historias", locale)}
-                  className="rounded-md border border-[color:var(--color-border)] bg-white px-5 py-3 text-sm font-semibold"
-                >
-                  {dict.home.ctaStories}
-                </Link>
-                <Link
-                  href={localizedPath("/informe-regional", locale)}
-                  className="rounded-md border border-[color:var(--color-border)] bg-white px-5 py-3 text-sm font-semibold"
-                >
-                  {dict.home.ctaReport}
-                </Link>
-              </div>
             </div>
-            <Link
-              href={localizedPath("/mapa", locale)}
-              className="rise-map-card hidden overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white shadow-sm md:block"
-              aria-label={dict.home.ctaMap}
-            >
-              <div className="relative aspect-[4/3] bg-[#a9d7e6]">
-                <Image
-                  src="/mapa landing.png"
-                  alt={dict.home.mapCardTitle}
-                  width={548}
-                  height={696}
-                  className="h-full w-full object-contain"
-                />
+            <article className="rise-map-card overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white shadow-sm">
+              <div
+                className="rise-map-preview relative aspect-[4/3] bg-[#a9d7e6]"
+                role="img"
+                aria-label={dict.home.mapCardTitle}
+              >
+                <MapPreviewLoader cases={localizedMapCases} locale={locale} />
               </div>
               <div className="border-t border-[color:var(--color-border)] bg-[color:var(--color-brand-cream)] p-5">
                 <p className="text-sm font-semibold text-[color:var(--color-primary)]">
@@ -184,8 +269,17 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
                 <p className="mt-2 text-2xl font-semibold text-[color:var(--color-text)]">
                   {dict.home.mapCardTitle}
                 </p>
+                <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">
+                  {dict.map.text}
+                </p>
+                <Link
+                  href={localizedPath("/mapa", locale)}
+                  className="mt-5 inline-flex rounded-md bg-[color:var(--color-primary)] px-5 py-3 text-sm font-semibold text-white"
+                >
+                  {dict.home.ctaMap}
+                </Link>
               </div>
-            </Link>
+            </article>
           </div>
         </section>
 
@@ -265,14 +359,14 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
               </Link>
             </div>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {countries.map((country) => (
-                <article key={country.slug} className="rounded-lg border border-white/15 p-4">
+              {stories.slice(0, 3).map((story) => (
+                <article key={story.id} className="rounded-lg border border-white/15 p-4">
                   <div className="rise-story-thumbnail aspect-video rounded-md bg-white/10" />
                   <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-white/70">
-                    {country.name}
+                    {story.country ?? dict.common.latinAmerica}
                   </p>
-                  <h3 className="mt-2 font-semibold">{country.storyTitle}</h3>
-                  <p className="mt-2 text-sm leading-6 text-white/75">{country.mainRisk}</p>
+                  <h3 className="mt-2 font-semibold">{story.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-white/75">{story.mainRisk ?? story.summary}</p>
                 </article>
               ))}
             </div>
@@ -353,24 +447,36 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
           </div>
         </section>
 
-        <section className="border-t border-[color:var(--color-border)] bg-white py-14">
+        <section className="rise-organizations border-t border-[color:var(--color-border)] py-16">
           <div className="page-shell space-y-8">
-            <div className="flex flex-wrap items-center justify-center gap-6 text-center sm:justify-start sm:text-left">
+            <div className="rise-organizations__intro">
               <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
-                {dict.home.projectBy}
+                {dict.home.organizationsEyebrow}
               </p>
-              <Link href="https://www.somosclaac.org/" aria-label="CLAAC">
-                <Image
-                  src="/brand/organizations/claac.png"
-                  alt="CLAAC - Coalicion para Latinoamerica de Accion Climatica"
-                  width={1920}
-                  height={1080}
-                  className="h-auto w-44"
-                  loading="eager"
-                />
-              </Link>
+              <h2 className="mt-2 text-3xl font-semibold">{dict.home.organizationsTitle}</h2>
             </div>
-            <LogoGroup title={dict.home.collaborators} items={collaboratorOrganizations} />
+            <div className="rise-organizations__layout">
+              <article className="rise-organizations__lead">
+                <h3 className="rise-logo-group__heading text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
+                  <span>{dict.home.projectBy.replace(/:$/, "")}</span>
+                </h3>
+                <Link
+                  href="https://www.somosclaac.org/"
+                  className="rise-organizations__lead-logo"
+                  aria-label="CLAAC"
+                >
+                  <Image
+                    src="/brand/organizations/claac.png"
+                    alt="CLAAC - Coalicion para Latinoamerica de Accion Climatica"
+                    width={1920}
+                    height={1080}
+                    className="rise-organizations__lead-image"
+                    loading="eager"
+                  />
+                </Link>
+              </article>
+              <LogoGroup title={dict.home.collaborators} items={collaboratorOrganizations} />
+            </div>
           </div>
         </section>
       </main>
@@ -378,7 +484,11 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
   );
 }
 
-export async function MapPageView({ locale, currentPath }: PublicPageProps) {
+export async function MapPageView({
+  locale,
+  currentPath,
+  initialFilters,
+}: PublicPageProps & { initialFilters?: MapInitialFilters }) {
   const dict = getDictionary(locale);
   const [cases, categories] = await Promise.all([getMapCases(), getCategories()]);
   const localizedCases = localizeMapCases(cases, locale);
@@ -402,15 +512,21 @@ export async function MapPageView({ locale, currentPath }: PublicPageProps) {
           </p>
         </div>
 
-        <MapExplorer cases={localizedCases} categories={localizedCategories} locale={locale} />
+        <MapExplorer
+          key={`${initialFilters?.risk ?? ""}:${initialFilters?.measure ?? ""}`}
+          cases={localizedCases}
+          categories={localizedCategories}
+          initialFilters={initialFilters}
+          locale={locale}
+        />
       </main>
     </PublicChrome>
   );
 }
 
-export function StoriesPageView({ locale, currentPath }: PublicPageProps) {
+export async function StoriesPageView({ locale, currentPath }: PublicPageProps) {
   const dict = getDictionary(locale);
-  const countries = getLocalizedCountries(locale);
+  const stories = await getPublishedStories();
 
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
@@ -426,22 +542,19 @@ export function StoriesPageView({ locale, currentPath }: PublicPageProps) {
         </div>
 
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {countries.map((country) => (
-            <article key={country.slug} className="overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white">
-              <div className="rise-story-thumbnail grid aspect-video place-items-center bg-[color:var(--color-surface-muted)] text-sm font-semibold text-[color:var(--color-muted)]">
-                {dict.stories.videoPlaceholder}
-              </div>
+          {stories.map((story) => (
+            <article key={story.id} className="overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white">
+              <StoryMedia fallbackLabel={dict.stories.videoPlaceholder} story={story} />
               <div className="p-5">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
-                  {country.name}
+                  {story.country ?? dict.common.latinAmerica}
                 </p>
-                <h2 className="mt-2 text-xl font-semibold">{country.storyTitle}</h2>
+                <h2 className="mt-2 text-xl font-semibold">{story.title}</h2>
                 <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">
-                  {dict.stories.storyAboutPrefix} {country.mainRisk.toLowerCase()}{" "}
-                  {dict.stories.storyAboutMiddle} {country.territory.toLowerCase()}.
+                  {story.summary}
                 </p>
                 <Link
-                  href={localizedPath(`/historias/${country.slug}`, locale)}
+                  href={localizedPath(`/historias/${story.slug}`, locale)}
                   className="mt-5 inline-flex rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
                 >
                   {dict.stories.viewStory}
@@ -455,13 +568,17 @@ export function StoriesPageView({ locale, currentPath }: PublicPageProps) {
   );
 }
 
-export function StoryPageView({ locale, currentPath, slug }: PublicPageProps & { slug: string }) {
+export async function StoryPageView({ locale, currentPath, slug }: PublicPageProps & { slug: string }) {
   const dict = getDictionary(locale);
-  const country = getLocalizedCountryBySlug(locale, slug);
+  const story = await getStoryBySlug(slug);
 
-  if (!country) {
+  if (!story) {
     notFound();
   }
+
+  const profileCountry = story.country
+    ? getLocalizedCountries(locale).find((country) => country.name.toLowerCase() === story.country?.toLowerCase())
+    : undefined;
 
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
@@ -470,26 +587,21 @@ export function StoryPageView({ locale, currentPath, slug }: PublicPageProps & {
           <div className="page-shell grid gap-8 py-10 lg:grid-cols-[0.95fr_1.05fr]">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
-                {country.name} · {country.territory}
+                {[story.country, story.territory].filter(Boolean).join(" · ") || dict.stories.eyebrow}
               </p>
-              <h1 className="mt-2 text-4xl font-semibold">{country.storyTitle}</h1>
+              <h1 className="mt-2 text-4xl font-semibold">{story.title}</h1>
               <p className="mt-4 text-lg leading-8 text-[color:var(--color-muted)]">
-                {dict.stories.heroTextPrefix} {country.mainRisk.toLowerCase()}.
+                {story.summary}
               </p>
             </div>
-            <div className="rise-media-placeholder grid aspect-video place-items-center rounded-lg bg-[color:var(--color-surface-muted)] text-sm font-semibold text-[color:var(--color-muted)]">
-              {dict.stories.mediaPlaceholder}
+            <div className="overflow-hidden rounded-lg">
+              <StoryMedia fallbackLabel={dict.stories.mediaPlaceholder} story={story} />
             </div>
           </div>
         </section>
 
-        <section className="page-shell grid gap-5 py-10 md:grid-cols-2">
-          {dict.stories.sections.map((section) => (
-            <article key={section.title} className="rounded-lg border border-[color:var(--color-border)] bg-white p-5">
-              <h2 className="text-xl font-semibold">{section.title}</h2>
-              <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">{section.text}</p>
-            </article>
-          ))}
+        <section className="page-shell py-10">
+          <StoryBody story={story} />
         </section>
 
         <section className="page-shell pb-12">
@@ -498,11 +610,11 @@ export function StoryPageView({ locale, currentPath, slug }: PublicPageProps & {
             <dl className="mt-4 grid gap-4 text-sm md:grid-cols-3">
               <div>
                 <dt className="font-semibold">{dict.common.country}</dt>
-                <dd className="text-[color:var(--color-muted)]">{country.name}</dd>
+                <dd className="text-[color:var(--color-muted)]">{story.country ?? dict.common.latinAmerica}</dd>
               </div>
               <div>
                 <dt className="font-semibold">{dict.common.mainRisk}</dt>
-                <dd className="text-[color:var(--color-muted)]">{country.mainRisk}</dd>
+                <dd className="text-[color:var(--color-muted)]">{story.mainRisk ?? dict.stories.eyebrow}</dd>
               </div>
               <div>
                 <dt className="font-semibold">{dict.common.involvedActors}</dt>
@@ -510,9 +622,16 @@ export function StoryPageView({ locale, currentPath, slug }: PublicPageProps & {
               </div>
             </dl>
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link href={localizedPath(`/perfiles/${country.slug}`, locale)} className="text-sm font-semibold text-[color:var(--color-primary)]">
-                {dict.stories.viewCountryProfile}
-              </Link>
+              {profileCountry ? (
+                <Link href={localizedPath(`/perfiles/${profileCountry.slug}`, locale)} className="text-sm font-semibold text-[color:var(--color-primary)]">
+                  {dict.stories.viewCountryProfile}
+                </Link>
+              ) : null}
+              {story.sourceUrl ? (
+                <Link href={story.sourceUrl} target="_blank" rel="noreferrer" className="text-sm font-semibold text-[color:var(--color-primary)]">
+                  {dict.case.viewSource}
+                </Link>
+              ) : null}
               <Link href={localizedPath("/historias", locale)} className="text-sm font-semibold text-[color:var(--color-primary)]">
                 {dict.stories.viewOtherStories}
               </Link>
@@ -527,9 +646,9 @@ export function StoryPageView({ locale, currentPath, slug }: PublicPageProps & {
   );
 }
 
-export function CountryProfilesPageView({ locale, currentPath }: PublicPageProps) {
+export async function CountryProfilesPageView({ locale, currentPath }: PublicPageProps) {
   const dict = getDictionary(locale);
-  const countries = getLocalizedCountries(locale);
+  const countries = await getPublishedCountryProfiles();
 
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
@@ -576,9 +695,9 @@ export function CountryProfilesPageView({ locale, currentPath }: PublicPageProps
   );
 }
 
-export function CountryProfilePageView({ locale, currentPath, slug }: PublicPageProps & { slug: string }) {
+export async function CountryProfilePageView({ locale, currentPath, slug }: PublicPageProps & { slug: string }) {
   const dict = getDictionary(locale);
-  const country = getLocalizedCountryBySlug(locale, slug);
+  const country = await getCountryProfileBySlug(slug);
 
   if (!country) {
     notFound();
@@ -602,12 +721,16 @@ export function CountryProfilePageView({ locale, currentPath, slug }: PublicPage
                 >
                   {dict.profiles.viewCasesMap}
                 </Link>
-                <a
-                  href="#"
-                  className="rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"
-                >
-                  {dict.profiles.downloadPdf}
-                </a>
+                {country.profilePdfUrl ? (
+                  <a
+                    href={country.profilePdfUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"
+                  >
+                    {dict.profiles.downloadPdf}
+                  </a>
+                ) : null}
               </div>
             </div>
             <dl className="grid gap-4 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)] p-5 sm:grid-cols-2">
@@ -632,11 +755,11 @@ export function CountryProfilePageView({ locale, currentPath, slug }: PublicPage
         </section>
 
         <section className="page-shell grid gap-5 py-10 md:grid-cols-2">
-          {dict.profiles.sections.map((section) => (
+          {dict.profiles.sections.map((section, index) => (
             <article key={section} className="rounded-lg border border-[color:var(--color-border)] bg-white p-5">
               <h2 className="text-xl font-semibold">{section}</h2>
               <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">
-                {dict.profiles.placeholderPrefix} {country.name}. {dict.profiles.placeholderSuffix}
+                {profileSectionContent(country, index, dict)}
               </p>
             </article>
           ))}
@@ -806,6 +929,12 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
   }
 
   const cover = item.images.find((image) => image.isCover) ?? item.images[0];
+  const caseRisk = getCaseRiskLabel(item, locale);
+  const measureLabels = getCaseMeasureLabels(item);
+  const classificationChips = [
+    { href: mapFilterPath(locale, "risk", caseRisk), label: caseRisk },
+    ...measureLabels.map((label) => ({ href: mapFilterPath(locale, "measure", label), label })),
+  ];
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -836,12 +965,23 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
           ) : null}
           <div className="space-y-5">
             <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
-              {item.category.name} · {dict.mapExplorer.severityLabels[item.severity]}
+              {item.category.name} · {caseRisk}
             </p>
             <h1 className="text-4xl font-semibold leading-tight">{item.title}</h1>
             <p className="text-lg leading-8 text-[color:var(--color-muted)]">
               {item.shortDescription}
             </p>
+            <div className="flex flex-wrap gap-2">
+              {classificationChips.map((chip) => (
+                <Link
+                  key={`${chip.href}-${chip.label}`}
+                  href={chip.href}
+                  className="inline-flex min-h-9 items-center rounded-full border border-[color:var(--color-primary)] bg-white px-3 py-1 text-sm font-semibold text-[color:var(--color-primary)] transition hover:bg-[color:var(--color-surface-muted)]"
+                >
+                  {chip.label}
+                </Link>
+              ))}
+            </div>
             <dl className="grid gap-3 rounded-lg border border-[color:var(--color-border)] bg-white p-5 text-sm md:grid-cols-2">
               <div>
                 <dt className="font-semibold">{dict.common.country}</dt>
@@ -877,11 +1017,28 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                 </div>
                 <div>
                   <dt className="font-semibold">{dict.case.threat}</dt>
-                  <dd className="text-[color:var(--color-muted)]">{dict.mapExplorer.severityLabels[item.severity]}</dd>
+                  <dd className="mt-1">
+                    <Link
+                      href={mapFilterPath(locale, "risk", caseRisk)}
+                      className="inline-flex min-h-8 items-center rounded-full border border-[color:var(--color-primary)] px-3 py-1 text-xs font-semibold text-[color:var(--color-primary)] transition hover:bg-[color:var(--color-surface-muted)]"
+                    >
+                      {caseRisk}
+                    </Link>
+                  </dd>
                 </div>
                 <div>
                   <dt className="font-semibold">{dict.case.measureSector}</dt>
-                  <dd className="text-[color:var(--color-muted)]">{item.category.name}</dd>
+                  <dd className="mt-1 flex flex-wrap gap-2">
+                    {measureLabels.map((label) => (
+                      <Link
+                        key={label}
+                        href={mapFilterPath(locale, "measure", label)}
+                        className="inline-flex min-h-8 items-center rounded-full border border-[color:var(--color-primary)] px-3 py-1 text-xs font-semibold text-[color:var(--color-primary)] transition hover:bg-[color:var(--color-surface-muted)]"
+                      >
+                        {label}
+                      </Link>
+                    ))}
+                  </dd>
                 </div>
                 <div>
                   <dt className="font-semibold">{dict.case.source}</dt>

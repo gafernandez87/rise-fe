@@ -1,5 +1,5 @@
 import { StoriesPageView } from "@/components/pages/public-pages";
 
-export default function StoriesPage() {
+export default async function StoriesPage() {
   return <StoriesPageView locale="es" currentPath="/historias" />;
 }

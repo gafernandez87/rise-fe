@@ -16,12 +16,21 @@ const markerIcon = L.divIcon({
   popupAnchor: [0, -14],
 });
 
-const latinAmericaBounds: L.LatLngBoundsExpression = [
+const latinAmericaViewBounds: L.LatLngBoundsExpression = [
   [-58, -120],
   [34, -25],
 ];
 
+const latinAmericaPanBounds: L.LatLngBoundsExpression = [
+  [-68, -130],
+  [48, -15],
+];
+
 const latinAmericaFitPadding = L.point(24, 24);
+const latinAmericaPreviewCenter: L.LatLngExpression = [-17, -66];
+const defaultPopupOffset = L.point(0, 7);
+const popupEdgePadding = 36;
+const popupBelowGap = 28;
 
 const createClusterIcon = (cluster: { getChildCount: () => number }) => {
   const count = cluster.getChildCount();
@@ -44,7 +53,7 @@ function MapBoundsHandler({ layoutSignal }: { layoutSignal: boolean }) {
       map.invalidateSize({ pan: false });
 
       map.setMinZoom(0);
-      const fitZoom = map.getBoundsZoom(latinAmericaBounds, false, latinAmericaFitPadding);
+      const fitZoom = map.getBoundsZoom(latinAmericaViewBounds, false, latinAmericaFitPadding);
       map.setMinZoom(fitZoom);
 
       if (map.getZoom() < fitZoom) {
@@ -56,6 +65,108 @@ function MapBoundsHandler({ layoutSignal }: { layoutSignal: boolean }) {
   }, [layoutSignal, map]);
 
   return null;
+}
+
+function StaticMapSizeHandler() {
+  const map = useMap();
+
+  useEffect(() => {
+    const animationFrame = window.requestAnimationFrame(() => {
+      map.invalidateSize({ pan: false });
+    });
+
+    return () => window.cancelAnimationFrame(animationFrame);
+  }, [map]);
+
+  return null;
+}
+
+function positionPopupFromMarker(popup: L.Popup, map: L.Map, item: MapCase) {
+  const element = popup.getElement();
+
+  if (!element) {
+    return;
+  }
+
+  const markerPoint = map.latLngToContainerPoint([item.latitude, item.longitude]);
+  const popupHeight = element.offsetHeight;
+  const shouldOpenBelow = markerPoint.y < popupHeight + popupEdgePadding;
+
+  popup.options.offset = shouldOpenBelow ? L.point(0, popupHeight + popupBelowGap) : defaultPopupOffset;
+  element.classList.toggle("rise-map-popup--below", shouldOpenBelow);
+  popup.update();
+}
+
+function CaseMarker({
+  dict,
+  item,
+  locale,
+}: {
+  dict: ReturnType<typeof getDictionary>;
+  item: MapCase;
+  locale: Locale;
+}) {
+  const map = useMap();
+
+  return (
+    <Marker
+      key={item.id}
+      position={[item.latitude, item.longitude]}
+      icon={markerIcon}
+      eventHandlers={{
+        popupopen: (event) => {
+          window.requestAnimationFrame(() => positionPopupFromMarker(event.popup, map, item));
+        },
+      }}
+    >
+      <Popup
+        autoPanPaddingBottomRight={[32, 32]}
+        autoPanPaddingTopLeft={[32, 32]}
+        className="rise-map-popup"
+        maxWidth={560}
+        minWidth={280}
+      >
+        <div className={`rise-map-popup__content${item.coverImageUrl ? " rise-map-popup__content--with-image" : ""}`}>
+          {item.coverImageUrl ? (
+            <Image
+              className="rise-map-popup__image"
+              src={item.coverImageUrl}
+              alt=""
+              width={220}
+              height={150}
+              unoptimized
+            />
+          ) : null}
+          <div className="rise-map-popup__body">
+            <p className="rise-map-popup__title">{item.title}</p>
+            <p className="rise-map-popup__description">{item.shortDescription}</p>
+            <dl className="rise-map-popup__meta">
+              <div>
+                <dt>{dict.mapPopup.country}</dt>
+                <dd>{item.country ?? dict.common.tbd}</dd>
+              </div>
+              <div>
+                <dt>{dict.mapPopup.measure}</dt>
+                <dd>{item.measureType ?? item.category.name}</dd>
+              </div>
+              <div>
+                <dt>{dict.mapPopup.organization}</dt>
+                <dd>{dict.common.toComplete}</dd>
+              </div>
+            </dl>
+            <div className="rise-map-popup__actions">
+              <Link href={localizedPath(`/casos/${item.slug}`, locale)}>
+                {dict.mapPopup.viewFullCase}
+              </Link>
+              <Link href={localizedPath(`/perfiles/${item.country?.toLowerCase() ?? ""}`, locale)}>
+                {dict.mapPopup.viewCountryProfile}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </Popup>
+    </Marker>
+  );
 }
 
 export function CasesMap({
@@ -71,10 +182,10 @@ export function CasesMap({
 
   return (
     <MapContainer
-      bounds={latinAmericaBounds}
+      bounds={latinAmericaViewBounds}
       boundsOptions={{ padding: latinAmericaFitPadding }}
       className="rise-map"
-      maxBounds={latinAmericaBounds}
+      maxBounds={latinAmericaPanBounds}
       maxBoundsViscosity={1}
       scrollWheelZoom
       worldCopyJump={false}
@@ -97,53 +208,48 @@ export function CasesMap({
         spiderfyDistanceMultiplier={1.4}
       >
         {cases.map((item) => (
-          <Marker key={item.id} position={[item.latitude, item.longitude]} icon={markerIcon}>
-            <Popup>
-              <div className="max-w-56 space-y-2">
-                {item.coverImageUrl ? (
-                  <Image
-                    className="h-24 w-full rounded object-cover"
-                    src={item.coverImageUrl}
-                    alt=""
-                    width={240}
-                    height={120}
-                    unoptimized
-                  />
-                ) : null}
-                <p className="text-sm font-semibold">{item.title}</p>
-                <p className="text-xs text-[color:var(--color-muted)]">{item.shortDescription}</p>
-                <dl className="grid gap-1 text-xs">
-                  <div>
-                    <dt className="font-semibold">{dict.mapPopup.country}</dt>
-                    <dd>{item.country ?? dict.common.tbd}</dd>
-                  </div>
-                  <div>
-                    <dt className="font-semibold">{dict.mapPopup.measure}</dt>
-                    <dd>{item.measureType ?? item.category.name}</dd>
-                  </div>
-                  <div>
-                    <dt className="font-semibold">{dict.mapPopup.organization}</dt>
-                    <dd>{dict.common.toComplete}</dd>
-                  </div>
-                </dl>
-                <Link
-                  href={localizedPath(`/casos/${item.slug}`, locale)}
-                  className="text-xs font-semibold text-[color:var(--color-primary)]"
-                >
-                  {dict.mapPopup.viewFullCase}
-                </Link>
-                <br />
-                <Link
-                  href={localizedPath(`/perfiles/${item.country?.toLowerCase() ?? ""}`, locale)}
-                  className="text-xs font-semibold text-[color:var(--color-primary)]"
-                >
-                  {dict.mapPopup.viewCountryProfile}
-                </Link>
-              </div>
-            </Popup>
-          </Marker>
+          <CaseMarker key={item.id} dict={dict} item={item} locale={locale} />
         ))}
       </MarkerClusterGroup>
+    </MapContainer>
+  );
+}
+
+export function StaticCasesMap({
+  cases,
+}: {
+  cases: MapCase[];
+  locale: Locale;
+}) {
+  return (
+    <MapContainer
+      attributionControl={false}
+      boxZoom={false}
+      center={latinAmericaPreviewCenter}
+      className="rise-map rise-map--static"
+      doubleClickZoom={false}
+      dragging={false}
+      keyboard={false}
+      scrollWheelZoom={false}
+      touchZoom={false}
+      worldCopyJump={false}
+      zoom={2.5}
+      zoomControl={false}
+      zoomSnap={0.25}
+    >
+      <StaticMapSizeHandler />
+      <TileLayer
+        className="rise-map-tile-layer"
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      {cases.map((item) => (
+        <Marker
+          key={item.id}
+          position={[item.latitude, item.longitude]}
+          icon={markerIcon}
+          interactive={false}
+        />
+      ))}
     </MapContainer>
   );
 }

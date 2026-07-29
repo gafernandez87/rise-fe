@@ -1,9 +1,27 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Pencil, Plus } from "lucide-react";
-import { getBackofficeCases, getBackofficeToken } from "@/lib/backoffice-api";
+import { ArrowLeft, BookOpen, FileText, Pencil, Plus } from "lucide-react";
+import {
+  getBackofficeCases,
+  getBackofficeCountryProfiles,
+  getBackofficeStories,
+  getBackofficeToken,
+} from "@/lib/backoffice-api";
 import type { AdaptationCase, CaseSeverity, CaseStatus } from "@/types/cases";
-import { createMeasure, deleteMeasure, loginBackoffice, logoutBackoffice, updateMeasure } from "./actions";
+import type { CountryProfile } from "@/types/country-profiles";
+import type { ResilienceStory } from "@/types/stories";
+import {
+  createCountryProfile,
+  createMeasure,
+  createStory,
+  deleteCountryProfile,
+  deleteMeasure,
+  loginBackoffice,
+  logoutBackoffice,
+  updateCountryProfile,
+  updateMeasure,
+  updateStory,
+} from "./actions";
 import { SubmitButton } from "./submit-button";
 
 export const dynamic = "force-dynamic";
@@ -16,10 +34,24 @@ type BackofficePageProps = {
     edit?: string;
     error?: string;
     mode?: string;
+    profileCreated?: string;
+    profileDeleted?: string;
+    profileEdit?: string;
+    profileMode?: string;
+    profileSave?: string;
+    profileUpdated?: string;
     save?: string;
+    section?: string;
+    storyCreated?: string;
+    storyEdit?: string;
+    storyMode?: string;
+    storySave?: string;
+    storyUpdated?: string;
     updated?: string;
   }>;
 };
+
+type BackofficeSection = "measures" | "profiles" | "stories";
 
 type FieldProps = {
   label: string;
@@ -137,11 +169,32 @@ function LoginView({ error }: { error?: string }) {
   );
 }
 
-function Notice({ created, deleted, save, updated }: { created?: string; deleted?: string; save?: string; updated?: string }) {
+function Notice({
+  created,
+  deleted,
+  entityLabel,
+  gender = "feminine",
+  missingMessage,
+  save,
+  updated,
+}: {
+  created?: string;
+  deleted?: string;
+  entityLabel: string;
+  gender?: "feminine" | "masculine";
+  missingMessage: string;
+  save?: string;
+  updated?: string;
+}) {
+  const article = gender === "masculine" ? "el" : "la";
+  const createdSuffix = gender === "masculine" ? "creado" : "creada";
+  const updatedSuffix = gender === "masculine" ? "actualizado" : "actualizada";
+  const deletedSuffix = gender === "masculine" ? "eliminado" : "eliminada";
+
   if (created === "1") {
     return (
       <p className="rounded-md border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm font-medium">
-        Medida creada.
+        {entityLabel} {createdSuffix}.
       </p>
     );
   }
@@ -149,7 +202,7 @@ function Notice({ created, deleted, save, updated }: { created?: string; deleted
   if (updated === "1") {
     return (
       <p className="rounded-md border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm font-medium">
-        Medida actualizada.
+        {entityLabel} {updatedSuffix}.
       </p>
     );
   }
@@ -157,7 +210,7 @@ function Notice({ created, deleted, save, updated }: { created?: string; deleted
   if (deleted === "1") {
     return (
       <p className="rounded-md border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm font-medium">
-        Medida eliminada.
+        {entityLabel} {deletedSuffix}.
       </p>
     );
   }
@@ -165,7 +218,7 @@ function Notice({ created, deleted, save, updated }: { created?: string; deleted
   if (save === "missing") {
     return (
       <p className="rounded-md border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm font-medium text-[color:var(--color-primary)]">
-        Completa titulo, resumen, latitud y longitud.
+        {missingMessage}
       </p>
     );
   }
@@ -173,7 +226,7 @@ function Notice({ created, deleted, save, updated }: { created?: string; deleted
   if (save === "error") {
     return (
       <p className="rounded-md border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm font-medium text-[color:var(--color-primary)]">
-        No se pudo guardar la medida.
+        No se pudo guardar {article} {entityLabel.toLowerCase()}.
       </p>
     );
   }
@@ -181,7 +234,7 @@ function Notice({ created, deleted, save, updated }: { created?: string; deleted
   if (save === "delete-error") {
     return (
       <p className="rounded-md border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm font-medium text-[color:var(--color-primary)]">
-        No se pudo eliminar la medida.
+        No se pudo eliminar {article} {entityLabel.toLowerCase()}.
       </p>
     );
   }
@@ -264,6 +317,71 @@ function MeasureFields({ measure }: { measure?: AdaptationCase }) {
   );
 }
 
+function StoryFields({ story }: { story?: ResilienceStory }) {
+  return (
+    <>
+      <section className="grid gap-4 md:grid-cols-2">
+        <Field label="Titulo" name="storyTitle" required value={story?.title} />
+        <Field label="Slug" name="storySlug" placeholder="se-genera-si-queda-vacio" value={story?.slug} />
+        <SelectField label="Estado" name="storyStatus" value={story?.status ?? "draft"}>
+          <option value="draft">Borrador</option>
+          <option value="published">Publicado</option>
+          <option value="hidden">Oculto</option>
+        </SelectField>
+        <Field label="Pais" name="storyCountry" value={story?.country} />
+        <Field label="Territorio" name="storyTerritory" value={story?.territory} />
+        <Field label="Riesgo principal" name="storyMainRisk" value={story?.mainRisk} />
+        <Field label="URL de video o imagen" name="storyMediaUrl" type="url" value={story?.mediaUrl} />
+        <Field label="Texto alternativo del medio" name="storyMediaAlt" value={story?.mediaAlt} />
+        <Field label="Fuente URL" name="storySourceUrl" type="url" value={story?.sourceUrl} />
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <TextArea label="Resumen" name="storySummary" required value={story?.summary} />
+        <TextArea label="Historia completa" name="storyContent" required value={story?.content} />
+      </section>
+    </>
+  );
+}
+
+function CountryProfileFields({ profile }: { profile?: CountryProfile }) {
+  return (
+    <>
+      <section className="grid gap-4 md:grid-cols-2">
+        <Field label="Pais" name="profileName" required value={profile?.name} />
+        <Field label="Slug" name="profileSlug" placeholder="se-genera-si-queda-vacio" value={profile?.slug} />
+        <SelectField label="Estado" name="profileStatus" value={profile?.status ?? "draft"}>
+          <option value="draft">Borrador</option>
+          <option value="published">Publicado</option>
+          <option value="hidden">Oculto</option>
+        </SelectField>
+        <Field label="Riesgo principal" name="profileMainRisk" required value={profile?.mainRisk} />
+        <Field label="Territorio priorizado" name="profileTerritory" required value={profile?.territory} />
+        <Field label="Sector mas afectado" name="profileSector" required value={profile?.sector} />
+        <Field label="Medidas identificadas" name="profileMeasuresCount" type="number" value={profile?.measuresCount} />
+        <Field label="Titulo de historia destacada" name="profileStoryTitle" value={profile?.storyTitle} />
+        <Field label="Imagen principal URL" name="profileHeroImageUrl" type="url" value={profile?.heroImageUrl} />
+        <Field label="Perfil PDF URL" name="profilePdfUrl" type="url" value={profile?.profilePdfUrl} />
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <TextArea label="Resumen del perfil" name="profileSummary" required value={profile?.summary} />
+        <TextArea label="Riesgos prioritarios (uno por linea)" name="profileRisks" value={profile?.risks.join("\n")} />
+        <TextArea label="Analisis de riesgo y vulnerabilidad" name="profileRiskAnalysis" value={profile?.riskAnalysis} />
+        <TextArea label="Amenazas climaticas" name="profileClimateThreats" value={profile?.climateThreats} />
+        <TextArea
+          label="Exposicion y vulnerabilidades"
+          name="profileExposureAndVulnerabilities"
+          value={profile?.exposureAndVulnerabilities}
+        />
+        <TextArea label="Medidas de adaptacion identificadas" name="profileAdaptationMeasures" value={profile?.adaptationMeasures} />
+        <TextArea label="Historia destacada" name="profileFeaturedStory" value={profile?.featuredStory} />
+        <TextArea label="Fuentes y referencias" name="profileSources" value={profile?.sources} />
+      </section>
+    </>
+  );
+}
+
 function CasesTable({ activeId, cases }: { activeId?: string; cases: AdaptationCase[] }) {
   if (cases.length === 0) {
     return (
@@ -336,8 +454,140 @@ function CasesTable({ activeId, cases }: { activeId?: string; cases: AdaptationC
   );
 }
 
+function StoriesTable({ activeId, stories }: { activeId?: string; stories: ResilienceStory[] }) {
+  if (stories.length === 0) {
+    return (
+      <div className="rounded-lg border border-[color:var(--color-border)] bg-white p-5 text-sm text-[color:var(--color-muted)]">
+        Todavia no hay historias cargadas.
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-[color:var(--color-border)] bg-white">
+      <table className="w-full min-w-[820px] border-collapse text-left text-sm">
+        <thead className="border-b border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)] text-xs font-semibold uppercase tracking-wide text-[color:var(--color-muted)]">
+          <tr>
+            <th className="px-4 py-3">Historia</th>
+            <th className="px-4 py-3">Territorio</th>
+            <th className="px-4 py-3">Riesgo</th>
+            <th className="px-4 py-3">Estado</th>
+            <th className="px-4 py-3 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {stories.map((item) => {
+            const territory = [item.country, item.territory].filter(Boolean).join(", ") || "Sin territorio";
+            const isActive = activeId === item.id;
+
+            return (
+              <tr
+                key={item.id}
+                className={`border-b border-[color:var(--color-border)] last:border-0 ${
+                  isActive ? "bg-[color:var(--color-brand-cream)]" : "bg-white"
+                }`}
+              >
+                <td className="px-4 py-3 align-top">
+                  <p className="font-semibold">{item.title}</p>
+                  <p className="mt-1 max-w-[380px] text-xs leading-5 text-[color:var(--color-muted)]">
+                    {item.summary}
+                  </p>
+                </td>
+                <td className="px-4 py-3 align-top text-[color:var(--color-muted)]">{territory}</td>
+                <td className="px-4 py-3 align-top text-[color:var(--color-muted)]">
+                  {item.mainRisk ?? "Sin riesgo"}
+                </td>
+                <td className="px-4 py-3 align-top">
+                  <span className="inline-flex rounded-md bg-[color:var(--color-surface-muted)] px-2.5 py-1 text-xs font-semibold">
+                    {statusLabels[item.status]}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-right align-top">
+                  <Link
+                    className="inline-flex items-center justify-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-semibold transition hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]"
+                    href={`/backoffice?section=stories&storyEdit=${encodeURIComponent(item.id)}`}
+                  >
+                    <Pencil size={15} aria-hidden="true" />
+                    Editar
+                  </Link>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function CountryProfilesTable({ activeId, profiles }: { activeId?: string; profiles: CountryProfile[] }) {
+  if (profiles.length === 0) {
+    return (
+      <div className="rounded-lg border border-[color:var(--color-border)] bg-white p-5 text-sm text-[color:var(--color-muted)]">
+        Todavia no hay perfiles cargados.
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-[color:var(--color-border)] bg-white">
+      <table className="w-full min-w-[860px] border-collapse text-left text-sm">
+        <thead className="border-b border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)] text-xs font-semibold uppercase tracking-wide text-[color:var(--color-muted)]">
+          <tr>
+            <th className="px-4 py-3">Perfil</th>
+            <th className="px-4 py-3">Territorio</th>
+            <th className="px-4 py-3">Sector</th>
+            <th className="px-4 py-3">Medidas</th>
+            <th className="px-4 py-3">Estado</th>
+            <th className="px-4 py-3 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {profiles.map((item) => {
+            const isActive = activeId === item.id;
+
+            return (
+              <tr
+                key={item.id}
+                className={`border-b border-[color:var(--color-border)] last:border-0 ${
+                  isActive ? "bg-[color:var(--color-brand-cream)]" : "bg-white"
+                }`}
+              >
+                <td className="px-4 py-3 align-top">
+                  <p className="font-semibold">{item.name}</p>
+                  <p className="mt-1 max-w-[380px] text-xs leading-5 text-[color:var(--color-muted)]">
+                    {item.mainRisk}
+                  </p>
+                </td>
+                <td className="px-4 py-3 align-top text-[color:var(--color-muted)]">{item.territory}</td>
+                <td className="px-4 py-3 align-top text-[color:var(--color-muted)]">{item.sector}</td>
+                <td className="px-4 py-3 align-top text-[color:var(--color-muted)]">{item.measuresCount}</td>
+                <td className="px-4 py-3 align-top">
+                  <span className="inline-flex rounded-md bg-[color:var(--color-surface-muted)] px-2.5 py-1 text-xs font-semibold">
+                    {statusLabels[item.status]}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-right align-top">
+                  <Link
+                    className="inline-flex items-center justify-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-semibold transition hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]"
+                    href={`/backoffice?section=profiles&profileEdit=${encodeURIComponent(item.id)}`}
+                  >
+                    <Pencil size={15} aria-hidden="true" />
+                    Editar
+                  </Link>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function MeasureForm({
   action,
+  errorPath,
   icon,
   measure,
   secondaryAction,
@@ -345,6 +595,7 @@ function MeasureForm({
   title,
 }: {
   action: (formData: FormData) => Promise<void>;
+  errorPath?: string;
   icon?: ReactNode;
   measure?: AdaptationCase;
   secondaryAction?: ReactNode;
@@ -353,12 +604,18 @@ function MeasureForm({
 }) {
   return (
     <form action={action} className="space-y-6 rounded-lg border border-[color:var(--color-border)] bg-white p-5">
+      {errorPath ? <input name="backofficeErrorPath" type="hidden" value={errorPath} /> : null}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           {icon ?? <Plus size={18} aria-hidden="true" />}
           <h2 className="text-xl font-semibold">{title}</h2>
         </div>
-        {secondaryAction}
+        <div className="flex flex-wrap items-center gap-3">
+          {secondaryAction}
+          <SubmitButton icon="save" pendingLabel="Guardando...">
+            Guardar
+          </SubmitButton>
+        </div>
       </div>
 
       <MeasureFields measure={measure} />
@@ -370,6 +627,263 @@ function MeasureForm({
   );
 }
 
+function StoryForm({
+  action,
+  errorPath,
+  icon,
+  secondaryAction,
+  story,
+  submitLabel,
+  title,
+}: {
+  action: (formData: FormData) => Promise<void>;
+  errorPath?: string;
+  icon?: ReactNode;
+  secondaryAction?: ReactNode;
+  story?: ResilienceStory;
+  submitLabel: string;
+  title: string;
+}) {
+  return (
+    <form action={action} className="space-y-6 rounded-lg border border-[color:var(--color-border)] bg-white p-5">
+      {errorPath ? <input name="backofficeErrorPath" type="hidden" value={errorPath} /> : null}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          {icon ?? <BookOpen size={18} aria-hidden="true" />}
+          <h2 className="text-xl font-semibold">{title}</h2>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          {secondaryAction}
+          <SubmitButton icon="save" pendingLabel="Guardando...">
+            Guardar
+          </SubmitButton>
+        </div>
+      </div>
+
+      <StoryFields story={story} />
+
+      <SubmitButton icon="save" pendingLabel="Guardando...">
+        {submitLabel}
+      </SubmitButton>
+    </form>
+  );
+}
+
+function CountryProfileForm({
+  action,
+  errorPath,
+  icon,
+  profile,
+  secondaryAction,
+  submitLabel,
+  title,
+}: {
+  action: (formData: FormData) => Promise<void>;
+  errorPath?: string;
+  icon?: ReactNode;
+  profile?: CountryProfile;
+  secondaryAction?: ReactNode;
+  submitLabel: string;
+  title: string;
+}) {
+  return (
+    <form action={action} className="space-y-6 rounded-lg border border-[color:var(--color-border)] bg-white p-5">
+      {errorPath ? <input name="backofficeErrorPath" type="hidden" value={errorPath} /> : null}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          {icon ?? <FileText size={18} aria-hidden="true" />}
+          <h2 className="text-xl font-semibold">{title}</h2>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          {secondaryAction}
+          <SubmitButton icon="save" pendingLabel="Guardando...">
+            Guardar
+          </SubmitButton>
+        </div>
+      </div>
+
+      <CountryProfileFields profile={profile} />
+
+      <SubmitButton icon="save" pendingLabel="Guardando...">
+        {submitLabel}
+      </SubmitButton>
+    </form>
+  );
+}
+
+function sidebarLinkClass(isActive: boolean) {
+  return `grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition ${
+    isActive
+      ? "bg-[color:var(--color-primary)] text-white"
+      : "text-[color:var(--color-muted)] hover:bg-[color:var(--color-surface-muted)] hover:text-[color:var(--color-primary)]"
+  }`;
+}
+
+function activeSectionTitle(section: BackofficeSection) {
+  if (section === "profiles") {
+    return "Perfiles de pais";
+  }
+
+  if (section === "stories") {
+    return "Historias de resiliencia";
+  }
+
+  return "Medidas de adaptacion";
+}
+
+function sectionBackHref(section: BackofficeSection) {
+  if (section === "profiles") {
+    return "/backoffice?section=profiles";
+  }
+
+  if (section === "stories") {
+    return "/backoffice?section=stories";
+  }
+
+  return "/backoffice";
+}
+
+function createHref(section: BackofficeSection) {
+  if (section === "profiles") {
+    return "/backoffice?section=profiles&profileMode=create";
+  }
+
+  if (section === "stories") {
+    return "/backoffice?section=stories&storyMode=create";
+  }
+
+  return "/backoffice?mode=create";
+}
+
+function createLabel(section: BackofficeSection) {
+  if (section === "profiles") {
+    return "Nuevo perfil";
+  }
+
+  if (section === "stories") {
+    return "Nueva historia";
+  }
+
+  return "Nueva medida";
+}
+
+function screenTitle(section: BackofficeSection, isCreating: boolean, isEditing: boolean) {
+  if (!isCreating && !isEditing) {
+    return "Administrar contenido";
+  }
+
+  if (section === "profiles") {
+    return isCreating ? "Nuevo perfil de pais" : "Editar perfil de pais";
+  }
+
+  if (section === "stories") {
+    return isCreating ? "Nueva historia" : "Editar historia";
+  }
+
+  return isCreating ? "Nueva medida" : "Editar medida";
+}
+
+function BackofficeSidebar({
+  activeSection,
+  counts,
+}: {
+  activeSection: BackofficeSection;
+  counts: Record<BackofficeSection, number>;
+}) {
+  const items = [
+    {
+      count: counts.measures,
+      href: "/backoffice",
+      icon: <Plus size={17} aria-hidden="true" />,
+      label: "Medidas",
+      section: "measures" as const,
+    },
+    {
+      count: counts.profiles,
+      href: "/backoffice?section=profiles",
+      icon: <FileText size={17} aria-hidden="true" />,
+      label: "Perfiles",
+      section: "profiles" as const,
+    },
+    {
+      count: counts.stories,
+      href: "/backoffice?section=stories",
+      icon: <BookOpen size={17} aria-hidden="true" />,
+      label: "Historias",
+      section: "stories" as const,
+    },
+  ];
+
+  return (
+    <aside className="border-b border-[color:var(--color-border)] bg-white p-3 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:border-b-0 lg:border-r lg:p-4">
+      <div className="px-3 py-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
+          Backoffice
+        </p>
+        <p className="mt-1 text-lg font-semibold">Contenido RISE</p>
+      </div>
+
+      <nav aria-label="Secciones del backoffice" className="mt-3 grid gap-1">
+        {items.map((item) => {
+          const isActive = activeSection === item.section;
+
+          return (
+            <Link key={item.section} className={sidebarLinkClass(isActive)} href={item.href}>
+              {item.icon}
+              <span className="truncate">{item.label}</span>
+              <span
+                className={`rounded-md px-2 py-0.5 text-xs ${
+                  isActive
+                    ? "bg-white/15 text-white"
+                    : "bg-[color:var(--color-surface-muted)] text-[color:var(--color-muted)]"
+                }`}
+              >
+                {item.count}
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      <form action={logoutBackoffice} className="mt-4 border-t border-[color:var(--color-border)] pt-3">
+        <SubmitButton fullWidth icon="logout" pendingLabel="Saliendo..." variant="secondary">
+          Salir
+        </SubmitButton>
+      </form>
+    </aside>
+  );
+}
+
+function CompactStats({
+  drafts,
+  published,
+  total,
+}: {
+  drafts: number;
+  published: number;
+  total: number;
+}) {
+  const stats = [
+    { label: "Total", value: total },
+    { label: "Publicadas", value: published },
+    { label: "Borradores", value: drafts },
+  ];
+
+  return (
+    <dl className="flex flex-wrap gap-2 text-xs">
+      {stats.map((stat) => (
+        <div
+          key={stat.label}
+          className="inline-flex items-center gap-2 rounded-md bg-[color:var(--color-surface-muted)] px-2.5 py-1.5"
+        >
+          <dt className="font-semibold text-[color:var(--color-muted)]">{stat.label}</dt>
+          <dd className="font-semibold text-[color:var(--color-text)]">{stat.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 export default async function BackofficePage({ searchParams }: BackofficePageProps) {
   const params = await searchParams;
   const token = await getBackofficeToken();
@@ -378,70 +892,150 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
     return <LoginView error={params.error} />;
   }
 
-  const { cases, unauthorized, error } = await getBackofficeCases(token);
-  const isCreating = params.mode === "create" && !params.edit;
-  const editingMeasure = params.edit ? cases.find((item) => item.id === params.edit) : undefined;
+  const [casesResult, profilesResult, storiesResult] = await Promise.all([
+    getBackofficeCases(token),
+    getBackofficeCountryProfiles(token),
+    getBackofficeStories(token),
+  ]);
+  const activeSection: BackofficeSection =
+    params.section === "profiles" ? "profiles" : params.section === "stories" ? "stories" : "measures";
+  const { cases } = casesResult;
+  const { countryProfiles } = profilesResult;
+  const { stories } = storiesResult;
+  const isCreatingMeasure = activeSection === "measures" && params.mode === "create" && !params.edit;
+  const isCreatingProfile =
+    activeSection === "profiles" && params.profileMode === "create" && !params.profileEdit;
+  const isCreatingStory =
+    activeSection === "stories" && params.storyMode === "create" && !params.storyEdit;
+  const editingMeasure =
+    activeSection === "measures" && params.edit ? cases.find((item) => item.id === params.edit) : undefined;
+  const editingProfile =
+    activeSection === "profiles" && params.profileEdit
+      ? countryProfiles.find((item) => item.id === params.profileEdit)
+      : undefined;
+  const editingStory =
+    activeSection === "stories" && params.storyEdit
+      ? stories.find((item) => item.id === params.storyEdit)
+      : undefined;
+  const isEditingMeasure = activeSection === "measures" && Boolean(params.edit);
+  const isEditingProfile = activeSection === "profiles" && Boolean(params.profileEdit);
+  const isEditingStory = activeSection === "stories" && Boolean(params.storyEdit);
+  const isCreating = isCreatingMeasure || isCreatingProfile || isCreatingStory;
+  const isEditing = isEditingMeasure || isEditingProfile || isEditingStory;
+  const isFormScreen = isCreating || isEditing;
+  const activeItems =
+    activeSection === "profiles" ? countryProfiles : activeSection === "stories" ? stories : cases;
+  const activeError =
+    activeSection === "profiles"
+      ? profilesResult.error
+      : activeSection === "stories"
+        ? storiesResult.error
+        : casesResult.error;
 
-  if (unauthorized) {
+  if (casesResult.unauthorized || profilesResult.unauthorized || storiesResult.unauthorized) {
     return <LoginView error="session" />;
   }
 
+  const sectionCounts = {
+    measures: cases.length,
+    profiles: countryProfiles.length,
+    stories: stories.length,
+  };
+  const activePublishedCount = activeItems.filter((item) => item.status === "published").length;
+  const activeDraftCount = activeItems.filter((item) => item.status === "draft").length;
+  const currentSectionTitle = activeSectionTitle(activeSection);
+  const currentCreateHref = createHref(activeSection);
+  const currentCreateLabel = createLabel(activeSection);
+  const currentScreenTitle = screenTitle(activeSection, isCreating, isEditing);
+  const currentSectionBackHref = sectionBackHref(activeSection);
+
   return (
-    <>
-      <main className="page-shell space-y-6 py-10">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
-              Backoffice
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold">Medidas de adaptacion</h1>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              className="inline-flex items-center gap-2 rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[color:var(--color-primary-strong)]"
-              href="/backoffice?mode=create"
-            >
-              <Plus size={16} aria-hidden="true" />
-              Nueva medida
-            </Link>
-            <form action={logoutBackoffice}>
-              <SubmitButton icon="logout" pendingLabel="Saliendo..." variant="secondary">
-                Salir
-              </SubmitButton>
-            </form>
-          </div>
-        </div>
+    <main className="min-h-screen bg-[color:var(--color-background)] lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
+        <BackofficeSidebar activeSection={activeSection} counts={sectionCounts} />
 
-        <Notice created={params.created} deleted={params.deleted} save={params.save} updated={params.updated} />
+        <section className="min-w-0 px-4 py-6 md:px-6 lg:min-h-screen lg:px-8">
+          <div className={`mx-auto space-y-5 ${isFormScreen ? "max-w-[980px]" : "max-w-[1120px]"}`}>
+            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[color:var(--color-border)] pb-5">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
+                  {currentSectionTitle}
+                </p>
+                <h1 className="mt-2 text-3xl font-semibold">{currentScreenTitle}</h1>
+                {!isFormScreen ? (
+                  <div className="mt-3">
+                    <CompactStats
+                      drafts={activeDraftCount}
+                      published={activePublishedCount}
+                      total={activeItems.length}
+                    />
+                  </div>
+                ) : null}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {isFormScreen ? (
+                  <Link
+                    className="inline-flex items-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-4 py-2 text-sm font-semibold transition hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]"
+                    href={currentSectionBackHref}
+                  >
+                    <ArrowLeft size={16} aria-hidden="true" />
+                    Volver
+                  </Link>
+                ) : (
+                  <Link
+                    className="inline-flex items-center gap-2 rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[color:var(--color-primary-strong)]"
+                    href={currentCreateHref}
+                  >
+                    {activeSection === "profiles" ? (
+                      <FileText size={16} aria-hidden="true" />
+                    ) : activeSection === "stories" ? (
+                      <BookOpen size={16} aria-hidden="true" />
+                    ) : (
+                      <Plus size={16} aria-hidden="true" />
+                    )}
+                    {currentCreateLabel}
+                  </Link>
+                )}
+              </div>
+            </div>
 
-        {error ? (
+        {activeSection === "profiles" ? (
+          <Notice
+            created={params.profileCreated}
+            deleted={params.profileDeleted}
+            entityLabel="Ficha de perfil"
+            missingMessage="Completa pais, resumen, riesgo principal, territorio y sector."
+            save={params.profileSave}
+            updated={params.profileUpdated}
+          />
+        ) : activeSection === "stories" ? (
+          <Notice
+            created={params.storyCreated}
+            entityLabel="Historia"
+            missingMessage="Completa titulo, resumen e historia completa."
+            save={params.storySave}
+            updated={params.storyUpdated}
+          />
+        ) : (
+          <Notice
+            created={params.created}
+            deleted={params.deleted}
+            entityLabel="Medida"
+            missingMessage="Completa titulo, resumen, latitud y longitud."
+            save={params.save}
+            updated={params.updated}
+          />
+        )}
+
+        {activeError ? (
           <p className="rounded-md border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm font-medium text-[color:var(--color-primary)]">
             No se pudo leer el backend.
           </p>
         ) : null}
 
-        <section className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-lg border border-[color:var(--color-border)] bg-white p-4">
-            <p className="text-sm text-[color:var(--color-muted)]">Total</p>
-            <p className="mt-1 text-2xl font-semibold">{cases.length}</p>
-          </div>
-          <div className="rounded-lg border border-[color:var(--color-border)] bg-white p-4">
-            <p className="text-sm text-[color:var(--color-muted)]">Publicadas</p>
-            <p className="mt-1 text-2xl font-semibold">
-              {cases.filter((item) => item.status === "published").length}
-            </p>
-          </div>
-          <div className="rounded-lg border border-[color:var(--color-border)] bg-white p-4">
-            <p className="text-sm text-[color:var(--color-muted)]">Borradores</p>
-            <p className="mt-1 text-2xl font-semibold">
-              {cases.filter((item) => item.status === "draft").length}
-            </p>
-          </div>
-        </section>
-
-        {isCreating ? (
+        {isCreatingMeasure ? (
           <MeasureForm
             action={createMeasure}
+            errorPath="/backoffice?mode=create"
             secondaryAction={
               <Link className="text-sm font-semibold text-[color:var(--color-muted)]" href="/backoffice">
                 Cancelar
@@ -452,11 +1046,40 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
           />
         ) : null}
 
-        {params.edit ? (
+        {isCreatingProfile ? (
+          <CountryProfileForm
+            action={createCountryProfile}
+            errorPath="/backoffice?section=profiles&profileMode=create"
+            secondaryAction={
+              <Link className="text-sm font-semibold text-[color:var(--color-muted)]" href="/backoffice?section=profiles">
+                Cancelar
+              </Link>
+            }
+            submitLabel="Guardar perfil"
+            title="Nuevo perfil de pais"
+          />
+        ) : null}
+
+        {isCreatingStory ? (
+          <StoryForm
+            action={createStory}
+            errorPath="/backoffice?section=stories&storyMode=create"
+            secondaryAction={
+              <Link className="text-sm font-semibold text-[color:var(--color-muted)]" href="/backoffice?section=stories">
+                Cancelar
+              </Link>
+            }
+            submitLabel="Guardar historia"
+            title="Nueva historia"
+          />
+        ) : null}
+
+        {activeSection === "measures" && params.edit ? (
           editingMeasure ? (
             <section className="space-y-4">
               <MeasureForm
                 action={updateMeasure.bind(null, editingMeasure.id)}
+                errorPath={`/backoffice?edit=${encodeURIComponent(editingMeasure.id)}`}
                 icon={<Pencil size={18} aria-hidden="true" />}
                 measure={editingMeasure}
                 secondaryAction={
@@ -471,6 +1094,11 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
                 action={deleteMeasure.bind(null, editingMeasure.id)}
                 className="rounded-lg border border-[color:var(--color-border)] bg-white p-5"
               >
+                <input
+                  name="backofficeErrorPath"
+                  type="hidden"
+                  value={`/backoffice?edit=${encodeURIComponent(editingMeasure.id)}`}
+                />
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <h2 className="text-lg font-semibold">Dar de baja medida</h2>
@@ -492,18 +1120,113 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
           )
         ) : null}
 
-        <section className="space-y-3">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-semibold">Medidas cargadas</h2>
-              <p className="mt-1 text-sm text-[color:var(--color-muted)]">
-                Vista general de todos los registros creados.
-              </p>
+        {activeSection === "profiles" && params.profileEdit ? (
+          editingProfile ? (
+            <section className="space-y-4">
+              <CountryProfileForm
+                action={updateCountryProfile.bind(null, editingProfile.id)}
+                errorPath={`/backoffice?section=profiles&profileEdit=${encodeURIComponent(editingProfile.id)}`}
+                icon={<Pencil size={18} aria-hidden="true" />}
+                profile={editingProfile}
+                secondaryAction={
+                  <Link className="text-sm font-semibold text-[color:var(--color-muted)]" href="/backoffice?section=profiles">
+                    Cancelar
+                  </Link>
+                }
+                submitLabel="Guardar cambios"
+                title="Editar perfil de pais"
+              />
+              <form
+                action={deleteCountryProfile.bind(null, editingProfile.id)}
+                className="rounded-lg border border-[color:var(--color-border)] bg-white p-5"
+              >
+                <input
+                  name="backofficeErrorPath"
+                  type="hidden"
+                  value={`/backoffice?section=profiles&profileEdit=${encodeURIComponent(editingProfile.id)}`}
+                />
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-lg font-semibold">Dar de baja perfil</h2>
+                    <label className="mt-2 flex items-start gap-2 text-sm text-[color:var(--color-muted)]">
+                      <input className="mt-1" name="confirmDelete" required type="checkbox" />
+                      Confirmo que quiero eliminar este perfil del backoffice.
+                    </label>
+                  </div>
+                  <SubmitButton icon="trash" pendingLabel="Eliminando..." variant="danger">
+                    Eliminar
+                  </SubmitButton>
+                </div>
+              </form>
+            </section>
+          ) : (
+            <p className="rounded-md border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm font-medium text-[color:var(--color-primary)]">
+              No se encontro el perfil seleccionado.
+            </p>
+          )
+        ) : null}
+
+        {activeSection === "stories" && params.storyEdit ? (
+          editingStory ? (
+            <StoryForm
+              action={updateStory.bind(null, editingStory.id)}
+              errorPath={`/backoffice?section=stories&storyEdit=${encodeURIComponent(editingStory.id)}`}
+              icon={<Pencil size={18} aria-hidden="true" />}
+              secondaryAction={
+                <Link className="text-sm font-semibold text-[color:var(--color-muted)]" href="/backoffice?section=stories">
+                  Cancelar
+                </Link>
+              }
+              story={editingStory}
+              submitLabel="Guardar cambios"
+              title="Editar historia"
+            />
+          ) : (
+            <p className="rounded-md border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm font-medium text-[color:var(--color-primary)]">
+              No se encontro la historia seleccionada.
+            </p>
+          )
+        ) : null}
+
+        {!isFormScreen && activeSection === "profiles" ? (
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold">Perfiles cargados</h2>
+                <p className="mt-1 text-sm text-[color:var(--color-muted)]">
+                  Vista general de todos los perfiles de pais creados.
+                </p>
+              </div>
             </div>
+            <CountryProfilesTable activeId={editingProfile?.id} profiles={countryProfiles} />
+          </section>
+        ) : !isFormScreen && activeSection === "stories" ? (
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold">Historias cargadas</h2>
+                <p className="mt-1 text-sm text-[color:var(--color-muted)]">
+                  Vista general de todos los relatos creados.
+                </p>
+              </div>
+            </div>
+            <StoriesTable activeId={editingStory?.id} stories={stories} />
+          </section>
+        ) : !isFormScreen ? (
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold">Medidas cargadas</h2>
+                <p className="mt-1 text-sm text-[color:var(--color-muted)]">
+                  Vista general de todos los registros creados.
+                </p>
+              </div>
+            </div>
+            <CasesTable activeId={editingMeasure?.id} cases={cases} />
+          </section>
+        ) : null}
           </div>
-          <CasesTable activeId={editingMeasure?.id} cases={cases} />
         </section>
-      </main>
-    </>
+    </main>
   );
 }

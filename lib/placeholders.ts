@@ -1,4 +1,7 @@
 import type { AdaptationCase, Category, MapCase } from "@/types/cases";
+import type { CountryProfile } from "@/types/country-profiles";
+import type { ResilienceStory } from "@/types/stories";
+import { projectCountries } from "@/lib/rise-content";
 
 export const placeholderCategories: Category[] = [
   {
@@ -140,4 +143,44 @@ export const placeholderMapCases: MapCase[] = placeholderCases.map((item) => ({
   region: item.region,
   category: item.category,
   coverImageUrl: item.images.find((image) => image.isCover)?.url,
+}));
+
+export const placeholderCountryProfiles: CountryProfile[] = projectCountries.map((country) => ({
+  id: `country-profile-${country.slug}`,
+  name: country.name,
+  slug: country.slug,
+  summary: country.summary,
+  status: "published",
+  mainRisk: country.mainRisk,
+  territory: country.territory,
+  sector: country.sector,
+  measuresCount: country.measuresCount,
+  storyTitle: country.storyTitle,
+  risks: [...country.risks],
+  heroImageUrl: null,
+  profilePdfUrl: null,
+  riskAnalysis: null,
+  climateThreats: null,
+  exposureAndVulnerabilities: null,
+  adaptationMeasures: null,
+  featuredStory: null,
+  sources: null,
+}));
+
+export const placeholderResilienceStories: ResilienceStory[] = projectCountries.map((country) => ({
+  id: `story-${country.slug}`,
+  title: country.storyTitle,
+  slug: country.slug,
+  summary: `${country.summary} Historia enfocada en ${country.mainRisk.toLowerCase()} en ${country.territory.toLowerCase()}.`,
+  content: [
+    `Esta historia documenta aprendizajes territoriales sobre ${country.mainRisk.toLowerCase()} en ${country.territory.toLowerCase()}.`,
+    "El relato completo podra cargarse desde el backoffice con detalles del proceso, protagonistas, recursos audiovisuales y fuentes.",
+  ].join("\n\n"),
+  status: "published",
+  country: country.name,
+  territory: country.territory,
+  mainRisk: country.mainRisk,
+  mediaUrl: null,
+  mediaAlt: null,
+  sourceUrl: null,
 }));

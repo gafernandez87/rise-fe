@@ -16,6 +16,14 @@ const CasesMap = dynamic(
   },
 );
 
+const StaticCasesMap = dynamic(
+  () => import("@/components/map/cases-map").then((mod) => mod.StaticCasesMap),
+  {
+    ssr: false,
+    loading: () => <div className="rise-map-preview__loading" aria-hidden="true" />,
+  },
+);
+
 export function MapLoader({
   cases,
   layoutSignal,
@@ -26,4 +34,14 @@ export function MapLoader({
   locale: Locale;
 }) {
   return <CasesMap cases={cases} layoutSignal={layoutSignal} locale={locale} />;
+}
+
+export function MapPreviewLoader({
+  cases,
+  locale,
+}: {
+  cases: MapCase[];
+  locale: Locale;
+}) {
+  return <StaticCasesMap cases={cases} locale={locale} />;
 }

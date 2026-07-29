@@ -481,7 +481,7 @@ const dictionaries = {
       projectBy: "Un proyecto de:",
       organizationsEyebrow: "Organizaciones",
       organizationsTitle: "Esta iniciativa es impulsada por",
-      leading: "Impulsan",
+      leading: "Un proyecto de",
       collaborators: "Colaboradores:",
       support: "Con el apoyo de",
       participants: "Organizaciones participantes",

@@ -11,21 +11,28 @@ import {
   StoriesPageView,
   StoryPageView,
 } from "@/components/pages/public-pages";
-import { getCaseBySlug, getPublishedCases } from "@/lib/api";
+import {
+  getCaseBySlug,
+  getCountryProfileBySlug,
+  getPublishedCases,
+  getPublishedCountryProfiles,
+  getPublishedStories,
+  getStoryBySlug,
+} from "@/lib/api";
 import {
   getDictionary,
-  getLocalizedCountries,
-  getLocalizedCountryBySlug,
   isLocale,
   locales,
   localizeCase,
   localizedPath,
   type Locale,
 } from "@/lib/i18n";
+import { readMapInitialFilters, type SearchParamsRecord } from "@/lib/map-filters";
 import { siteConfig } from "@/lib/site";
 
 type LocalizedPageProps = {
   params: Promise<{ locale: string; segments?: string[] }>;
+  searchParams: Promise<SearchParamsRecord>;
 };
 
 const staticSegments: string[][] = [
@@ -119,16 +126,32 @@ export async function generateMetadata({ params }: LocalizedPageProps): Promise<
     };
   }
 
-  if (segments.length === 2 && (segments[0] === "perfiles" || segments[0] === "historias")) {
-    const country = getLocalizedCountryBySlug(locale, segments[1]);
+  if (segments.length === 2 && segments[0] === "perfiles") {
+    const country = await getCountryProfileBySlug(segments[1]);
 
     if (!country) {
       return {};
     }
 
     return {
-      title: segments[0] === "perfiles" ? country.name : country.storyTitle,
+      title: country.name,
       description: country.summary,
+      alternates: {
+        canonical: `${siteConfig.siteUrl}${localizedPath(currentPathFromSegments(segments), locale)}`,
+      },
+    };
+  }
+
+  if (segments.length === 2 && segments[0] === "historias") {
+    const story = await getStoryBySlug(segments[1]);
+
+    if (!story) {
+      return {};
+    }
+
+    return {
+      title: story.title,
+      description: story.summary,
       alternates: {
         canonical: `${siteConfig.siteUrl}${localizedPath(currentPathFromSegments(segments), locale)}`,
       },
@@ -139,21 +162,24 @@ export async function generateMetadata({ params }: LocalizedPageProps): Promise<
 }
 
 export async function generateStaticParams() {
-  const cases = await getPublishedCases();
-  const countries = getLocalizedCountries("es");
+  const [cases, countries, stories] = await Promise.all([
+    getPublishedCases(),
+    getPublishedCountryProfiles(),
+    getPublishedStories(),
+  ]);
   const routeSegments = [
     ...staticSegments,
     ...countries.flatMap((country) => [
       ["perfiles", country.slug],
-      ["historias", country.slug],
     ]),
+    ...stories.map((story) => ["historias", story.slug]),
     ...cases.map((item) => ["casos", item.slug]),
   ];
 
   return locales.flatMap((locale) => routeSegments.map((segments) => ({ locale, segments })));
 }
 
-export default async function LocalizedPage({ params }: LocalizedPageProps) {
+export default async function LocalizedPage({ params, searchParams }: LocalizedPageProps) {
   const { locale: localeParam, segments = [] } = await params;
 
   if (!isLocale(localeParam)) {
@@ -171,7 +197,9 @@ export default async function LocalizedPage({ params }: LocalizedPageProps) {
     const [route] = segments;
 
     if (route === "mapa") {
-      return <MapPageView locale={locale} currentPath={currentPath} />;
+      const initialFilters = readMapInitialFilters(await searchParams);
+
+      return <MapPageView locale={locale} currentPath={currentPath} initialFilters={initialFilters} />;
     }
 
     if (route === "historias") {

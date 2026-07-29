@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "start:dev": "API_URL=http://localhost:3001 NEXT_PUBLIC_API_URL=http://localhost:3001 NEXT_PUBLIC_SITE_URL=http://localhost:3000 next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

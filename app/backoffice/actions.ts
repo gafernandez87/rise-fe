@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import { backofficeTokenCookie, fetchBackofficeApi, getBackofficeToken } from "@/lib/backoffice-api";
 import { siteConfig } from "@/lib/site";
 import type { CaseSeverity, CaseStatus } from "@/types/cases";
+import type { CountryProfileStatus } from "@/types/country-profiles";
+import type { StoryStatus } from "@/types/stories";
 
 const backofficeAdminEmail = process.env.BACKOFFICE_ADMIN_EMAIL ?? "backoffice@rise.local";
 
@@ -14,6 +16,14 @@ type LoginResponse = {
 };
 
 const backofficePath = "/backoffice";
+const profilesBackofficePath = `${backofficePath}?section=profiles`;
+const storiesBackofficePath = `${backofficePath}?section=stories`;
+
+function appendQueryParam(path: string, key: string, value: string) {
+  const separator = path.includes("?") ? "&" : "?";
+
+  return `${path}${separator}${key}=${value}`;
+}
 
 function formText(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -23,6 +33,30 @@ function formText(formData: FormData, key: string) {
 
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function formNullableText(formData: FormData, key: string) {
+  const value = formData.get(key);
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function formBackofficeErrorPath(formData: FormData, fallback: string) {
+  const value = formText(formData, "backofficeErrorPath");
+
+  if (
+    value === backofficePath ||
+    value?.startsWith(`${backofficePath}?`) ||
+    value?.startsWith(`${backofficePath}/`)
+  ) {
+    return value;
+  }
+
+  return fallback;
 }
 
 function slugify(value: string) {
@@ -43,6 +77,12 @@ function formNumber(formData: FormData, key: string) {
 
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function formLines(formData: FormData, key: string) {
+  const value = formText(formData, key);
+
+  return value ? value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean) : [];
 }
 
 function removeEmptyValues<T extends Record<string, unknown>>(value: T) {
@@ -118,6 +158,66 @@ function buildMeasurePayload(formData: FormData) {
   });
 }
 
+function buildStoryPayload(formData: FormData) {
+  const title = formText(formData, "storyTitle");
+  const summary = formText(formData, "storySummary");
+  const content = formText(formData, "storyContent");
+
+  if (!title || !summary || !content) {
+    return null;
+  }
+
+  const mediaUrl = formText(formData, "storyMediaUrl");
+
+  return removeEmptyValues({
+    title,
+    slug: formText(formData, "storySlug") ?? slugify(title),
+    summary,
+    content,
+    status: (formText(formData, "storyStatus") ?? "draft") as StoryStatus,
+    country: formText(formData, "storyCountry"),
+    territory: formText(formData, "storyTerritory"),
+    mainRisk: formText(formData, "storyMainRisk"),
+    mediaUrl,
+    mediaAlt: formText(formData, "storyMediaAlt") ?? (mediaUrl ? `Material audiovisual de ${title}` : undefined),
+    sourceUrl: formText(formData, "storySourceUrl"),
+  });
+}
+
+function buildCountryProfilePayload(formData: FormData, options: { clearOptionalFields?: boolean } = {}) {
+  const name = formText(formData, "profileName");
+  const summary = formText(formData, "profileSummary");
+  const mainRisk = formText(formData, "profileMainRisk");
+  const territory = formText(formData, "profileTerritory");
+  const sector = formText(formData, "profileSector");
+  const optionalText = options.clearOptionalFields ? formNullableText : formText;
+
+  if (!name || !summary || !mainRisk || !territory || !sector) {
+    return null;
+  }
+
+  return removeEmptyValues({
+    name,
+    slug: formText(formData, "profileSlug") ?? slugify(name),
+    summary,
+    status: (formText(formData, "profileStatus") ?? "draft") as CountryProfileStatus,
+    mainRisk,
+    territory,
+    sector,
+    measuresCount: formNumber(formData, "profileMeasuresCount"),
+    storyTitle: optionalText(formData, "profileStoryTitle"),
+    risks: formLines(formData, "profileRisks"),
+    heroImageUrl: optionalText(formData, "profileHeroImageUrl"),
+    profilePdfUrl: optionalText(formData, "profilePdfUrl"),
+    riskAnalysis: optionalText(formData, "profileRiskAnalysis"),
+    climateThreats: optionalText(formData, "profileClimateThreats"),
+    exposureAndVulnerabilities: optionalText(formData, "profileExposureAndVulnerabilities"),
+    adaptationMeasures: optionalText(formData, "profileAdaptationMeasures"),
+    featuredStory: optionalText(formData, "profileFeaturedStory"),
+    sources: optionalText(formData, "profileSources"),
+  });
+}
+
 async function clearBackofficeSession() {
   const cookieStore = await cookies();
   cookieStore.delete(backofficeTokenCookie);
@@ -184,10 +284,11 @@ export async function logoutBackoffice() {
 
 export async function createMeasure(formData: FormData) {
   const token = await requireBackofficeToken();
+  const errorPath = formBackofficeErrorPath(formData, `${backofficePath}?mode=create`);
   const payload = buildMeasurePayload(formData);
 
   if (!payload) {
-    redirect(`${backofficePath}?save=missing`);
+    redirect(appendQueryParam(errorPath, "save", "missing"));
   }
 
   let response: Response;
@@ -203,7 +304,7 @@ export async function createMeasure(formData: FormData) {
       cache: "no-store",
     });
   } catch {
-    redirect(`${backofficePath}?save=error`);
+    redirect(appendQueryParam(errorPath, "save", "error"));
   }
 
   if (response.status === 401) {
@@ -212,7 +313,7 @@ export async function createMeasure(formData: FormData) {
   }
 
   if (!response.ok) {
-    redirect(`${backofficePath}?save=error`);
+    redirect(appendQueryParam(errorPath, "save", "error"));
   }
 
   revalidatePath(backofficePath);
@@ -221,10 +322,11 @@ export async function createMeasure(formData: FormData) {
 
 export async function updateMeasure(id: string, formData: FormData) {
   const token = await requireBackofficeToken();
+  const errorPath = formBackofficeErrorPath(formData, `${backofficePath}?edit=${encodeURIComponent(id)}`);
   const payload = buildMeasurePayload(formData);
 
   if (!payload) {
-    redirect(`${backofficePath}?save=missing`);
+    redirect(appendQueryParam(errorPath, "save", "missing"));
   }
 
   let response: Response;
@@ -240,7 +342,7 @@ export async function updateMeasure(id: string, formData: FormData) {
       cache: "no-store",
     });
   } catch {
-    redirect(`${backofficePath}?save=error`);
+    redirect(appendQueryParam(errorPath, "save", "error"));
   }
 
   if (response.status === 401) {
@@ -249,15 +351,16 @@ export async function updateMeasure(id: string, formData: FormData) {
   }
 
   if (!response.ok) {
-    redirect(`${backofficePath}?save=error`);
+    redirect(appendQueryParam(errorPath, "save", "error"));
   }
 
   revalidatePath(backofficePath);
   redirect(`${backofficePath}?updated=1`);
 }
 
-export async function deleteMeasure(id: string) {
+export async function deleteMeasure(id: string, formData: FormData) {
   const token = await requireBackofficeToken();
+  const errorPath = formBackofficeErrorPath(formData, `${backofficePath}?edit=${encodeURIComponent(id)}`);
   let response: Response;
 
   try {
@@ -269,7 +372,7 @@ export async function deleteMeasure(id: string) {
       cache: "no-store",
     });
   } catch {
-    redirect(`${backofficePath}?save=delete-error`);
+    redirect(appendQueryParam(errorPath, "save", "delete-error"));
   }
 
   if (response.status === 401) {
@@ -278,9 +381,205 @@ export async function deleteMeasure(id: string) {
   }
 
   if (!response.ok) {
-    redirect(`${backofficePath}?save=delete-error`);
+    redirect(appendQueryParam(errorPath, "save", "delete-error"));
   }
 
   revalidatePath(backofficePath);
   redirect(`${backofficePath}?deleted=1`);
+}
+
+export async function createCountryProfile(formData: FormData) {
+  const token = await requireBackofficeToken();
+  const errorPath = formBackofficeErrorPath(formData, `${profilesBackofficePath}&profileMode=create`);
+  const payload = buildCountryProfilePayload(formData);
+
+  if (!payload) {
+    redirect(appendQueryParam(errorPath, "profileSave", "missing"));
+  }
+
+  let response: Response;
+
+  try {
+    response = await fetchBackofficeApi(`${siteConfig.apiUrl}/admin/country-profiles`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+  } catch {
+    redirect(appendQueryParam(errorPath, "profileSave", "error"));
+  }
+
+  if (response.status === 401) {
+    await clearBackofficeSession();
+    redirect(`${backofficePath}?error=session`);
+  }
+
+  if (!response.ok) {
+    redirect(appendQueryParam(errorPath, "profileSave", "error"));
+  }
+
+  revalidatePath(backofficePath);
+  revalidatePath("/perfiles");
+  redirect(`${profilesBackofficePath}&profileCreated=1`);
+}
+
+export async function updateCountryProfile(id: string, formData: FormData) {
+  const token = await requireBackofficeToken();
+  const errorPath = formBackofficeErrorPath(
+    formData,
+    `${profilesBackofficePath}&profileEdit=${encodeURIComponent(id)}`,
+  );
+  const payload = buildCountryProfilePayload(formData, { clearOptionalFields: true });
+
+  if (!payload) {
+    redirect(appendQueryParam(errorPath, "profileSave", "missing"));
+  }
+
+  let response: Response;
+
+  try {
+    response = await fetchBackofficeApi(`${siteConfig.apiUrl}/admin/country-profiles/${id}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+  } catch {
+    redirect(appendQueryParam(errorPath, "profileSave", "error"));
+  }
+
+  if (response.status === 401) {
+    await clearBackofficeSession();
+    redirect(`${backofficePath}?error=session`);
+  }
+
+  if (!response.ok) {
+    redirect(appendQueryParam(errorPath, "profileSave", "error"));
+  }
+
+  revalidatePath(backofficePath);
+  revalidatePath("/perfiles");
+  redirect(`${profilesBackofficePath}&profileUpdated=1`);
+}
+
+export async function deleteCountryProfile(id: string, formData: FormData) {
+  const token = await requireBackofficeToken();
+  const errorPath = formBackofficeErrorPath(
+    formData,
+    `${profilesBackofficePath}&profileEdit=${encodeURIComponent(id)}`,
+  );
+  let response: Response;
+
+  try {
+    response = await fetchBackofficeApi(`${siteConfig.apiUrl}/admin/country-profiles/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+  } catch {
+    redirect(appendQueryParam(errorPath, "profileSave", "delete-error"));
+  }
+
+  if (response.status === 401) {
+    await clearBackofficeSession();
+    redirect(`${backofficePath}?error=session`);
+  }
+
+  if (!response.ok) {
+    redirect(appendQueryParam(errorPath, "profileSave", "delete-error"));
+  }
+
+  revalidatePath(backofficePath);
+  revalidatePath("/perfiles");
+  redirect(`${profilesBackofficePath}&profileDeleted=1`);
+}
+
+export async function createStory(formData: FormData) {
+  const token = await requireBackofficeToken();
+  const errorPath = formBackofficeErrorPath(formData, `${storiesBackofficePath}&storyMode=create`);
+  const payload = buildStoryPayload(formData);
+
+  if (!payload) {
+    redirect(appendQueryParam(errorPath, "storySave", "missing"));
+  }
+
+  let response: Response;
+
+  try {
+    response = await fetchBackofficeApi(`${siteConfig.apiUrl}/admin/stories`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+  } catch {
+    redirect(appendQueryParam(errorPath, "storySave", "error"));
+  }
+
+  if (response.status === 401) {
+    await clearBackofficeSession();
+    redirect(`${backofficePath}?error=session`);
+  }
+
+  if (!response.ok) {
+    redirect(appendQueryParam(errorPath, "storySave", "error"));
+  }
+
+  revalidatePath(backofficePath);
+  revalidatePath("/historias");
+  redirect(`${storiesBackofficePath}&storyCreated=1`);
+}
+
+export async function updateStory(id: string, formData: FormData) {
+  const token = await requireBackofficeToken();
+  const errorPath = formBackofficeErrorPath(
+    formData,
+    `${storiesBackofficePath}&storyEdit=${encodeURIComponent(id)}`,
+  );
+  const payload = buildStoryPayload(formData);
+
+  if (!payload) {
+    redirect(appendQueryParam(errorPath, "storySave", "missing"));
+  }
+
+  let response: Response;
+
+  try {
+    response = await fetchBackofficeApi(`${siteConfig.apiUrl}/admin/stories/${id}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+  } catch {
+    redirect(appendQueryParam(errorPath, "storySave", "error"));
+  }
+
+  if (response.status === 401) {
+    await clearBackofficeSession();
+    redirect(`${backofficePath}?error=session`);
+  }
+
+  if (!response.ok) {
+    redirect(appendQueryParam(errorPath, "storySave", "error"));
+  }
+
+  revalidatePath(backofficePath);
+  revalidatePath("/historias");
+  redirect(`${storiesBackofficePath}&storyUpdated=1`);
 }

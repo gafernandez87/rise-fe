@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { MapLoader } from "@/components/map/map-loader";
 import {
   getDictionary,
@@ -11,11 +12,13 @@ import {
   localizedPath,
   type Locale,
 } from "@/lib/i18n";
+import type { MapInitialFilters } from "@/lib/map-filters";
 import type { Category, MapCase } from "@/types/cases";
 
 type MapExplorerProps = {
   cases: MapCase[];
   categories: Category[];
+  initialFilters?: MapInitialFilters;
   locale: Locale;
 };
 
@@ -24,8 +27,49 @@ function getCaseRisk(item: MapCase, locale: Locale) {
   return item.threat ?? dict.mapExplorer.riskBySeverity[item.severity];
 }
 
+function normalizeFilterValue(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
+function uniqueFilterOptions(values: Array<string | null | undefined>) {
+  const seenValues = new Set<string>();
+
+  return values.filter((value): value is string => {
+    const normalizedValue = value ? normalizeFilterValue(value) : "";
+
+    if (!normalizedValue || seenValues.has(normalizedValue)) {
+      return false;
+    }
+
+    seenValues.add(normalizedValue);
+    return true;
+  });
+}
+
+function filtersMatch(option: string, value: string) {
+  return normalizeFilterValue(option) === normalizeFilterValue(value);
+}
+
+function resolveFilterOption(options: string[], value?: string) {
+  const normalizedValue = value?.trim();
+
+  if (!normalizedValue) {
+    return "";
+  }
+
+  return options.find((option) => filtersMatch(option, normalizedValue)) ?? normalizedValue;
+}
+
+function getCaseMeasureLabels(item: MapCase) {
+  return uniqueFilterOptions([item.measureType, item.category.name]);
+}
+
 function getCaseMeasure(item: MapCase) {
-  return item.measureType ?? item.category.name;
+  return getCaseMeasureLabels(item)[0] ?? item.category.name;
 }
 
 function getCaseTerritory(item: MapCase) {
@@ -64,23 +108,47 @@ function SelectFilter({
   );
 }
 
-export function MapExplorer({ cases, categories, locale }: MapExplorerProps) {
+export function MapExplorer({ cases, categories, initialFilters, locale }: MapExplorerProps) {
   const dict = getDictionary(locale);
   const content = getLocalizedContentLists(locale);
   const countries = getLocalizedCountries(locale);
+  const router = useRouter();
+  const pathname = usePathname();
+  const threatOptions = useMemo(
+    () => uniqueFilterOptions([...cases.map((item) => getCaseRisk(item, locale)), ...content.climateRisks, initialFilters?.risk]),
+    [cases, content.climateRisks, initialFilters?.risk, locale],
+  );
+  const measureOptions = useMemo(
+    () =>
+      uniqueFilterOptions([
+        ...categories.map((item) => item.name),
+        ...cases.flatMap(getCaseMeasureLabels),
+        ...content.adaptationMeasureTypes,
+        initialFilters?.measure,
+      ]),
+    [cases, categories, content.adaptationMeasureTypes, initialFilters?.measure],
+  );
+  const territoryOptions = useMemo(
+    () => uniqueFilterOptions([...cases.map(getCaseTerritory), ...content.territories]),
+    [cases, content.territories],
+  );
+  const initialRisk = resolveFilterOption(threatOptions, initialFilters?.risk);
+  const initialMeasure = resolveFilterOption(measureOptions, initialFilters?.measure);
   const [query, setQuery] = useState("");
   const [country, setCountry] = useState("");
-  const [risk, setRisk] = useState("");
-  const [measure, setMeasure] = useState("");
+  const [risk, setRisk] = useState(initialRisk);
+  const [measure, setMeasure] = useState(initialMeasure);
   const [territory, setTerritory] = useState("");
   const [actor, setActor] = useState("");
   const [status, setStatus] = useState("");
   const [filtersVisible, setFiltersVisible] = useState(true);
 
   const filteredCases = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
+    const normalizedQuery = normalizeFilterValue(query);
 
     return cases.filter((item) => {
+      const caseRisk = getCaseRisk(item, locale);
+      const caseMeasureLabels = getCaseMeasureLabels(item);
       const textMatch =
         !normalizedQuery ||
         [
@@ -91,16 +159,19 @@ export function MapExplorer({ cases, categories, locale }: MapExplorerProps) {
           item.locality,
           item.ecoregion,
           item.threat,
-          getCaseMeasure(item),
+          caseRisk,
+          ...caseMeasureLabels,
         ]
           .filter(Boolean)
           .join(" ")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
           .toLowerCase()
           .includes(normalizedQuery);
 
       const countryMatch = !country || item.country === country;
-      const riskMatch = !risk || getCaseRisk(item, locale) === risk;
-      const measureMatch = !measure || getCaseMeasure(item) === measure;
+      const riskMatch = !risk || filtersMatch(caseRisk, risk);
+      const measureMatch = !measure || caseMeasureLabels.some((label) => filtersMatch(label, measure));
       const territoryMatch = !territory || getCaseTerritory(item) === territory;
       const actorMatch = !actor || Boolean(item.youthRole?.toLowerCase().includes(actor.toLowerCase()));
 
@@ -108,13 +179,16 @@ export function MapExplorer({ cases, categories, locale }: MapExplorerProps) {
     });
   }, [actor, cases, country, locale, measure, query, risk, territory]);
 
-  const threatOptions = [...new Set([...cases.map((item) => getCaseRisk(item, locale)), ...content.climateRisks])];
-  const measureOptions = [
-    ...new Set([...categories.map((item) => item.name), ...cases.map(getCaseMeasure), ...content.adaptationMeasureTypes]),
-  ];
-  const territoryOptions = [
-    ...new Set([...cases.map(getCaseTerritory).filter((item): item is string => Boolean(item)), ...content.territories]),
-  ];
+  const clearFilters = () => {
+    setQuery("");
+    setCountry("");
+    setRisk("");
+    setMeasure("");
+    setTerritory("");
+    setActor("");
+    setStatus("");
+    router.replace(pathname, { scroll: false });
+  };
 
   return (
     <div className={filtersVisible ? "grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]" : "grid gap-6"}>
@@ -240,15 +314,7 @@ export function MapExplorer({ cases, categories, locale }: MapExplorerProps) {
             />
             <button
               type="button"
-              onClick={() => {
-                setQuery("");
-                setCountry("");
-                setRisk("");
-                setMeasure("");
-                setTerritory("");
-                setActor("");
-                setStatus("");
-              }}
+              onClick={clearFilters}
               className="w-full rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"
             >
               {dict.mapExplorer.clearFilters}

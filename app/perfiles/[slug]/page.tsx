@@ -1,12 +1,14 @@
 import { CountryProfilePageView } from "@/components/pages/public-pages";
-import { getLocalizedCountries } from "@/lib/i18n";
+import { getPublishedCountryProfiles } from "@/lib/api";
 
 type CountryProfilePageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
-  return getLocalizedCountries("es").map((country) => ({ slug: country.slug }));
+export async function generateStaticParams() {
+  const countries = await getPublishedCountryProfiles();
+
+  return countries.map((country) => ({ slug: country.slug }));
 }
 
 export default async function CountryProfilePage({ params }: CountryProfilePageProps) {

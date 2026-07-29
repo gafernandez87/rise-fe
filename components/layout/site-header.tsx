@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { defaultLocale, localizedPath, type Locale } from "@/lib/i18n";
 
 const navItems = [
   { href: "https://www.somosclaac.org/", label: "INICIO", active: true },
@@ -12,20 +13,95 @@ const navItems = [
     href: "https://www.somosclaac.org/estado-de-las-organizaciones-juveniles-climaticas-en-america-latina-y-el-caribe/",
     label: "INFORME JUVENTUDES LAC",
   },
-  { href: "https://www.somosclaac.org/potencia-tu-voz/", label: "POTENCIA TU VOZ", active: true },
+  { href: "https://www.somosclaac.org/potencia-tu-voz/", label: "POTENCIA TU VOZ", active: false },
   { href: "https://www.climaps.org/", label: "CLIMAPS" },
   { href: "https://miradosveces.somosclaac.org/", label: "CAMPAÑA #MIRADOSVECES" },
 ];
 
-export function SiteHeader() {
+const riseNavItems = [
+  {
+    href: "/",
+    label: {
+      es: "Inicio RISE",
+      en: "RISE home",
+      pt: "Inicio RISE",
+    },
+  },
+  {
+    href: "/mapa",
+    label: {
+      es: "Mapa",
+      en: "Map",
+      pt: "Mapa",
+    },
+  },
+  {
+    href: "/perfiles",
+    label: {
+      es: "Perfiles",
+      en: "Profiles",
+      pt: "Perfis",
+    },
+  },
+  {
+    href: "/historias",
+    label: {
+      es: "Historias",
+      en: "Stories",
+      pt: "Historias",
+    },
+  },
+  {
+    href: "/informe-regional",
+    label: {
+      es: "Informe regional",
+      en: "Regional report",
+      pt: "Relatorio regional",
+    },
+  },
+  {
+    href: "/metodologia",
+    label: {
+      es: "Metodologia",
+      en: "Methodology",
+      pt: "Metodologia",
+    },
+  },
+] satisfies {
+  href: string;
+  label: Record<Locale, string>;
+}[];
+
+type SiteHeaderProps = {
+  locale?: Locale;
+  currentPath?: string;
+};
+
+function isRisePathActive(currentPath: string | undefined, href: string) {
+  if (!currentPath) {
+    return false;
+  }
+
+  if (href === "/") {
+    return currentPath === "/";
+  }
+
+  return currentPath === href || currentPath.startsWith(`${href}/`);
+}
+
+export function SiteHeader({ locale = defaultLocale, currentPath }: SiteHeaderProps) {
   const navId = useId();
-  const submenuId = useId();
+  const academiaSubmenuId = useId();
+  const riseSubmenuId = useId();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSubmenuOpen, setIsSubmenuOpen] = useState(false);
+  const [openSubmenu, setOpenSubmenu] = useState<"academia" | "rise" | null>(null);
+  const isAcademiaSubmenuOpen = openSubmenu === "academia";
+  const isRiseSubmenuOpen = openSubmenu === "rise";
+  const isRiseSectionActive = riseNavItems.some((item) => isRisePathActive(currentPath, item.href));
 
   function closeMenus() {
     setIsMenuOpen(false);
-    setIsSubmenuOpen(false);
+    setOpenSubmenu(null);
   }
 
   return (
@@ -68,19 +144,19 @@ export function SiteHeader() {
           <Link href={navItems[2].href} className="claac-header__link" onClick={closeMenus}>
             <span>{navItems[2].label}</span>
           </Link>
-          <div className={`claac-header__menu${isSubmenuOpen ? " claac-header__menu--open" : ""}`}>
+          <div className={`claac-header__menu${isAcademiaSubmenuOpen ? " claac-header__menu--open" : ""}`}>
             <button
               className="claac-header__link claac-header__menu-trigger"
               type="button"
-              aria-controls={submenuId}
-              aria-expanded={isSubmenuOpen}
+              aria-controls={academiaSubmenuId}
+              aria-expanded={isAcademiaSubmenuOpen}
               aria-haspopup="true"
-              onClick={() => setIsSubmenuOpen((current) => !current)}
+              onClick={() => setOpenSubmenu((current) => (current === "academia" ? null : "academia"))}
             >
               <span>ACADEMIA COP30</span>
               <span className="claac-header__caret" aria-hidden="true" />
             </button>
-            <div id={submenuId} className="claac-header__submenu">
+            <div id={academiaSubmenuId} className="claac-header__submenu">
               <Link
                 href="https://www.somosclaac.org/academia-cop-30/"
                 className="claac-header__submenu-link"
@@ -88,6 +164,36 @@ export function SiteHeader() {
               >
                 PLATAFORMA
               </Link>
+            </div>
+          </div>
+          <div className={`claac-header__menu${isRiseSubmenuOpen ? " claac-header__menu--open" : ""}`}>
+            <button
+              className="claac-header__link claac-header__menu-trigger claac-header__link--active"
+              type="button"
+              aria-controls={riseSubmenuId}
+              aria-expanded={isRiseSubmenuOpen}
+              aria-haspopup="true"
+              onClick={() => setOpenSubmenu((current) => (current === "rise" ? null : "rise"))}
+            >
+              <span>RISE</span>
+              <span className="claac-header__caret" aria-hidden="true" />
+            </button>
+            <div id={riseSubmenuId} className="claac-header__submenu">
+              {riseNavItems.map((item) => {
+                const isActive = isRisePathActive(currentPath, item.href);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={localizedPath(item.href, locale)}
+                    className={`claac-header__submenu-link${isActive ? " claac-header__submenu-link--active" : ""}`}
+                    aria-current={isActive ? "page" : undefined}
+                    onClick={closeMenus}
+                  >
+                    {item.label[locale]}
+                  </Link>
+                );
+              })}
             </div>
           </div>
           {navItems.slice(3).map((item) => (

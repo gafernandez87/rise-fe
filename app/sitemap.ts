@@ -1,11 +1,14 @@
 import type { MetadataRoute } from "next";
-import { getPublishedCases } from "@/lib/api";
-import { getLocalizedCountries, locales, localizedPath } from "@/lib/i18n";
+import { getPublishedCases, getPublishedCountryProfiles, getPublishedStories } from "@/lib/api";
+import { locales, localizedPath } from "@/lib/i18n";
 import { siteConfig } from "@/lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const cases = await getPublishedCases();
-  const countries = getLocalizedCountries("es");
+  const [cases, countries, stories] = await Promise.all([
+    getPublishedCases(),
+    getPublishedCountryProfiles(),
+    getPublishedStories(),
+  ]);
   const staticRoutes = [
     "",
     "/mapa",
@@ -14,12 +17,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/informe-regional",
     "/metodologia",
   ];
-  const countryRoutes = countries.flatMap((country) => [
-    `/perfiles/${country.slug}`,
-    `/historias/${country.slug}`,
-  ]);
+  const countryRoutes = countries.map((country) => `/perfiles/${country.slug}`);
+  const storyRoutes = stories.map((story) => `/historias/${story.slug}`);
   const caseRoutes = cases.map((item) => `/casos/${item.slug}`);
-  const routes = [...staticRoutes, ...countryRoutes, ...caseRoutes];
+  const routes = [...staticRoutes, ...countryRoutes, ...storyRoutes, ...caseRoutes];
 
   return locales.flatMap((locale) =>
     routes.map((path) => ({
