@@ -171,7 +171,7 @@ function SiteFooter({ locale }: { locale: Locale }) {
         <Link href="https://www.somosclaac.org/" aria-label="CLAAC">
           <Image
             src="/brand/organizations/claac.png"
-            alt="CLAAC - Coalicion para Latinoamerica de Accion Climatica"
+            alt="CLAAC - Coalición para Latinoamérica de Acción Climática"
             width={1920}
             height={1080}
             className="h-auto w-40"
@@ -584,7 +584,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
                 >
                   <Image
                     src="/brand/organizations/claac.png"
-                    alt="CLAAC - Coalicion para Latinoamerica de Accion Climatica"
+                    alt="CLAAC - Coalición para Latinoamérica de Acción Climática"
                     width={1920}
                     height={1080}
                     className="rise-organizations__lead-image"

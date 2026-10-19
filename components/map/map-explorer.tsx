@@ -181,8 +181,9 @@ export function MapExplorer({ cases, categories, initialFilters, locale }: MapEx
       const countryMatch = !country || Boolean(item.country && filtersMatch(item.country, country));
       const riskMatch = !risk || filtersMatch(caseRisk, risk);
       const measureMatch = !measure || caseMeasureLabels.some((label) => filtersMatch(label, measure));
-      const territoryMatch = !territory || getCaseTerritory(item) === territory;
-      const actorMatch = !actor || Boolean(item.youthRole?.toLowerCase().includes(actor.toLowerCase()));
+      const caseTerritory = getCaseTerritory(item);
+      const territoryMatch = !territory || Boolean(caseTerritory && filtersMatch(caseTerritory, territory));
+      const actorMatch = !actor || Boolean(item.youthRole && normalizeFilterValue(item.youthRole).includes(normalizeFilterValue(actor)));
 
       return textMatch && countryMatch && riskMatch && measureMatch && territoryMatch && actorMatch;
     });

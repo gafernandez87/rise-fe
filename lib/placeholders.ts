@@ -6,39 +6,39 @@ import { projectCountries } from "@/lib/rise-content";
 export const placeholderCategories: Category[] = [
   {
     id: "water",
-    name: "Gestion comunitaria del agua",
+    name: "Gestión comunitaria del agua",
     slug: "gestion-del-agua",
-    description: "Placeholder de categoria.",
+    description: "Placeholder de categoría.",
   },
   {
     id: "cities",
     name: "Infraestructura verde",
     slug: "ciudades-resilientes",
-    description: "Placeholder de categoria.",
+    description: "Placeholder de categoría.",
   },
   {
     id: "food",
     name: "Agricultura resiliente",
     slug: "sistemas-alimentarios",
-    description: "Placeholder de categoria.",
+    description: "Placeholder de categoría.",
   },
 ];
 
 export const placeholderCases: AdaptationCase[] = [
   {
     id: "andes-water",
-    title: "Gestion comunitaria del agua en contexto de sequia",
+    title: "Gestión comunitaria del agua en contexto de sequía",
     slug: "gestion-comunitaria-agua-sequia",
     shortDescription:
-      "Caso placeholder sobre gobernanza local del agua y resiliencia hidrica en territorios expuestos a sequia.",
+      "Caso placeholder sobre gobernanza local del agua y resiliencia hídrica en territorios expuestos a sequía.",
     fullDescription:
-      "Contenido placeholder. Esta pagina quedara conectada al backoffice para mostrar informacion completa, imagenes, fuentes y datos complementarios del caso.",
+      "Contenido placeholder. Esta página quedará conectada al backoffice para mostrar información completa, imágenes, fuentes y datos complementarios del caso.",
     severity: "high",
     status: "published",
     latitude: -32.88,
     longitude: -71.25,
     country: "Chile",
-    region: "Region de Valparaiso",
+    region: "Región de Valparaiso",
     sourceUrl: null,
     category: placeholderCategories[0],
     images: [
@@ -56,9 +56,9 @@ export const placeholderCases: AdaptationCase[] = [
     title: "Corredores verdes contra islas de calor",
     slug: "corredores-verdes-islas-calor",
     shortDescription:
-      "Caso placeholder sobre infraestructura verde urbana y adaptacion frente al calor extremo.",
+      "Caso placeholder sobre infraestructura verde urbana y adaptación frente al calor extremo.",
     fullDescription:
-      "Contenido placeholder. Luego se reemplazara por el relato completo del caso, ubicacion, imagenes y datos institucionales.",
+      "Contenido placeholder. Luego se reemplazará por el relato completo del caso, ubicación, imágenes y datos institucionales.",
     severity: "medium",
     status: "published",
     latitude: -34.6,
@@ -82,22 +82,22 @@ export const placeholderCases: AdaptationCase[] = [
     title: "Agricultura resiliente frente a inundaciones",
     slug: "agricultura-resiliente-inundaciones",
     shortDescription:
-      "Caso placeholder sobre practicas productivas resilientes ante inundaciones y variabilidad climatica.",
+      "Caso placeholder sobre prácticas productivas resilientes ante inundaciones y variabilidad climática.",
     fullDescription:
-      "Contenido placeholder. El backoffice permitira editar esta informacion y administrar multiples imagenes.",
+      "Contenido placeholder. El backoffice permitirá editar esta información y administrar múltiples imágenes.",
     severity: "critical",
     status: "published",
     latitude: 14.08,
     longitude: -87.21,
     country: "Honduras",
-    region: "Francisco Morazan",
+    region: "Francisco Morazán",
     sourceUrl: null,
     category: placeholderCategories[2],
     images: [
       {
         id: "coastal-food-cover",
         url: "https://images.unsplash.com/photo-1500382017468-9049fed747ef",
-        altText: "Campo agricola usado como imagen placeholder.",
+        altText: "Campo agrícola usado como imagen placeholder.",
         sortOrder: 0,
         isCover: true,
       },
@@ -108,22 +108,22 @@ export const placeholderCases: AdaptationCase[] = [
     title: "Agricultura resiliente frente a inundaciones",
     slug: "agricultura-resiliente-inundaciones",
     shortDescription:
-      "Caso placeholder sobre practicas productivas resilientes ante inundaciones y variabilidad climatica.",
+      "Caso placeholder sobre prácticas productivas resilientes ante inundaciones y variabilidad climática.",
     fullDescription:
-      "Contenido placeholder. El backoffice permitira editar esta informacion y administrar multiples imagenes.",
+      "Contenido placeholder. El backoffice permitirá editar esta información y administrar múltiples imágenes.",
     severity: "critical",
     status: "published",
     latitude: 14.08,
     longitude: -88.21,
     country: "Honduras",
-    region: "Francisco Morazan",
+    region: "Francisco Morazán",
     sourceUrl: null,
     category: placeholderCategories[2],
     images: [
       {
         id: "coastal-food-cover",
         url: "https://images.unsplash.com/photo-1500382017468-9049fed747ef",
-        altText: "Campo agricola usado como imagen placeholder.",
+        altText: "Campo agrícola usado como imagen placeholder.",
         sortOrder: 0,
         isCover: true,
       },
@@ -174,7 +174,7 @@ export const placeholderResilienceStories: ResilienceStory[] = projectCountries.
   summary: `${country.summary} Historia enfocada en ${country.mainRisk.toLowerCase()} en ${country.territory.toLowerCase()}.`,
   content: [
     `Esta historia documenta aprendizajes territoriales sobre ${country.mainRisk.toLowerCase()} en ${country.territory.toLowerCase()}.`,
-    "El relato completo podra cargarse desde el backoffice con detalles del proceso, protagonistas, recursos audiovisuales y fuentes.",
+    "El relato completo podrá cargarse desde el backoffice con detalles del proceso, protagonistas, recursos audiovisuales y fuentes.",
   ].join("\n\n"),
   status: "published",
   country: country.name,

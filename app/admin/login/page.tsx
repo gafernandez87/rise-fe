@@ -19,7 +19,7 @@ export default function AdminLoginPage() {
             type="password"
           />
           <button className="w-full rounded-md bg-[color:var(--color-primary)] px-4 py-2 font-semibold text-white">
-            Iniciar sesion
+            Iniciar sesión
           </button>
         </form>
       </main>

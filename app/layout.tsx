@@ -51,11 +51,11 @@ export const metadata: Metadata = {
     template: "%s | RISE",
   },
   description:
-    "Plataforma regional de medidas de adaptacion e historias de resiliencia lideradas por juventudes en America Latina.",
+    "Plataforma regional de medidas de adaptación e historias de resiliencia lideradas por juventudes en América Latina.",
   openGraph: {
     title: "RISE",
     description:
-      "Explora casos, perfiles nacionales e historias de resiliencia en America Latina.",
+      "Explora casos, perfiles nacionales e historias de resiliencia en América Latina.",
     siteName: "RISE",
     type: "website",
   },

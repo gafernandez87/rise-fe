@@ -27,7 +27,7 @@ export default async function AdminCasesPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-[color:var(--color-surface-muted)]">
               <tr>
-                <th className="p-3">Titulo</th>
+                <th className="p-3">Título</th>
                 <th className="p-3">Categoria</th>
                 <th className="p-3">Severidad</th>
                 <th className="p-3">Estado</th>

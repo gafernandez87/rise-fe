@@ -17,7 +17,7 @@ function getConfiguredApiUrl() {
 export const siteConfig = {
   name: "RISE",
   description:
-    "Plataforma regional de medidas de adaptacion e historias de resiliencia lideradas por juventudes en America Latina.",
+    "Plataforma regional de medidas de adaptación e historias de resiliencia lideradas por juventudes en América Latina.",
   siteUrl: trimTrailingSlash(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001"),
   apiUrl: getConfiguredApiUrl(),
 };

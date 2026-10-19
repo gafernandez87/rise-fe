@@ -73,7 +73,7 @@ const severityLabels: Record<CaseSeverity, string> = {
   low: "Baja",
   medium: "Media",
   high: "Alta",
-  critical: "Critica",
+  critical: "Crítica",
 };
 
 function Field({ label, name, required, step, type = "text", placeholder, value }: FieldProps) {
@@ -139,7 +139,7 @@ function LoginView({ error }: { error?: string }) {
       : error === "unavailable"
         ? "No se pudo conectar con el backend."
         : error === "session"
-          ? "La sesion expiro. Ingresa nuevamente."
+          ? "La sesión expiró. Ingresa nuevamente."
           : error === "missing"
             ? "Ingresa la clave."
             : null;
@@ -250,7 +250,7 @@ function MeasureFields({ measure }: { measure?: AdaptationCase }) {
   return (
     <>
       <section className="grid gap-4 md:grid-cols-2">
-        <Field label="Titulo" name="title" required value={measure?.title} />
+        <Field label="Título" name="title" required value={measure?.title} />
         <Field label="Slug" name="slug" placeholder="se-genera-si-queda-vacio" value={measure?.slug} />
         <SelectField label="Estado" name="status" value={measure?.status ?? "draft"}>
           <option value="draft">Borrador</option>
@@ -261,19 +261,19 @@ function MeasureFields({ measure }: { measure?: AdaptationCase }) {
           <option value="medium">Media</option>
           <option value="low">Baja</option>
           <option value="high">Alta</option>
-          <option value="critical">Critica</option>
+          <option value="critical">Crítica</option>
         </SelectField>
-        <Field label="Pais" name="country" value={measure?.country} />
+        <Field label="País" name="country" value={measure?.country} />
         <Field label="Localidad" name="locality" value={measure?.locality} />
         <Field
-          label="Jurisdiccion subnacional"
+          label="Jurisdicción subnacional"
           name="subnationalJurisdiction"
           value={measure?.subnationalJurisdiction ?? measure?.region}
         />
-        <Field label="Ecorregion" name="ecoregion" value={measure?.ecoregion} />
+        <Field label="Ecorregión" name="ecoregion" value={measure?.ecoregion} />
         <Field label="Latitud" name="latitude" required step="any" type="number" value={measure?.latitude} />
         <Field label="Longitud" name="longitude" required step="any" type="number" value={measure?.longitude} />
-        <Field label="Fecha de implementacion" name="implementationDate" value={measure?.implementationDate} />
+        <Field label="Fecha de implementación" name="implementationDate" value={measure?.implementationDate} />
         <Field label="Foto URL" name="photoUrl" type="url" value={casePhotoUrl(measure)} />
         <Field label="Amenaza" name="threat" value={measure?.threat} />
         <Field label="Sector / tipo de medida" name="measureType" value={measure?.measureType ?? measure?.category.name} />
@@ -283,7 +283,7 @@ function MeasureFields({ measure }: { measure?: AdaptationCase }) {
 
       <section className="grid gap-4 lg:grid-cols-2">
         <TextArea label="Resumen de la medida" name="shortDescription" required value={measure?.shortDescription} />
-        <TextArea label="Descripcion completa" name="fullDescription" value={measure?.fullDescription} />
+        <TextArea label="Descripción completa" name="fullDescription" value={measure?.fullDescription} />
         <TextArea
           label="Perfil de vulnerabilidad nacional"
           name="nationalVulnerabilityProfile"
@@ -295,15 +295,15 @@ function MeasureFields({ measure }: { measure?: AdaptationCase }) {
         <TextArea label="Rol de la juventud" name="youthRole" value={measure?.youthRole} />
         <TextArea label="Resultados obtenidos" name="results" value={measure?.results} />
         <TextArea label="Contacto con referente" name="contact" value={measure?.contact} />
-        <TextArea label="Problematica climatica local" name="localClimateProblem" value={measure?.localClimateProblem} />
+        <TextArea label="Problemática climática local" name="localClimateProblem" value={measure?.localClimateProblem} />
         <TextArea
-          label="Contexto socio-politico nacional"
+          label="Contexto sociopolítico nacional"
           name="nationalSocioPoliticalContext"
           value={measure?.nationalSocioPoliticalContext}
         />
-        <TextArea label="Alianzas estrategicas" name="strategicAlliances" value={measure?.strategicAlliances} />
+        <TextArea label="Alianzas estratégicas" name="strategicAlliances" value={measure?.strategicAlliances} />
         <TextArea label="Factores habilitantes y condicionantes" name="enablingFactors" value={measure?.enablingFactors} />
-        <TextArea label="Co-beneficios" name="coBenefits" value={measure?.coBenefits} />
+        <TextArea label="Cobeneficios" name="coBenefits" value={measure?.coBenefits} />
         <TextArea label="Escalabilidad" name="scalability" value={measure?.scalability} />
         <TextArea label="Sostenibilidad en el tiempo" name="longTermSustainability" value={measure?.longTermSustainability} />
       </section>
@@ -321,14 +321,14 @@ function StoryFields({ story }: { story?: ResilienceStory }) {
   return (
     <>
       <section className="grid gap-4 md:grid-cols-2">
-        <Field label="Titulo" name="storyTitle" required value={story?.title} />
+        <Field label="Título" name="storyTitle" required value={story?.title} />
         <Field label="Slug" name="storySlug" placeholder="se-genera-si-queda-vacio" value={story?.slug} />
         <SelectField label="Estado" name="storyStatus" value={story?.status ?? "draft"}>
           <option value="draft">Borrador</option>
           <option value="published">Publicado</option>
           <option value="hidden">Oculto</option>
         </SelectField>
-        <Field label="Pais" name="storyCountry" value={story?.country} />
+        <Field label="País" name="storyCountry" value={story?.country} />
         <Field label="Territorio" name="storyTerritory" value={story?.territory} />
         <Field label="Riesgo principal" name="storyMainRisk" value={story?.mainRisk} />
         <Field label="URL de video o imagen" name="storyMediaUrl" type="url" value={story?.mediaUrl} />
@@ -348,7 +348,7 @@ function CountryProfileFields({ profile }: { profile?: CountryProfile }) {
   return (
     <>
       <section className="grid gap-4 md:grid-cols-2">
-        <Field label="Pais" name="profileName" required value={profile?.name} />
+        <Field label="País" name="profileName" required value={profile?.name} />
         <Field label="Slug" name="profileSlug" placeholder="se-genera-si-queda-vacio" value={profile?.slug} />
         <SelectField label="Estado" name="profileStatus" value={profile?.status ?? "draft"}>
           <option value="draft">Borrador</option>
@@ -357,24 +357,24 @@ function CountryProfileFields({ profile }: { profile?: CountryProfile }) {
         </SelectField>
         <Field label="Riesgo principal" name="profileMainRisk" required value={profile?.mainRisk} />
         <Field label="Territorio priorizado" name="profileTerritory" required value={profile?.territory} />
-        <Field label="Sector mas afectado" name="profileSector" required value={profile?.sector} />
+        <Field label="Sector más afectado" name="profileSector" required value={profile?.sector} />
         <Field label="Medidas identificadas" name="profileMeasuresCount" type="number" value={profile?.measuresCount} />
-        <Field label="Titulo de historia destacada" name="profileStoryTitle" value={profile?.storyTitle} />
+        <Field label="Título de historia destacada" name="profileStoryTitle" value={profile?.storyTitle} />
         <Field label="Imagen principal URL" name="profileHeroImageUrl" type="url" value={profile?.heroImageUrl} />
         <Field label="Perfil PDF URL" name="profilePdfUrl" type="url" value={profile?.profilePdfUrl} />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
         <TextArea label="Resumen del perfil" name="profileSummary" required value={profile?.summary} />
-        <TextArea label="Riesgos prioritarios (uno por linea)" name="profileRisks" value={profile?.risks.join("\n")} />
-        <TextArea label="Analisis de riesgo y vulnerabilidad" name="profileRiskAnalysis" value={profile?.riskAnalysis} />
-        <TextArea label="Amenazas climaticas" name="profileClimateThreats" value={profile?.climateThreats} />
+        <TextArea label="Riesgos prioritarios (uno por línea)" name="profileRisks" value={profile?.risks.join("\n")} />
+        <TextArea label="Análisis de riesgo y vulnerabilidad" name="profileRiskAnalysis" value={profile?.riskAnalysis} />
+        <TextArea label="Amenazas climáticas" name="profileClimateThreats" value={profile?.climateThreats} />
         <TextArea
-          label="Exposicion y vulnerabilidades"
+          label="Exposición y vulnerabilidades"
           name="profileExposureAndVulnerabilities"
           value={profile?.exposureAndVulnerabilities}
         />
-        <TextArea label="Medidas de adaptacion identificadas" name="profileAdaptationMeasures" value={profile?.adaptationMeasures} />
+        <TextArea label="Medidas de adaptación identificadas" name="profileAdaptationMeasures" value={profile?.adaptationMeasures} />
         <TextArea label="Historia destacada" name="profileFeaturedStory" value={profile?.featuredStory} />
         <TextArea label="Fuentes y referencias" name="profileSources" value={profile?.sources} />
       </section>
@@ -386,7 +386,7 @@ function CasesTable({ activeId, cases }: { activeId?: string; cases: AdaptationC
   if (cases.length === 0) {
     return (
       <div className="rounded-lg border border-[color:var(--color-border)] bg-white p-5 text-sm text-[color:var(--color-muted)]">
-        Todavia no hay medidas cargadas.
+        Todavía no hay medidas cargadas.
       </div>
     );
   }
@@ -408,7 +408,7 @@ function CasesTable({ activeId, cases }: { activeId?: string; cases: AdaptationC
           {cases.map((item) => {
             const location =
               [item.locality, item.subnationalJurisdiction ?? item.region, item.country].filter(Boolean).join(", ") ||
-              "Sin ubicacion";
+              "Sin ubicación";
             const isActive = activeId === item.id;
 
             return (
@@ -458,7 +458,7 @@ function StoriesTable({ activeId, stories }: { activeId?: string; stories: Resil
   if (stories.length === 0) {
     return (
       <div className="rounded-lg border border-[color:var(--color-border)] bg-white p-5 text-sm text-[color:var(--color-muted)]">
-        Todavia no hay historias cargadas.
+        Todavía no hay historias cargadas.
       </div>
     );
   }
@@ -524,7 +524,7 @@ function CountryProfilesTable({ activeId, profiles }: { activeId?: string; profi
   if (profiles.length === 0) {
     return (
       <div className="rounded-lg border border-[color:var(--color-border)] bg-white p-5 text-sm text-[color:var(--color-muted)]">
-        Todavia no hay perfiles cargados.
+        Todavía no hay perfiles cargados.
       </div>
     );
   }
@@ -721,14 +721,14 @@ function sidebarLinkClass(isActive: boolean) {
 
 function activeSectionTitle(section: BackofficeSection) {
   if (section === "profiles") {
-    return "Perfiles de pais";
+    return "Perfiles de país";
   }
 
   if (section === "stories") {
     return "Historias de resiliencia";
   }
 
-  return "Medidas de adaptacion";
+  return "Medidas de adaptación";
 }
 
 function sectionBackHref(section: BackofficeSection) {
@@ -773,7 +773,7 @@ function screenTitle(section: BackofficeSection, isCreating: boolean, isEditing:
   }
 
   if (section === "profiles") {
-    return isCreating ? "Nuevo perfil de pais" : "Editar perfil de pais";
+    return isCreating ? "Nuevo perfil de país" : "Editar perfil de país";
   }
 
   if (section === "stories") {
@@ -1003,7 +1003,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
             created={params.profileCreated}
             deleted={params.profileDeleted}
             entityLabel="Ficha de perfil"
-            missingMessage="Completa pais, resumen, riesgo principal, territorio y sector."
+            missingMessage="Completa país, resumen, riesgo principal, territorio y sector."
             save={params.profileSave}
             updated={params.profileUpdated}
           />
@@ -1011,7 +1011,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
           <Notice
             created={params.storyCreated}
             entityLabel="Historia"
-            missingMessage="Completa titulo, resumen e historia completa."
+            missingMessage="Completa título, resumen e historia completa."
             save={params.storySave}
             updated={params.storyUpdated}
           />
@@ -1020,7 +1020,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
             created={params.created}
             deleted={params.deleted}
             entityLabel="Medida"
-            missingMessage="Completa titulo, resumen, latitud y longitud."
+            missingMessage="Completa título, resumen, latitud y longitud."
             save={params.save}
             updated={params.updated}
           />
@@ -1056,7 +1056,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
               </Link>
             }
             submitLabel="Guardar perfil"
-            title="Nuevo perfil de pais"
+            title="Nuevo perfil de país"
           />
         ) : null}
 
@@ -1115,7 +1115,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
             </section>
           ) : (
             <p className="rounded-md border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm font-medium text-[color:var(--color-primary)]">
-              No se encontro la medida seleccionada.
+              No se encontró la medida seleccionada.
             </p>
           )
         ) : null}
@@ -1134,7 +1134,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
                   </Link>
                 }
                 submitLabel="Guardar cambios"
-                title="Editar perfil de pais"
+                title="Editar perfil de país"
               />
               <form
                 action={deleteCountryProfile.bind(null, editingProfile.id)}
@@ -1161,7 +1161,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
             </section>
           ) : (
             <p className="rounded-md border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm font-medium text-[color:var(--color-primary)]">
-              No se encontro el perfil seleccionado.
+              No se encontró el perfil seleccionado.
             </p>
           )
         ) : null}
@@ -1183,7 +1183,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
             />
           ) : (
             <p className="rounded-md border border-[color:var(--color-border)] bg-white px-4 py-3 text-sm font-medium text-[color:var(--color-primary)]">
-              No se encontro la historia seleccionada.
+              No se encontró la historia seleccionada.
             </p>
           )
         ) : null}
@@ -1194,7 +1194,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
               <div>
                 <h2 className="text-xl font-semibold">Perfiles cargados</h2>
                 <p className="mt-1 text-sm text-[color:var(--color-muted)]">
-                  Vista general de todos los perfiles de pais creados.
+                  Vista general de todos los perfiles de país creados.
                 </p>
               </div>
             </div>

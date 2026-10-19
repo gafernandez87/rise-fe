@@ -62,7 +62,7 @@ const riseNavItems = [
   {
     href: "/metodologia",
     label: {
-      es: "Metodologia",
+      es: "Metodología",
       en: "Methodology",
       pt: "Metodologia",
     },
@@ -105,7 +105,7 @@ export function SiteHeader({ locale = defaultLocale, currentPath }: SiteHeaderPr
   }
 
   return (
-    <header className={`claac-header${isMenuOpen ? " claac-header--menu-open" : ""}`}>
+    <header className={`claac-header${isMenuOpen ? " claac-header--menú-open" : ""}`}>
       <div className="claac-header__overlay" />
       <div className="claac-header__content">
         <Link
@@ -116,7 +116,7 @@ export function SiteHeader({ locale = defaultLocale, currentPath }: SiteHeaderPr
         >
           <Image
             src="/brand/organizations/claac.png"
-            alt="CLAAC - Coalicion para Latinoamerica de Accion Climatica"
+            alt="CLAAC - Coalición para Latinoamérica de Acción Climática"
             width={1920}
             height={1080}
             priority
@@ -129,7 +129,7 @@ export function SiteHeader({ locale = defaultLocale, currentPath }: SiteHeaderPr
           type="button"
           aria-controls={navId}
           aria-expanded={isMenuOpen}
-          aria-label={isMenuOpen ? "Cerrar menu" : "Abrir menu"}
+          aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}
           onClick={() => setIsMenuOpen((current) => !current)}
         >
           {isMenuOpen ? <X size={24} aria-hidden="true" /> : <Menu size={24} aria-hidden="true" />}

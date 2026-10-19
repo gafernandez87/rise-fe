@@ -2,74 +2,74 @@ export const projectCountries = [
   {
     name: "Chile",
     slug: "chile",
-    risks: ["Sequia", "crisis hidrica", "incendios"],
-    mainRisk: "Sequia y estres hidrico",
+    risks: ["Sequía", "crisis hídrica", "incendios"],
+    mainRisk: "Sequía y estrés hídrico",
     territory: "Zona centro-norte",
     sector: "Agua y agricultura",
     measuresCount: 4,
-    storyTitle: "Gestion comunitaria del agua en contexto de sequia",
+    storyTitle: "Gestión comunitaria del agua en contexto de sequía",
     summary:
-      "Perfil enfocado en territorios expuestos a escasez hidrica, degradacion de cuencas e incendios cada vez mas intensos.",
+      "Perfil enfocado en territorios expuestos a escasez hídrica, degradación de cuencas e incendios cada vez más intensos.",
   },
   {
     name: "Argentina",
     slug: "argentina",
-    risks: ["Inundacion", "calor extremo", "sequias"],
+    risks: ["Inundación", "calor extremo", "sequías"],
     mainRisk: "Inundaciones y olas de calor",
     territory: "Centros urbanos y cuencas productivas",
     sector: "Ciudades, salud y agricultura",
     measuresCount: 4,
     storyTitle: "Corredores verdes para barrios expuestos al calor",
     summary:
-      "Perfil orientado a riesgos urbanos, eventos extremos y medidas que combinan infraestructura verde con organizacion local.",
+      "Perfil orientado a riesgos urbanos, eventos extremos y medidas que combinan infraestructura verde con organización local.",
   },
   {
     name: "Colombia",
     slug: "colombia",
-    risks: ["Deslizamientos", "inundacion", "perdida de biodiversidad"],
+    risks: ["Deslizamientos", "inundación", "pérdida de biodiversidad"],
     mainRisk: "Deslizamientos e inundaciones",
-    territory: "Montana, cuencas y periferias urbanas",
+    territory: "Montaña, cuencas y periferias urbanas",
     sector: "Biodiversidad, agua e infraestructura",
     measuresCount: 4,
-    storyTitle: "Restauracion territorial con juventudes rurales",
+    storyTitle: "Restauración territorial con juventudes rurales",
     summary:
-      "Perfil centrado en vulnerabilidad territorial, restauracion ecologica y gestion del riesgo desde comunidades locales.",
+      "Perfil centrado en vulnerabilidad territorial, restauración ecológica y gestión del riesgo desde comunidades locales.",
   },
   {
-    name: "Mexico",
+    name: "México",
     slug: "mexico",
-    risks: ["Calor extremo", "sequias", "subida del nivel del mar"],
-    mainRisk: "Calor extremo y sequia",
-    territory: "Zonas aridas, urbanas y costeras",
+    risks: ["Calor extremo", "sequías", "subida del nivel del mar"],
+    mainRisk: "Calor extremo y sequía",
+    territory: "Zonas áridas, urbanas y costeras",
     sector: "Salud, agua y ciudades",
     measuresCount: 4,
-    storyTitle: "Educacion climatica para comunidades expuestas",
+    storyTitle: "Educación climática para comunidades expuestas",
     summary:
       "Perfil con foco en calor, disponibilidad de agua y soluciones educativas y comunitarias para reducir vulnerabilidades.",
   },
   {
     name: "Brasil",
     slug: "brasil",
-    risks: ["Inundacion", "perdida de biodiversidad", "incendios"],
-    mainRisk: "Inundaciones y perdida de biodiversidad",
+    risks: ["Inundación", "pérdida de biodiversidad", "incendios"],
+    mainRisk: "Inundaciones y pérdida de biodiversidad",
     territory: "Bosques, cuencas y ciudades",
-    sector: "Biodiversidad, agua y gestion local",
+    sector: "Biodiversidad, agua y gestión local",
     measuresCount: 4,
     storyTitle: "Soluciones basadas en la naturaleza en territorios urbanos",
     summary:
-      "Perfil orientado a biodiversidad, gestion de cuencas, incendios e iniciativas de restauracion lideradas por alianzas locales.",
+      "Perfil orientado a biodiversidad, gestión de cuencas, incendios e iniciativas de restauración lideradas por alianzas locales.",
   },
   {
     name: "Honduras",
     slug: "honduras",
-    risks: ["Huracanes", "inundacion", "deslizamientos"],
+    risks: ["Huracanes", "inundación", "deslizamientos"],
     mainRisk: "Inundaciones y deslizamientos",
     territory: "Zonas costeras, rurales y de ladera",
     sector: "Agua, infraestructura y agricultura",
     measuresCount: 4,
-    storyTitle: "Alerta temprana y organizacion comunitaria",
+    storyTitle: "Alerta temprana y organización comunitaria",
     summary:
-      "Perfil centrado en eventos hidrometeorologicos, seguridad territorial y medidas comunitarias para anticipar impactos.",
+      "Perfil centrado en eventos hidrometeorológicos, seguridad territorial y medidas comunitarias para anticipar impactos.",
   },
 ] as const;
 
@@ -123,60 +123,60 @@ export function formatCountryNameWithFlag(country: string) {
 export const adaptationMeasureTypes = [
   "Infraestructura verde",
   "Soluciones basadas en la naturaleza",
-  "Educacion climatica",
-  "Gestion comunitaria del agua",
-  "Restauracion ecologica",
+  "Educación climática",
+  "Gestión comunitaria del agua",
+  "Restauración ecológica",
   "Alerta temprana",
   "Gobernanza local",
   "Agricultura resiliente",
 ];
 
 export const climateRisks = [
-  "Sequia",
-  "Inundacion",
+  "Sequía",
+  "Inundación",
   "Calor extremo",
   "Incendios",
   "Subida del nivel del mar",
-  "Perdida de biodiversidad",
-  "Crisis hidrica",
+  "Pérdida de biodiversidad",
+  "Crisis hídrica",
   "Deslizamientos",
 ];
 
-export const territories = ["Urbano", "Rural", "Costero", "Montana", "Bosque", "Cuenca", "Humedal", "Zona arida"];
+export const territories = ["Urbano", "Rural", "Costero", "Montaña", "Bosque", "Cuenca", "Humedal", "Zona árida"];
 
 export const actors = [
   "Juventudes",
   "Comunidad local",
-  "Organizacion social",
+  "Organización social",
   "Gobierno local",
   "Academia",
-  "Alianza publico-comunitaria",
+  "Alianza público-comunitaria",
 ];
 
 export const methodologySteps = [
   {
-    title: "Revision documental",
-    description: "Revision de fuentes nacionales, multilaterales y tecnicas.",
+    title: "Revisión documental",
+    description: "Revisión de fuentes nacionales, multilaterales y técnicas.",
   },
   {
-    title: "Perfil de pais",
-    description: "Elaboracion de diagnosticos de riesgo y vulnerabilidad climatica.",
+    title: "Perfil de país",
+    description: "Elaboración de diagnósticos de riesgo y vulnerabilidad climática.",
   },
   {
-    title: "Identificacion de medidas",
-    description: "Levantamiento de acciones de adaptacion existentes por pais.",
+    title: "Identificación de medidas",
+    description: "Levantamiento de acciones de adaptación existentes por país.",
   },
   {
-    title: "Seleccion de historias",
-    description: "Priorizacion de un caso destacado por pais con enfoque narrativo.",
+    title: "Selección de historias",
+    description: "Priorización de un caso destacado por país con enfoque narrativo.",
   },
   {
-    title: "Produccion multimedia",
-    description: "Desarrollo de videos, fichas, fotografias y relatos territoriales.",
+    title: "Producción multimedia",
+    description: "Desarrollo de videos, fichas, fotografías y relatos territoriales.",
   },
   {
-    title: "Sintesis regional",
-    description: "Elaboracion del informe comparativo regional y aprendizajes comunes.",
+    title: "Síntesis regional",
+    description: "Elaboración del informe comparativo regional y aprendizajes comunes.",
   },
 ];
 
@@ -198,7 +198,7 @@ export const organizations = {
   ],
   participants: [
     {
-      name: "Jovenes por el Clima Argentina",
+      name: "Jóvenes por el Clima Argentina",
       logo: "/brand/organizations/jovenes-por-el-clima.png",
     },
     { name: "Nuestro Futuro", logo: "/brand/organizations/nuestro-futuro.png" },
