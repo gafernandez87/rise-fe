@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -99,7 +99,7 @@ function SelectFilter({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-normal"
+        className="min-w-0 w-full rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-normal"
       >
         <option value="">{allLabel}</option>
         {options.map((option) => (
@@ -151,6 +151,8 @@ export function MapExplorer({ cases, categories, initialFilters, locale }: MapEx
   const [actor, setActor] = useState("");
   const [status, setStatus] = useState("");
   const [filtersVisible, setFiltersVisible] = useState(true);
+  const filtersPanelId = useId();
+  const filtersToggleRef = useRef<HTMLButtonElement>(null);
 
   const filteredCases = useMemo(() => {
     const normalizedQuery = normalizeFilterValue(query);
@@ -201,22 +203,114 @@ export function MapExplorer({ cases, categories, initialFilters, locale }: MapEx
   };
 
   return (
-    <div className={filtersVisible ? "grid gap-6 xl:grid-cols-[minmax(0,1fr)_300px]" : "grid gap-6"}>
-      <section className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-[color:var(--color-muted)]">
-            {filteredCases.length} {dict.mapExplorer.of} {cases.length} {dict.mapExplorer.visibleCases}
-          </p>
-          <button
-            type="button"
-            onClick={() => setFiltersVisible((current) => !current)}
-            className="inline-flex items-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-4 py-2 text-sm font-semibold"
-            aria-expanded={filtersVisible}
+    <div className={`rise-map-explorer${filtersVisible ? "" : " rise-map-explorer--collapsed"}`}>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 xl:col-span-full">
+        <p className="text-sm text-[color:var(--color-muted)]">
+          {filteredCases.length} {dict.mapExplorer.of} {cases.length} {dict.mapExplorer.visibleCases}
+        </p>
+        <button
+          ref={filtersToggleRef}
+          type="button"
+          onClick={() => setFiltersVisible((current) => !current)}
+          className="rise-action inline-flex items-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-4 py-2 text-sm font-semibold"
+          aria-expanded={filtersVisible}
+          aria-controls={filtersPanelId}
+        >
+          <SlidersHorizontal size={16} aria-hidden="true" />
+          {filtersVisible ? dict.mapExplorer.hideFilters : dict.mapExplorer.showFilters}
+        </button>
+      </div>
+
+      <div
+        id={filtersPanelId}
+        className="rise-map-filters"
+        aria-hidden={!filtersVisible}
+        inert={!filtersVisible}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <aside
+            aria-label={dict.mapExplorer.filters}
+            className="min-w-0 rounded-lg border border-[color:var(--color-border)] bg-white p-4 shadow-sm"
           >
-            <SlidersHorizontal size={16} aria-hidden="true" />
-            {filtersVisible ? dict.mapExplorer.hideFilters : dict.mapExplorer.showFilters}
-          </button>
+            <div className="space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
+                    {dict.mapExplorer.filters}
+                  </p>
+                  <p className="mt-1 text-sm text-[color:var(--color-muted)]">
+                    {filteredCases.length} {dict.mapExplorer.of} {cases.length} {dict.mapExplorer.visibleCases}
+                  </p>
+                </div>
+              </div>
+              <label className="grid gap-1 text-sm font-medium">
+                {dict.mapExplorer.search}
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  className="min-w-0 w-full rounded-md border border-[color:var(--color-border)] px-3 py-2 text-sm font-normal"
+                  placeholder={dict.mapExplorer.searchPlaceholder}
+                />
+              </label>
+              <SelectFilter
+                label={dict.mapExplorer.country}
+                value={country}
+                options={countryOptions}
+                allLabel={dict.mapExplorer.all}
+                onChange={setCountry}
+                formatOption={formatCountryNameWithFlag}
+              />
+              <SelectFilter
+                label={dict.mapExplorer.climateRisk}
+                value={risk}
+                options={threatOptions}
+                allLabel={dict.mapExplorer.all}
+                onChange={setRisk}
+              />
+              <SelectFilter
+                label={dict.mapExplorer.measureType}
+                value={measure}
+                options={measureOptions}
+                allLabel={dict.mapExplorer.all}
+                onChange={setMeasure}
+              />
+              <SelectFilter
+                label={dict.mapExplorer.ecosystem}
+                value={territory}
+                options={territoryOptions}
+                allLabel={dict.mapExplorer.all}
+                onChange={setTerritory}
+              />
+              <SelectFilter
+                label={dict.mapExplorer.actor}
+                value={actor}
+                options={content.actors}
+                allLabel={dict.mapExplorer.all}
+                onChange={setActor}
+              />
+              <SelectFilter
+                label={dict.mapExplorer.contentStatus}
+                value={status}
+                options={[...dict.mapExplorer.statusOptions]}
+                allLabel={dict.mapExplorer.all}
+                onChange={setStatus}
+              />
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="rise-action w-full rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"
+              >
+                {dict.mapExplorer.clearFilters}
+              </button>
+              <div className="rounded-md bg-[color:var(--color-surface-muted)] p-3 text-xs leading-5 text-[color:var(--color-muted)]">
+                {dict.mapExplorer.preparedFilters}
+              </div>
+            </div>
+          </aside>
         </div>
+      </div>
+
+      <section className="min-w-0 space-y-4 xl:col-start-1 xl:row-start-2">
         <div className="overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white shadow-sm">
           <MapLoader cases={filteredCases} layoutSignal={filtersVisible} locale={locale} />
         </div>
@@ -246,7 +340,7 @@ export function MapExplorer({ cases, categories, initialFilters, locale }: MapEx
               </dl>
               <Link
                 href={localizedPath(`/casos/${item.slug}`, locale)}
-                className="mt-4 inline-flex rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
+                className="rise-action mt-4 inline-flex rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
               >
                 {dict.mapExplorer.viewFullCase}
               </Link>
@@ -254,92 +348,6 @@ export function MapExplorer({ cases, categories, initialFilters, locale }: MapEx
           ))}
         </div>
       </section>
-
-      {filtersVisible ? (
-        <aside className="h-fit rounded-lg border border-[color:var(--color-border)] bg-white p-4 shadow-sm xl:sticky xl:top-6">
-          <div className="space-y-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
-                  {dict.mapExplorer.filters}
-                </p>
-                <p className="mt-1 text-sm text-[color:var(--color-muted)]">
-                  {filteredCases.length} {dict.mapExplorer.of} {cases.length} {dict.mapExplorer.visibleCases}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setFiltersVisible(false)}
-                className="rounded-md border border-[color:var(--color-border)] px-3 py-2 text-sm font-semibold"
-              >
-                {dict.mapExplorer.hideFilters}
-              </button>
-            </div>
-            <label className="grid gap-1 text-sm font-medium">
-              {dict.mapExplorer.search}
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                className="rounded-md border border-[color:var(--color-border)] px-3 py-2 text-sm font-normal"
-                placeholder={dict.mapExplorer.searchPlaceholder}
-              />
-            </label>
-            <SelectFilter
-              label={dict.mapExplorer.country}
-              value={country}
-              options={countryOptions}
-              allLabel={dict.mapExplorer.all}
-              onChange={setCountry}
-              formatOption={formatCountryNameWithFlag}
-            />
-            <SelectFilter
-              label={dict.mapExplorer.climateRisk}
-              value={risk}
-              options={threatOptions}
-              allLabel={dict.mapExplorer.all}
-              onChange={setRisk}
-            />
-            <SelectFilter
-              label={dict.mapExplorer.measureType}
-              value={measure}
-              options={measureOptions}
-              allLabel={dict.mapExplorer.all}
-              onChange={setMeasure}
-            />
-            <SelectFilter
-              label={dict.mapExplorer.ecosystem}
-              value={territory}
-              options={territoryOptions}
-              allLabel={dict.mapExplorer.all}
-              onChange={setTerritory}
-            />
-            <SelectFilter
-              label={dict.mapExplorer.actor}
-              value={actor}
-              options={content.actors}
-              allLabel={dict.mapExplorer.all}
-              onChange={setActor}
-            />
-            <SelectFilter
-              label={dict.mapExplorer.contentStatus}
-              value={status}
-              options={[...dict.mapExplorer.statusOptions]}
-              allLabel={dict.mapExplorer.all}
-              onChange={setStatus}
-            />
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="w-full rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"
-            >
-              {dict.mapExplorer.clearFilters}
-            </button>
-            <div className="rounded-md bg-[color:var(--color-surface-muted)] p-3 text-xs leading-5 text-[color:var(--color-muted)]">
-              {dict.mapExplorer.preparedFilters}
-            </div>
-          </div>
-        </aside>
-      ) : null}
     </div>
   );
 }

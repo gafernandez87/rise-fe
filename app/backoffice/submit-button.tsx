@@ -41,7 +41,7 @@ export function SubmitButton({
 
   return (
     <button
-      className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition disabled:cursor-wait disabled:opacity-75 ${
+      className={`rise-action inline-flex cursor-pointer items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition disabled:cursor-wait disabled:opacity-75 ${
         fullWidth ? "w-full" : ""
       } ${variantClasses[variant]}`}
       disabled={pending}

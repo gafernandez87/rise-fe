@@ -51,19 +51,30 @@ function MapBoundsHandler({ layoutSignal }: { layoutSignal: boolean }) {
   const map = useMap();
 
   useEffect(() => {
-    const animationFrame = window.requestAnimationFrame(() => {
-      map.invalidateSize({ pan: false });
+    let animationFrame = 0;
+    const updateBounds = () => {
+      window.cancelAnimationFrame(animationFrame);
+      animationFrame = window.requestAnimationFrame(() => {
+        map.invalidateSize({ pan: false });
 
-      map.setMinZoom(0);
-      const fitZoom = map.getBoundsZoom(latinAmericaViewBounds, false, latinAmericaFitPadding);
-      map.setMinZoom(fitZoom);
+        map.setMinZoom(0);
+        const fitZoom = map.getBoundsZoom(latinAmericaViewBounds, false, latinAmericaFitPadding);
+        map.setMinZoom(fitZoom);
 
-      if (map.getZoom() < fitZoom) {
-        map.setZoom(fitZoom, { animate: false });
-      }
-    });
+        if (map.getZoom() < fitZoom) {
+          map.setZoom(fitZoom, { animate: false });
+        }
+      });
+    };
 
-    return () => window.cancelAnimationFrame(animationFrame);
+    updateBounds();
+    const observer = new ResizeObserver(updateBounds);
+    observer.observe(map.getContainer());
+
+    return () => {
+      observer.disconnect();
+      window.cancelAnimationFrame(animationFrame);
+    };
   }, [layoutSignal, map]);
 
   return null;

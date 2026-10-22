@@ -125,7 +125,7 @@ export function SiteHeader({ locale = defaultLocale, currentPath }: SiteHeaderPr
           />
         </Link>
         <button
-          className="claac-header__toggle"
+          className="rise-action claac-header__toggle"
           type="button"
           aria-controls={navId}
           aria-expanded={isMenuOpen}

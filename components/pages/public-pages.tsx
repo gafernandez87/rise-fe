@@ -185,7 +185,7 @@ function SiteFooter({ locale }: { locale: Locale }) {
             href="https://www.instagram.com/claac_latam/"
             target="_blank"
             rel="noreferrer"
-            className="grid h-10 w-10 place-items-center rounded-full border border-current text-[color:var(--color-brand-cream)]"
+            className="rise-action grid h-10 w-10 place-items-center rounded-full border border-current text-[color:var(--color-brand-cream)]"
             aria-label="Instagram CLAAC"
           >
             <InstagramIcon />
@@ -692,7 +692,7 @@ export async function StoriesPageView({ locale, currentPath }: PublicPageProps) 
                 </p>
                 <Link
                   href={localizedPath(`/historias/${story.slug}`, locale)}
-                  className="mt-5 inline-flex rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
+                  className="rise-action mt-5 inline-flex rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
                 >
                   {dict.stories.viewStory}
                 </Link>
@@ -769,7 +769,7 @@ export async function StoryPageView({ locale, currentPath, slug }: PublicPagePro
               </p>
               <Link
                 href={countryMeasuresHref}
-                className="inline-flex items-center gap-2 rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
+                className="rise-action inline-flex items-center gap-2 rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
               >
                 {dict.stories.viewCountryMeasures}
                 <ArrowRight size={16} aria-hidden="true" />
@@ -792,7 +792,7 @@ export async function StoryPageView({ locale, currentPath, slug }: PublicPagePro
                     </p>
                     <Link
                       href={localizedPath(`/casos/${relatedCase.slug}`, locale)}
-                      className="mt-4 inline-flex items-center gap-2 rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-primary)]"
+                      className="rise-action mt-4 inline-flex items-center gap-2 rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold text-[color:var(--color-primary)]"
                     >
                       {dict.stories.viewRelatedMeasure}
                       <ArrowRight size={16} aria-hidden="true" />
@@ -889,7 +889,7 @@ export async function CountryProfilesPageView({ locale, currentPath }: PublicPag
               </dl>
               <Link
                 href={localizedPath(`/perfiles/${country.slug}`, locale)}
-                className="mt-5 inline-flex rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
+                className="rise-action mt-5 inline-flex rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
               >
                 {dict.home.viewProfile}
               </Link>
@@ -925,7 +925,7 @@ export async function CountryProfilePageView({ locale, currentPath, slug }: Publ
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href={localizedPath("/mapa", locale)}
-                  className="rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
+                  className="rise-action rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
                 >
                   {dict.profiles.viewCasesMap}
                 </Link>
@@ -934,7 +934,7 @@ export async function CountryProfilePageView({ locale, currentPath, slug }: Publ
                     href={country.profilePdfUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"
+                    className="rise-action rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"
                   >
                     {dict.profiles.downloadPdf}
                   </a>
@@ -1003,13 +1003,13 @@ export function RegionalReportPageView({ locale, currentPath }: PublicPageProps)
               <div className="mt-6 flex flex-wrap gap-3">
                 <a
                   href="#"
-                  className="rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
+                  className="rise-action rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
                 >
                   {dict.report.downloadPdf}
                 </a>
                 <a
                   href="#resumen"
-                  className="rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"
+                  className="rise-action rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"
                 >
                   {dict.report.readOnline}
                 </a>
@@ -1059,7 +1059,7 @@ export function RegionalReportPageView({ locale, currentPath }: PublicPageProps)
                 <Link
                   key={country.slug}
                   href={localizedPath(`/perfiles/${country.slug}`, locale)}
-                  className="rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"
+                  className="rise-action rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"
                 >
                   <CountryLabel country={country.name} />
                 </Link>
@@ -1200,7 +1200,7 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                 <Link
                   key={`${chip.href}-${chip.label}`}
                   href={chip.href}
-                  className="inline-flex min-h-9 items-center rounded-full border border-[color:var(--color-primary)] bg-white px-3 py-1 text-sm font-semibold text-[color:var(--color-primary)] transition hover:bg-[color:var(--color-surface-muted)]"
+                  className="rise-action inline-flex min-h-9 items-center rounded-full border border-[color:var(--color-primary)] bg-white px-3 py-1 text-sm font-semibold text-[color:var(--color-primary)] transition hover:bg-[color:var(--color-surface-muted)]"
                 >
                   {chip.label}
                 </Link>
@@ -1248,7 +1248,7 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                   <dd className="mt-1">
                     <Link
                       href={mapFilterPath(locale, "risk", caseRisk)}
-                      className="inline-flex min-h-8 items-center rounded-full border border-[color:var(--color-primary)] px-3 py-1 text-xs font-semibold text-[color:var(--color-primary)] transition hover:bg-[color:var(--color-surface-muted)]"
+                      className="rise-action inline-flex min-h-8 items-center rounded-full border border-[color:var(--color-primary)] px-3 py-1 text-xs font-semibold text-[color:var(--color-primary)] transition hover:bg-[color:var(--color-surface-muted)]"
                     >
                       {caseRisk}
                     </Link>
@@ -1261,7 +1261,7 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                       <Link
                         key={label}
                         href={mapFilterPath(locale, "measure", label)}
-                        className="inline-flex min-h-8 items-center rounded-full border border-[color:var(--color-primary)] px-3 py-1 text-xs font-semibold text-[color:var(--color-primary)] transition hover:bg-[color:var(--color-surface-muted)]"
+                        className="rise-action inline-flex min-h-8 items-center rounded-full border border-[color:var(--color-primary)] px-3 py-1 text-xs font-semibold text-[color:var(--color-primary)] transition hover:bg-[color:var(--color-surface-muted)]"
                       >
                         {label}
                       </Link>
@@ -1327,7 +1327,7 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                     </p>
                     <Link
                       href={localizedPath(`/historias/${relatedStory.slug}`, locale)}
-                      className="mt-4 inline-flex items-center gap-2 rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
+                      className="rise-action mt-4 inline-flex items-center gap-2 rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
                     >
                       <BookOpen size={16} aria-hidden="true" />
                       {dict.case.viewRelatedStory}
@@ -1336,7 +1336,7 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                 ) : (
                   <Link
                     href={localizedPath("/historias", locale)}
-                    className="mt-5 inline-flex items-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--color-primary)]"
+                    className="rise-action mt-5 inline-flex items-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--color-primary)]"
                   >
                     {dict.case.viewStories}
                     <ArrowRight size={16} aria-hidden="true" />

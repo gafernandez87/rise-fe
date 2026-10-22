@@ -132,6 +132,8 @@ a {
 }
 
 .rise-action {
+  display: inline-flex;
+  min-width: 44px;
   min-height: 44px;
   align-items: center;
   justify-content: center;
@@ -142,6 +144,16 @@ a {
     transform 180ms ease;
 }
 
+.rise-action:focus-visible {
+  outline: 2px solid var(--color-water);
+  outline-offset: 3px;
+}
+
+.rise-action:not(:disabled):not([aria-disabled="true"]):active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .rise-card:hover {
     border-color: var(--color-primary);
@@ -149,9 +161,15 @@ a {
     transform: translateY(-2px);
   }
 
-  .rise-action:hover {
+  .rise-action:not(:disabled):not([aria-disabled="true"]):hover {
+    border-color: var(--color-primary);
     box-shadow: 0 4px 12px rgb(32 39 36 / 12%);
     transform: translateY(-1px);
+  }
+
+  .rise-action:not(:disabled):not([aria-disabled="true"]):hover:active {
+    box-shadow: none;
+    transform: translateY(0);
   }
 }
 
@@ -1102,6 +1120,59 @@ a {
   }
 }
 
+.rise-map-explorer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rise-map-filters {
+  display: grid;
+  grid-template-rows: 1fr;
+  min-width: 0;
+  margin-bottom: 1.5rem;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    grid-template-rows 240ms ease,
+    margin-bottom 240ms ease,
+    opacity 180ms ease,
+    visibility 0s;
+}
+
+.rise-map-explorer--collapsed .rise-map-filters {
+  grid-template-rows: 0fr;
+  margin-bottom: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows 240ms ease,
+    margin-bottom 240ms ease,
+    opacity 180ms ease,
+    visibility 0s 240ms;
+}
+
+@media (min-width: 1280px) {
+  .rise-map-explorer {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    column-gap: 1.5rem;
+    transition: grid-template-columns 240ms ease, column-gap 240ms ease;
+  }
+
+  .rise-map-explorer--collapsed {
+    grid-template-columns: minmax(0, 1fr) 0px;
+    column-gap: 0;
+  }
+
+  .rise-map-filters {
+    position: sticky;
+    top: 1.5rem;
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    margin-bottom: 0;
+  }
+}
+
 .rise-marker {
   display: grid;
   height: 28px;
@@ -1166,8 +1237,12 @@ button {
     scroll-behavior: auto !important;
   }
 
+  .rise-action {
+    transition: none !important;
+  }
+
   .rise-card:hover,
-  .rise-action:hover,
+  .rise-action:not(:disabled):not([aria-disabled="true"]):hover,
   .rise-logo-tile:hover,
   .rise-logo-tile:focus-within,
   .language-switcher__flag:hover,

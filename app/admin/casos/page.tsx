@@ -18,7 +18,7 @@ export default async function AdminCasesPage() {
           </div>
           <Link
             href="/admin/casos/nuevo"
-            className="rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
+            className="rise-action rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
           >
             Nuevo caso
           </Link>

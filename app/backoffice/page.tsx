@@ -438,7 +438,7 @@ function CasesTable({ activeId, cases }: { activeId?: string; cases: AdaptationC
                 </td>
                 <td className="px-4 py-3 text-right align-top">
                   <Link
-                    className="inline-flex items-center justify-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-semibold transition hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]"
+                    className="rise-action inline-flex items-center justify-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-semibold transition hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]"
                     href={`/backoffice?edit=${encodeURIComponent(item.id)}`}
                   >
                     <Pencil size={15} aria-hidden="true" />
@@ -504,7 +504,7 @@ function StoriesTable({ activeId, stories }: { activeId?: string; stories: Resil
                 </td>
                 <td className="px-4 py-3 text-right align-top">
                   <Link
-                    className="inline-flex items-center justify-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-semibold transition hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]"
+                    className="rise-action inline-flex items-center justify-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-semibold transition hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]"
                     href={`/backoffice?section=stories&storyEdit=${encodeURIComponent(item.id)}`}
                   >
                     <Pencil size={15} aria-hidden="true" />
@@ -569,7 +569,7 @@ function CountryProfilesTable({ activeId, profiles }: { activeId?: string; profi
                 </td>
                 <td className="px-4 py-3 text-right align-top">
                   <Link
-                    className="inline-flex items-center justify-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-semibold transition hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]"
+                    className="rise-action inline-flex items-center justify-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-semibold transition hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]"
                     href={`/backoffice?section=profiles&profileEdit=${encodeURIComponent(item.id)}`}
                   >
                     <Pencil size={15} aria-hidden="true" />
@@ -974,7 +974,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
               <div className="flex flex-wrap gap-2">
                 {isFormScreen ? (
                   <Link
-                    className="inline-flex items-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-4 py-2 text-sm font-semibold transition hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]"
+                    className="rise-action inline-flex items-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-4 py-2 text-sm font-semibold transition hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]"
                     href={currentSectionBackHref}
                   >
                     <ArrowLeft size={16} aria-hidden="true" />
@@ -982,7 +982,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
                   </Link>
                 ) : (
                   <Link
-                    className="inline-flex items-center gap-2 rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[color:var(--color-primary-strong)]"
+                    className="rise-action inline-flex items-center gap-2 rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[color:var(--color-primary-strong)]"
                     href={currentCreateHref}
                   >
                     {activeSection === "profiles" ? (

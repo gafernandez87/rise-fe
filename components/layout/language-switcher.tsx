@@ -46,7 +46,7 @@ export function LanguageSwitcher({
       </div>
       ) : null}
       <button
-        className="language-switcher__trigger"
+        className="rise-action language-switcher__trigger"
         type="button"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((current) => !current)}
