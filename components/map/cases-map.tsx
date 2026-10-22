@@ -23,16 +23,8 @@ const latinAmericaViewBounds: L.LatLngBoundsExpression = [
   [34, -25],
 ];
 
-const latinAmericaPanBounds: L.LatLngBoundsExpression = [
-  [-68, -130],
-  [48, -15],
-];
-
 const latinAmericaFitPadding = L.point(24, 24);
 const latinAmericaPreviewCenter: L.LatLngExpression = [-17, -66];
-const defaultPopupOffset = L.point(0, 7);
-const popupEdgePadding = 36;
-const popupBelowGap = 28;
 
 const createClusterIcon = (cluster: { getChildCount: () => number }) => {
   const count = cluster.getChildCount();
@@ -47,7 +39,7 @@ const createClusterIcon = (cluster: { getChildCount: () => number }) => {
   });
 };
 
-function MapBoundsHandler({ layoutSignal }: { layoutSignal: boolean }) {
+function MapSizeHandler({ layoutSignal }: { layoutSignal: boolean }) {
   const map = useMap();
 
   useEffect(() => {
@@ -56,14 +48,6 @@ function MapBoundsHandler({ layoutSignal }: { layoutSignal: boolean }) {
       window.cancelAnimationFrame(animationFrame);
       animationFrame = window.requestAnimationFrame(() => {
         map.invalidateSize({ pan: false });
-
-        map.setMinZoom(0);
-        const fitZoom = map.getBoundsZoom(latinAmericaViewBounds, false, latinAmericaFitPadding);
-        map.setMinZoom(fitZoom);
-
-        if (map.getZoom() < fitZoom) {
-          map.setZoom(fitZoom, { animate: false });
-        }
       });
     };
 
@@ -94,22 +78,6 @@ function StaticMapSizeHandler() {
   return null;
 }
 
-function positionPopupFromMarker(popup: L.Popup, map: L.Map, item: MapCase) {
-  const element = popup.getElement();
-
-  if (!element) {
-    return;
-  }
-
-  const markerPoint = map.latLngToContainerPoint([item.latitude, item.longitude]);
-  const popupHeight = element.offsetHeight;
-  const shouldOpenBelow = markerPoint.y < popupHeight + popupEdgePadding;
-
-  popup.options.offset = shouldOpenBelow ? L.point(0, popupHeight + popupBelowGap) : defaultPopupOffset;
-  element.classList.toggle("rise-map-popup--below", shouldOpenBelow);
-  popup.update();
-}
-
 function CaseMarker({
   dict,
   item,
@@ -119,7 +87,6 @@ function CaseMarker({
   item: MapCase;
   locale: Locale;
 }) {
-  const map = useMap();
   const countrySlug = getCountrySlugFromName(item.country);
 
   return (
@@ -127,16 +94,13 @@ function CaseMarker({
       key={item.id}
       position={[item.latitude, item.longitude]}
       icon={markerIcon}
-      eventHandlers={{
-        popupopen: (event) => {
-          window.requestAnimationFrame(() => positionPopupFromMarker(event.popup, map, item));
-        },
-      }}
     >
       <Popup
-        autoPanPaddingBottomRight={[32, 32]}
-        autoPanPaddingTopLeft={[32, 32]}
+        autoPan
+        autoPanPaddingBottomRight={[16, 16]}
+        autoPanPaddingTopLeft={[16, 16]}
         className="rise-map-popup"
+        maxHeight={360}
         maxWidth={560}
         minWidth={280}
       >
@@ -203,14 +167,12 @@ export function CasesMap({
       bounds={latinAmericaViewBounds}
       boundsOptions={{ padding: latinAmericaFitPadding }}
       className="rise-map"
-      maxBounds={latinAmericaPanBounds}
-      maxBoundsViscosity={1}
       scrollWheelZoom
       worldCopyJump={false}
       zoomDelta={0.5}
       zoomSnap={0.5}
     >
-      <MapBoundsHandler layoutSignal={layoutSignal} />
+      <MapSizeHandler layoutSignal={layoutSignal} />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         className="rise-map-tile-layer"

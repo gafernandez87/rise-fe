@@ -1011,20 +1011,6 @@ a {
   border-radius: var(--radius-lg);
 }
 
-.leaflet-container.rise-map .rise-map-popup--below {
-  margin-top: 20px;
-  margin-bottom: 0;
-}
-
-.leaflet-container.rise-map .rise-map-popup--below .leaflet-popup-tip-container {
-  top: -19px;
-  margin-top: 0;
-}
-
-.leaflet-container.rise-map .rise-map-popup--below .leaflet-popup-tip {
-  margin: 11px auto 0;
-}
-
 .rise-map-popup__content {
   display: grid;
   gap: 0.85rem;
@@ -1103,7 +1089,7 @@ a {
 
 @media (max-width: 640px) {
   .leaflet-container.rise-map .rise-map-popup .leaflet-popup-content {
-    width: min(20rem, calc(100vw - 3rem)) !important;
+    width: min(20rem, calc(100vw - 7rem)) !important;
   }
 
   .rise-map-popup__content--with-image {
@@ -1249,4 +1235,34 @@ button {
   .language-switcher__flag:focus-visible {
     transform: none;
   }
+}
+
+@media print {
+  @page { margin: 16mm; }
+
+  .rise-public .claac-header,
+  .rise-public .language-switcher,
+  .rise-public footer,
+  .rise-print-hide,
+  .rise-public script {
+    display: none !important;
+  }
+
+  body, .rise-case-page, .rise-case-page section, .rise-case-page article, .rise-case-page aside {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+
+  .rise-case-page .page-shell {
+    width: 100%;
+    padding-inline: 0;
+    margin-inline: 0;
+  }
+
+  .rise-public section::before, .rise-public section::after { display: none; }
+  .rise-public h1, .rise-public h2, .rise-public h3 { break-after: avoid; }
+  .rise-public img { max-height: 70mm; object-fit: contain; }
+  .rise-public a { text-decoration: underline; overflow-wrap: anywhere; }
+  .rise-case-actions { break-inside: avoid; }
 }

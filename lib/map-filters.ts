@@ -1,51 +1,43 @@
 import { localizedPath, type Locale } from "@/lib/i18n";
 
-export type MapInitialFilters = {
-  country?: string;
-  risk?: string;
-  measure?: string;
-};
-
-export type SearchParamsRecord = Record<string, string | string[] | undefined>;
-
-const mapFilterAliases = {
+export const mapFilterAliases = {
   country: ["country", "pais"],
   risk: ["risk", "riesgo"],
   measure: ["measure", "medida", "category", "categoria"],
+  territory: ["territory"],
+  actor: ["actor"],
 } as const;
 
-function firstSearchParamValue(value: string | string[] | undefined) {
-  const firstValue = Array.isArray(value) ? value[0] : value;
-  const normalizedValue = firstValue?.trim();
-
-  return normalizedValue || undefined;
-}
-
-function readAliasedSearchParam(
-  searchParams: SearchParamsRecord,
-  aliases: readonly string[],
-) {
-  for (const alias of aliases) {
-    const value = firstSearchParamValue(searchParams[alias]);
-
-    if (value) {
-      return value;
-    }
-  }
-
-  return undefined;
-}
+export type MapFilterKey = keyof typeof mapFilterAliases;
+export type MapInitialFilters = Partial<Record<MapFilterKey, string[]>> & { query?: string };
+export type SearchParamsRecord = Record<string, string | string[] | undefined>;
 
 export function readMapInitialFilters(searchParams: SearchParamsRecord): MapInitialFilters {
-  return {
-    country: readAliasedSearchParam(searchParams, mapFilterAliases.country),
-    risk: readAliasedSearchParam(searchParams, mapFilterAliases.risk),
-    measure: readAliasedSearchParam(searchParams, mapFilterAliases.measure),
-  };
+  const result: MapInitialFilters = {};
+  for (const key of Object.keys(mapFilterAliases) as MapFilterKey[]) {
+    for (const alias of mapFilterAliases[key]) {
+      const raw = searchParams[alias];
+      const values = [...new Set((Array.isArray(raw) ? raw : [raw]).map((v) => v?.trim()).filter((v): v is string => Boolean(v)))];
+      if (values.length) {
+        result[key] = values;
+        break;
+      }
+    }
+  }
+  const query = searchParams.q;
+  result.query = (Array.isArray(query) ? query[0] : query) || undefined;
+  return result;
 }
 
-export function mapFilterPath(locale: Locale, filter: keyof MapInitialFilters, value: string) {
-  const query = new URLSearchParams({ [filter]: value });
+export function mapFiltersQuery(filters: MapInitialFilters) {
+  const query = new URLSearchParams();
+  for (const key of Object.keys(mapFilterAliases) as MapFilterKey[]) {
+    for (const value of filters[key] ?? []) query.append(key, value);
+  }
+  if (filters.query) query.set("q", filters.query);
+  return query.toString();
+}
 
-  return localizedPath(`/mapa?${query.toString()}`, locale);
+export function mapFilterPath(locale: Locale, filter: MapFilterKey, value: string) {
+  return localizedPath(`/mapa?${mapFiltersQuery({ [filter]: [value] })}`, locale);
 }

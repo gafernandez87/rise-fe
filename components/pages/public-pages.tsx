@@ -17,6 +17,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CaseActions } from "@/components/cases/case-actions";
+import { getUiCopy } from "@/lib/ui-copy";
 import { CaseCard } from "@/components/cases/case-card";
 import { CountryLabel } from "@/components/countries/country-label";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
@@ -256,12 +258,13 @@ function isLikelyImageUrl(url: string) {
 }
 
 function StoryMedia({
-  fallbackLabel,
+  locale,
   story,
 }: {
-  fallbackLabel: string;
+  locale: Locale;
   story: ResilienceStory;
 }) {
+  const ui = getUiCopy(locale);
   if (story.mediaUrl && isLikelyImageUrl(story.mediaUrl)) {
     return (
       <div
@@ -277,7 +280,7 @@ function StoryMedia({
     return (
       <div className="rise-story-thumbnail grid aspect-video place-items-center bg-[color:var(--color-surface-muted)] text-sm font-semibold text-[color:var(--color-muted)]">
         <Link href={story.mediaUrl} target="_blank" rel="noreferrer" className="text-[color:var(--color-primary)]">
-          {fallbackLabel}
+          {/\.(mp4|webm|mov)(\?|$)/i.test(story.mediaUrl) || /https?:\/\/(www\.)?(youtube\.com|youtu\.be|vimeo\.com)\//i.test(story.mediaUrl) ? ui.video : /\.(mp3|wav|ogg|m4a)(\?|$)/i.test(story.mediaUrl) ? ui.audio : ui.material}
         </Link>
       </div>
     );
@@ -285,7 +288,7 @@ function StoryMedia({
 
   return (
     <div className="rise-story-thumbnail grid aspect-video place-items-center bg-[color:var(--color-surface-muted)] text-sm font-semibold text-[color:var(--color-muted)]">
-      {fallbackLabel}
+      {ui.text}
     </div>
   );
 }
@@ -493,7 +496,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
             >
               {stories.slice(0, 3).map((story) => (
                 <article key={story.id} className="rounded-lg border border-white/15 p-4">
-                  <div className="rise-story-thumbnail aspect-video rounded-md bg-white/10" />
+                  <StoryMedia locale={locale} story={story} />
                   <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-white/70">
                     <CountryLabel country={story.country} fallback={dict.common.latinAmerica} />
                   </p>
@@ -650,10 +653,9 @@ export async function MapPageView({
         </div>
 
         <MapExplorer
-          key={`${initialFilters?.country ?? ""}:${initialFilters?.risk ?? ""}:${initialFilters?.measure ?? ""}`}
+          key={JSON.stringify(initialFilters ?? {})}
           cases={localizedCases}
           categories={localizedCategories}
-          initialFilters={initialFilters}
           locale={locale}
         />
       </main>
@@ -681,7 +683,7 @@ export async function StoriesPageView({ locale, currentPath }: PublicPageProps) 
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {stories.map((story) => (
             <article key={story.id} className="rise-card overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white">
-              <StoryMedia fallbackLabel={dict.stories.videoPlaceholder} story={story} />
+              <StoryMedia locale={locale} story={story} />
               <div className="p-5">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
                   <CountryLabel country={story.country} fallback={dict.common.latinAmerica} />
@@ -746,7 +748,7 @@ export async function StoryPageView({ locale, currentPath, slug }: PublicPagePro
               </p>
             </div>
             <div className="overflow-hidden rounded-lg">
-              <StoryMedia fallbackLabel={dict.stories.mediaPlaceholder} story={story} />
+              <StoryMedia locale={locale} story={story} />
             </div>
           </div>
         </section>
@@ -924,7 +926,7 @@ export async function CountryProfilePageView({ locale, currentPath, slug }: Publ
               <p className="mt-4 text-lg leading-8 text-[color:var(--color-muted)]">{country.summary}</p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
-                  href={localizedPath("/mapa", locale)}
+                  href={mapFilterPath(locale, "country", country.name)}
                   className="rise-action rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
                 >
                   {dict.profiles.viewCasesMap}
@@ -1001,12 +1003,7 @@ export function RegionalReportPageView({ locale, currentPath }: PublicPageProps)
                 {dict.report.text}
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <a
-                  href="#"
-                  className="rise-action rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
-                >
-                  {dict.report.downloadPdf}
-                </a>
+                <p className="self-center text-sm text-[color:var(--color-muted)]">{getUiCopy(locale).pdfUnavailable}</p>
                 <a
                   href="#resumen"
                   className="rise-action rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"
@@ -1164,7 +1161,7 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
 
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
-      <main>
+      <main className="rise-case-page">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -1228,6 +1225,7 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
             </dl>
           </div>
         </section>
+        <CaseActions title={item.title} locale={locale} sourceUrl={item.sourceUrl} />
         <section className="page-shell pb-14">
           <div className="grid gap-6 lg:grid-cols-[0.7fr_1.3fr]">
             <aside className="h-fit rounded-lg border border-[color:var(--color-border)] bg-white p-5">

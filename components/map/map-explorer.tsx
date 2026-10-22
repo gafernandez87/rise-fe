@@ -1,26 +1,27 @@
 "use client";
 
-import { useId, useMemo, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
+import Image from "next/image";
 import { SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { CountryLabel } from "@/components/countries/country-label";
 import { MapLoader } from "@/components/map/map-loader";
 import {
   getDictionary,
   getLocalizedContentLists,
-  getLocalizedCountries,
   localizedPath,
   type Locale,
 } from "@/lib/i18n";
-import type { MapInitialFilters } from "@/lib/map-filters";
+import { mapFiltersQuery, readMapInitialFilters, type MapInitialFilters, type MapFilterKey } from "@/lib/map-filters";
+import { filterMapCases, normalizeFilterValue, uniqueFilterOptions, getCaseMeasureLabels, getCaseTerritory } from "@/lib/map-search";
+import { getUiCopy } from "@/lib/ui-copy";
 import { formatCountryNameWithFlag } from "@/lib/rise-content";
 import type { Category, MapCase } from "@/types/cases";
 
 type MapExplorerProps = {
   cases: MapCase[];
   categories: Category[];
-  initialFilters?: MapInitialFilters;
   locale: Locale;
 };
 
@@ -29,183 +30,77 @@ function getCaseRisk(item: MapCase, locale: Locale) {
   return item.threat ?? dict.mapExplorer.riskBySeverity[item.severity];
 }
 
-function normalizeFilterValue(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
-}
-
-function uniqueFilterOptions(values: Array<string | null | undefined>) {
-  const seenValues = new Set<string>();
-
-  return values.filter((value): value is string => {
-    const normalizedValue = value ? normalizeFilterValue(value) : "";
-
-    if (!normalizedValue || seenValues.has(normalizedValue)) {
-      return false;
-    }
-
-    seenValues.add(normalizedValue);
-    return true;
-  });
-}
-
-function filtersMatch(option: string, value: string) {
-  return normalizeFilterValue(option) === normalizeFilterValue(value);
-}
-
-function resolveFilterOption(options: string[], value?: string) {
-  const normalizedValue = value?.trim();
-
-  if (!normalizedValue) {
-    return "";
-  }
-
-  return options.find((option) => filtersMatch(option, normalizedValue)) ?? normalizedValue;
-}
-
-function getCaseMeasureLabels(item: MapCase) {
-  return uniqueFilterOptions([item.measureType, item.category.name]);
-}
-
 function getCaseMeasure(item: MapCase) {
   return getCaseMeasureLabels(item)[0] ?? item.category.name;
 }
 
-function getCaseTerritory(item: MapCase) {
-  return item.ecoregion ?? item.locality ?? item.region;
-}
-
-function SelectFilter({
-  label,
-  value,
-  options,
-  allLabel,
-  onChange,
-  formatOption,
-}: {
+function MultiFilter({ label, selected, options, onChange, formatOption }: {
   label: string;
-  value: string;
+  selected: string[];
   options: string[];
-  allLabel: string;
-  onChange: (value: string) => void;
+  onChange: (value: string[]) => void;
   formatOption?: (option: string) => string;
 }) {
   return (
-    <label className="grid gap-1 text-sm font-medium">
-      {label}
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="min-w-0 w-full rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-normal"
-      >
-        <option value="">{allLabel}</option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {formatOption ? formatOption(option) : option}
-          </option>
-        ))}
-      </select>
-    </label>
+    <fieldset className="min-w-0 space-y-2">
+      <legend className="text-sm font-semibold">{label}</legend>
+      <div className="max-h-44 overflow-y-auto rounded-md border border-[color:var(--color-border)] p-2">
+        {options.map((option) => {
+          const checked = selected.some((value) => normalizeFilterValue(value) === normalizeFilterValue(option));
+          return (
+            <label key={option} className="flex min-h-10 cursor-pointer items-center gap-2 rounded px-1 text-sm">
+              <input type="checkbox" checked={checked} className="h-4 w-4 shrink-0 accent-[var(--color-primary)]"
+                onChange={() => onChange(checked ? selected.filter((value) => normalizeFilterValue(value) !== normalizeFilterValue(option)) : [...selected, option])} />
+              <span className="min-w-0 break-words">{formatOption ? formatOption(option) : option}</span>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }
 
-export function MapExplorer({ cases, categories, initialFilters, locale }: MapExplorerProps) {
+export function MapExplorer({ cases, categories, locale }: MapExplorerProps) {
   const dict = getDictionary(locale);
   const content = getLocalizedContentLists(locale);
-  const countries = getLocalizedCountries(locale);
-  const router = useRouter();
+  const ui = getUiCopy(locale);
+  const searchParams = useSearchParams();
+  const filters = readMapInitialFilters(Object.fromEntries([...searchParams.keys()].map((key) => [key, searchParams.getAll(key)])));
   const pathname = usePathname();
-  const threatOptions = useMemo(
-    () => uniqueFilterOptions([...cases.map((item) => getCaseRisk(item, locale)), ...content.climateRisks, initialFilters?.risk]),
-    [cases, content.climateRisks, initialFilters?.risk, locale],
-  );
-  const measureOptions = useMemo(
-    () =>
-      uniqueFilterOptions([
-        ...categories.map((item) => item.name),
-        ...cases.flatMap(getCaseMeasureLabels),
-        ...content.adaptationMeasureTypes,
-        initialFilters?.measure,
-      ]),
-    [cases, categories, content.adaptationMeasureTypes, initialFilters?.measure],
-  );
-  const countryOptions = useMemo(
-    () => uniqueFilterOptions([...countries.map((item) => item.name), ...cases.map((item) => item.country), initialFilters?.country]),
-    [cases, countries, initialFilters?.country],
-  );
-  const territoryOptions = useMemo(
-    () => uniqueFilterOptions([...cases.map(getCaseTerritory), ...content.territories]),
-    [cases, content.territories],
-  );
-  const initialCountry = resolveFilterOption(countryOptions, initialFilters?.country);
-  const initialRisk = resolveFilterOption(threatOptions, initialFilters?.risk);
-  const initialMeasure = resolveFilterOption(measureOptions, initialFilters?.measure);
-  const [query, setQuery] = useState("");
-  const [country, setCountry] = useState(initialCountry);
-  const [risk, setRisk] = useState(initialRisk);
-  const [measure, setMeasure] = useState(initialMeasure);
-  const [territory, setTerritory] = useState("");
-  const [actor, setActor] = useState("");
-  const [status, setStatus] = useState("");
+  const threatOptions = uniqueFilterOptions([...cases.map((item) => getCaseRisk(item, locale)), ...(filters.risk ?? [])]);
+  const measureOptions = uniqueFilterOptions([...categories.map((item) => item.name), ...cases.flatMap(getCaseMeasureLabels), ...(filters.measure ?? [])]);
+  const countryOptions = uniqueFilterOptions([...cases.map((item) => item.country), ...(filters.country ?? [])]);
+  const territoryOptions = uniqueFilterOptions([...cases.map(getCaseTerritory), ...(filters.territory ?? [])]);
+  const actorOptions = uniqueFilterOptions([...content.actors.filter((actor) => cases.some((item) => normalizeFilterValue(item.youthRole ?? "").includes(normalizeFilterValue(actor)))), ...(filters.actor ?? [])]);
+  const updateFilters = (next: MapInitialFilters) => {
+    const query = mapFiltersQuery(next);
+    window.history.replaceState(null, "", `${pathname}${query ? `?${query}` : ""}`);
+  };
+  const selectFilter = (key: MapFilterKey, values: string[]) => updateFilters({ ...filters, [key]: values });
+  const query = filters.query ?? "";
   const [filtersVisible, setFiltersVisible] = useState(true);
   const filtersPanelId = useId();
   const filtersToggleRef = useRef<HTMLButtonElement>(null);
 
-  const filteredCases = useMemo(() => {
-    const normalizedQuery = normalizeFilterValue(query);
-
-    return cases.filter((item) => {
-      const caseRisk = getCaseRisk(item, locale);
-      const caseMeasureLabels = getCaseMeasureLabels(item);
-      const textMatch =
-        !normalizedQuery ||
-        [
-          item.title,
-          item.shortDescription,
-          item.country,
-          item.region,
-          item.locality,
-          item.ecoregion,
-          item.threat,
-          caseRisk,
-          ...caseMeasureLabels,
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .toLowerCase()
-          .includes(normalizedQuery);
-
-      const countryMatch = !country || Boolean(item.country && filtersMatch(item.country, country));
-      const riskMatch = !risk || filtersMatch(caseRisk, risk);
-      const measureMatch = !measure || caseMeasureLabels.some((label) => filtersMatch(label, measure));
-      const caseTerritory = getCaseTerritory(item);
-      const territoryMatch = !territory || Boolean(caseTerritory && filtersMatch(caseTerritory, territory));
-      const actorMatch = !actor || Boolean(item.youthRole && normalizeFilterValue(item.youthRole).includes(normalizeFilterValue(actor)));
-
-      return textMatch && countryMatch && riskMatch && measureMatch && territoryMatch && actorMatch;
-    });
-  }, [actor, cases, country, locale, measure, query, risk, territory]);
-
-  const clearFilters = () => {
-    setQuery("");
-    setCountry("");
-    setRisk("");
-    setMeasure("");
-    setTerritory("");
-    setActor("");
-    setStatus("");
-    router.replace(pathname, { scroll: false });
-  };
+  const filteredCases = filterMapCases(cases, filters, (item) => getCaseRisk(item, locale));
+  const clearFilters = () => updateFilters({});
+  const filterGroups = [
+    { key: "country", label: dict.mapExplorer.country, options: countryOptions, formatOption: formatCountryNameWithFlag },
+    { key: "risk", label: dict.mapExplorer.climateRisk, options: threatOptions },
+    { key: "measure", label: dict.mapExplorer.measureType, options: measureOptions },
+    { key: "territory", label: dict.mapExplorer.ecosystem, options: territoryOptions },
+    { key: "actor", label: dict.mapExplorer.actor, options: actorOptions },
+  ] satisfies Array<{ key: MapFilterKey; label: string; options: string[]; formatOption?: (value: string) => string }>;
+  const activeFilters = filterGroups.flatMap((group) => (filters[group.key] ?? []).map((value) => ({
+    id: `${group.key}:${value}`, label: `${group.label}: ${value}`,
+    remove: () => selectFilter(group.key, (filters[group.key] ?? []).filter((item) => item !== value)),
+  })));
+  if (query) activeFilters.unshift({ id: "query", label: `${dict.mapExplorer.search}: ${query}`, remove: () => updateFilters({ ...filters, query: undefined }) });
 
   return (
     <div className={`rise-map-explorer${filtersVisible ? "" : " rise-map-explorer--collapsed"}`}>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 xl:col-span-full">
-        <p className="text-sm text-[color:var(--color-muted)]">
+        <p role="status" className="text-sm text-[color:var(--color-muted)]">
           {filteredCases.length} {dict.mapExplorer.of} {cases.length} {dict.mapExplorer.visibleCases}
         </p>
         <button
@@ -247,54 +142,17 @@ export function MapExplorer({ cases, categories, initialFilters, locale }: MapEx
                 {dict.mapExplorer.search}
                 <input
                   value={query}
-                  onChange={(event) => setQuery(event.target.value)}
+                  onChange={(event) => updateFilters({ ...filters, query: event.target.value })}
                   className="min-w-0 w-full rounded-md border border-[color:var(--color-border)] px-3 py-2 text-sm font-normal"
                   placeholder={dict.mapExplorer.searchPlaceholder}
                 />
               </label>
-              <SelectFilter
-                label={dict.mapExplorer.country}
-                value={country}
-                options={countryOptions}
-                allLabel={dict.mapExplorer.all}
-                onChange={setCountry}
-                formatOption={formatCountryNameWithFlag}
-              />
-              <SelectFilter
-                label={dict.mapExplorer.climateRisk}
-                value={risk}
-                options={threatOptions}
-                allLabel={dict.mapExplorer.all}
-                onChange={setRisk}
-              />
-              <SelectFilter
-                label={dict.mapExplorer.measureType}
-                value={measure}
-                options={measureOptions}
-                allLabel={dict.mapExplorer.all}
-                onChange={setMeasure}
-              />
-              <SelectFilter
-                label={dict.mapExplorer.ecosystem}
-                value={territory}
-                options={territoryOptions}
-                allLabel={dict.mapExplorer.all}
-                onChange={setTerritory}
-              />
-              <SelectFilter
-                label={dict.mapExplorer.actor}
-                value={actor}
-                options={content.actors}
-                allLabel={dict.mapExplorer.all}
-                onChange={setActor}
-              />
-              <SelectFilter
-                label={dict.mapExplorer.contentStatus}
-                value={status}
-                options={[...dict.mapExplorer.statusOptions]}
-                allLabel={dict.mapExplorer.all}
-                onChange={setStatus}
-              />
+              <p className="text-xs leading-5 text-[color:var(--color-muted)]">{ui.filterHelp}</p>
+              {filterGroups.filter((group) => group.options.length > 0).map((group) => (
+                <MultiFilter key={group.key} label={group.label} options={group.options}
+                  selected={filters[group.key] ?? []} onChange={(values) => selectFilter(group.key, values)}
+                  formatOption={group.formatOption} />
+              ))}
               <button
                 type="button"
                 onClick={clearFilters}
@@ -303,7 +161,7 @@ export function MapExplorer({ cases, categories, initialFilters, locale }: MapEx
                 {dict.mapExplorer.clearFilters}
               </button>
               <div className="rounded-md bg-[color:var(--color-surface-muted)] p-3 text-xs leading-5 text-[color:var(--color-muted)]">
-                {dict.mapExplorer.preparedFilters}
+                {ui.mapNote}
               </div>
             </div>
           </aside>
@@ -311,12 +169,31 @@ export function MapExplorer({ cases, categories, initialFilters, locale }: MapEx
       </div>
 
       <section className="min-w-0 space-y-4 xl:col-start-1 xl:row-start-2">
+        {activeFilters.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {activeFilters.map((filter) => (
+              <button key={filter.id} type="button" onClick={filter.remove}
+                aria-label={`${ui.removeFilter}: ${filter.label}`}
+                className="rise-action gap-2 rounded-full border border-[color:var(--color-border)] bg-white px-3 py-1 text-xs">
+                {filter.label}<span aria-hidden="true">×</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {filteredCases.length === 0 ? (
+          <div role="status" className="rounded-lg border border-[color:var(--color-border)] bg-white p-6">
+            <h2 className="text-lg font-semibold">{ui.noResults}</h2>
+            <p className="mt-2 text-sm text-[color:var(--color-muted)]">{ui.noResultsHelp}</p>
+            {activeFilters.length > 0 ? <button type="button" onClick={clearFilters} className="rise-action mt-4 rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold">{dict.mapExplorer.clearFilters}</button> : null}
+          </div>
+        ) : null}
         <div className="overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white shadow-sm">
           <MapLoader cases={filteredCases} layoutSignal={filtersVisible} locale={locale} />
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           {filteredCases.map((item) => (
             <article key={item.id} className="rise-card rounded-lg border border-[color:var(--color-border)] bg-white p-4">
+              {item.coverImageUrl ? <Image src={item.coverImageUrl} alt={`${ui.imageAlt}: ${item.title}`} width={640} height={360} unoptimized className="mb-4 h-40 w-full rounded-md object-cover" /> : null}
               <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
                 <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
                   <CountryLabel country={item.country} fallback={dict.mapExplorer.countryTbd} />
@@ -337,6 +214,7 @@ export function MapExplorer({ cases, categories, initialFilters, locale }: MapEx
                   <dt className="font-semibold text-[color:var(--color-text)]">{dict.mapExplorer.territory}</dt>
                   <dd>{getCaseTerritory(item) ?? dict.mapExplorer.territoryFallback}</dd>
                 </div>
+                {item.youthRole ? <div><dt className="font-semibold">{ui.youthRole}</dt><dd className="line-clamp-3">{item.youthRole}</dd></div> : null}
               </dl>
               <Link
                 href={localizedPath(`/casos/${item.slug}`, locale)}
