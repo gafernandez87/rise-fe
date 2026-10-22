@@ -222,7 +222,7 @@ export function MapExplorer({ cases, categories, initialFilters, locale }: MapEx
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           {filteredCases.map((item) => (
-            <article key={item.id} className="rounded-lg border border-[color:var(--color-border)] bg-white p-4">
+            <article key={item.id} className="rise-card rounded-lg border border-[color:var(--color-border)] bg-white p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
                 <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
                   <CountryLabel country={item.country} fallback={dict.mapExplorer.countryTbd} />

@@ -15,7 +15,7 @@ type CaseCardProps = {
 const caseCardActionClassNames: Record<CaseCardActionVariant, string> = {
   link: "inline-flex text-sm font-semibold text-[color:var(--color-primary)]",
   button:
-    "inline-flex w-full items-center justify-center rounded-md border border-[color:var(--color-border)] bg-white px-5 py-3 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-surface-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-primary)]",
+    "rise-action inline-flex w-full items-center justify-center rounded-md border border-[color:var(--color-border)] bg-white px-5 py-3 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-surface-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-primary)]",
 };
 
 export function CaseCard({ item, locale, actionVariant = "link" }: CaseCardProps) {
@@ -24,7 +24,7 @@ export function CaseCard({ item, locale, actionVariant = "link" }: CaseCardProps
   const isButtonAction = actionVariant === "button";
 
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white shadow-sm">
+    <article className="rise-card flex h-full flex-col overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white shadow-sm">
       {cover ? (
         <Image
           className="h-44 w-full object-cover"

@@ -90,6 +90,111 @@ a {
   padding-inline: max(var(--space-page-x), calc((100% - var(--page-max-width)) / 2));
 }
 
+.rise-home .rise-section,
+.rise-home .rise-report-band {
+  padding-block: clamp(2.5rem, 5vw, 4rem);
+}
+
+.rise-section--about {
+  background: var(--color-brand-cream);
+  border-top: 1px solid var(--color-border);
+}
+
+.rise-section--profiles {
+  background: var(--color-surface-muted);
+}
+
+.rise-section--cases {
+  background: var(--color-surface);
+}
+
+.rise-report-band {
+  background: var(--color-brand-cream);
+}
+
+.rise-public :is(h1, h2, h3) {
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.rise-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.rise-card:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 6px 20px rgb(32 39 36 / 8%);
+}
+
+.rise-action {
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rise-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 8px 24px rgb(32 39 36 / 10%);
+    transform: translateY(-2px);
+  }
+
+  .rise-action:hover {
+    box-shadow: 0 4px 12px rgb(32 39 36 / 12%);
+    transform: translateY(-1px);
+  }
+}
+
+.rise-public :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-water);
+  outline-offset: 3px;
+}
+
+.rise-section--stories :is(a, button, [tabindex]):focus-visible {
+  outline-color: var(--color-white);
+}
+
+/* Only homepage collections slide; search results keep their vertical layout. */
+@media (max-width: 767px) {
+  .rise-card-rail {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 86%;
+    gap: 1rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-earth) transparent;
+    padding: 6px 6px 16px;
+    margin: -6px;
+  }
+
+  .rise-card-rail > * {
+    min-width: 0;
+    scroll-snap-align: start;
+  }
+
+  .rise-card-rail:focus-visible {
+    outline-offset: -2px;
+  }
+
+  .rise-section--stories .rise-card-rail {
+    scrollbar-color: #ffffffb3 transparent;
+  }
+}
+
 .rise-hero,
 .rise-section,
 .rise-report-band,
@@ -393,9 +498,9 @@ a {
 }
 
 .rise-logo-tile__image {
-  width: auto;
-  max-width: 100%;
-  max-height: 4.6rem;
+  flex-shrink: 0;
+  width: min(100%, 10rem);
+  height: 4.6rem;
   object-fit: contain;
 }
 
@@ -464,10 +569,17 @@ a {
   }
 }
 
+@media (max-width: 767px) {
+  .rise-logo-grid.rise-card-rail {
+    grid-template-columns: none;
+    grid-auto-columns: min(72%, 16rem);
+  }
+}
+
 .language-switcher {
   position: fixed;
   right: max(20px, env(safe-area-inset-right));
-  bottom: 0;
+  bottom: max(12px, env(safe-area-inset-bottom));
   z-index: 1200;
   display: grid;
   justify-items: end;
@@ -502,6 +614,8 @@ a {
   display: grid;
   place-items: center;
   overflow: hidden;
+  min-width: 44px;
+  min-height: 44px;
   font-size: 25px;
   line-height: 1;
   filter: saturate(1.08);
@@ -522,6 +636,8 @@ a {
   padding: 9px 20px;
   box-shadow: 0 6px 14px rgb(0 0 0 / 28%);
   cursor: pointer;
+  min-height: 44px;
+  border-radius: var(--radius-md);
   font-family: Arial;
   font-size: 19px; /*clamp(1.35rem, 5vw, 1.9rem);*/
   font-weight: 700;
@@ -1037,8 +1153,25 @@ button {
   cursor: pointer;
 }
 
-button:hover {
-  /* Move the button up slightly when hovered */
-  transform: translateY(-1px);
-  transition: transform 0.3s ease;
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .rise-public *,
+  .rise-public *::before,
+  .rise-public *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+
+  .rise-card:hover,
+  .rise-action:hover,
+  .rise-logo-tile:hover,
+  .rise-logo-tile:focus-within,
+  .language-switcher__flag:hover,
+  .language-switcher__flag:focus-visible {
+    transform: none;
+  }
 }

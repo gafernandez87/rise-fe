@@ -105,7 +105,7 @@ export function SiteHeader({ locale = defaultLocale, currentPath }: SiteHeaderPr
   }
 
   return (
-    <header className={`claac-header${isMenuOpen ? " claac-header--menú-open" : ""}`}>
+    <header className={`claac-header${isMenuOpen ? " claac-header--menu-open" : ""}`}>
       <div className="claac-header__overlay" />
       <div className="claac-header__content">
         <Link

@@ -138,17 +138,17 @@ function StoryThemeIcon({ story }: { story: ResilienceStory }) {
 const collaboratorOrganizations = [...organizations.support, ...organizations.participants];
 const homeIntroCardIcons = [BookOpen, Leaf, AlertTriangle] as const;
 const homeCardActionClassName =
-  "inline-flex w-full items-center justify-center rounded-md border border-[color:var(--color-border)] bg-white px-5 py-3 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-surface-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-primary)]";
+  "rise-action inline-flex w-full items-center justify-center rounded-md border border-[color:var(--color-border)] bg-white px-5 py-3 text-sm font-semibold text-[color:var(--color-primary)] transition hover:border-[color:var(--color-primary)] hover:bg-[color:var(--color-surface-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-primary)]";
 const storySectionIcons: LucideIcon[] = [AlertTriangle, Handshake, BookOpenText, Sprout];
 
 function PublicChrome({ locale, currentPath, children }: PublicPageProps & { children: ReactNode }) {
   return (
-    <>
+    <div className="rise-public">
       <SiteHeader locale={locale} currentPath={currentPath} />
       <LanguageSwitcher locale={locale} currentPath={currentPath} />
       {children}
       <SiteFooter locale={locale} />
-    </>
+    </div>
   );
 }
 
@@ -224,7 +224,12 @@ function LogoGroup({ title, items }: { title: string; items: OrganizationLogo[] 
       <h3 className="rise-logo-group__heading text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
         <span>{title}</span>
       </h3>
-      <div className="rise-logo-grid">
+      <div
+        className="rise-logo-grid rise-card-rail"
+        role="region"
+        aria-label={title}
+        tabIndex={0}
+      >
         {items.map((item) => (
           <div
             key={item.name}
@@ -336,7 +341,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
 
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
-      <main>
+      <main className="rise-home">
         <section className="rise-hero bg-white">
           <div className="page-shell grid gap-10 py-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
             <div className="space-y-7">
@@ -380,7 +385,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
                 </p>
                 <Link
                   href={localizedPath("/mapa", locale)}
-                  className="mt-5 inline-flex rounded-md bg-[color:var(--color-primary)] px-5 py-3 text-sm font-semibold text-white"
+                  className="rise-action mt-5 inline-flex rounded-md bg-[color:var(--color-primary)] px-5 py-3 text-sm font-semibold text-white"
                 >
                   {dict.home.ctaMap}
                 </Link>
@@ -414,7 +419,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
                 <Link
                   key={card.title}
                   href={localizedPath(card.href, locale)}
-                  className="group rounded-lg border border-[color:var(--color-border)] p-5 transition hover:border-[color:var(--color-primary)] hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-primary)]"
+                  className="rise-card group rounded-lg border border-[color:var(--color-border)] p-5 transition hover:border-[color:var(--color-primary)] hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--color-primary)]"
                 >
                   <span className="mb-4 grid h-12 w-12 place-items-center rounded-md bg-[color:var(--color-surface-muted)] text-[color:var(--color-primary)] transition group-hover:bg-[color:var(--color-primary)] group-hover:text-white">
                     <Icon aria-hidden="true" className="h-7 w-7" strokeWidth={1.8} />
@@ -439,9 +444,14 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
               {dict.home.viewProfiles}
             </Link>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div
+            className="rise-card-rail grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+            role="region"
+            aria-label={dict.home.profilesTitle}
+            tabIndex={0}
+          >
             {countries.map((country) => (
-              <article key={country.slug} className="flex h-full flex-col rounded-lg border border-[color:var(--color-border)] bg-white p-5">
+              <article key={country.slug} className="rise-card flex h-full flex-col rounded-lg border border-[color:var(--color-border)] bg-white p-5">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
                   {country.mainRisk}
                 </p>
@@ -475,7 +485,12 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
                 {dict.home.viewStories}
               </Link>
             </div>
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div
+              className="rise-card-rail grid gap-5 md:grid-cols-2 lg:grid-cols-3"
+              role="region"
+              aria-label={dict.home.storiesTitle}
+              tabIndex={0}
+            >
               {stories.slice(0, 3).map((story) => (
                 <article key={story.id} className="rounded-lg border border-white/15 p-4">
                   <div className="rise-story-thumbnail aspect-video rounded-md bg-white/10" />
@@ -502,14 +517,19 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
               {dict.home.exploreMap}
             </Link>
           </div>
-          <div className="grid gap-5 md:grid-cols-3">
+          <div
+            className="rise-card-rail grid gap-5 md:grid-cols-3"
+            role="region"
+            aria-label={dict.home.casesTitle}
+            tabIndex={0}
+          >
             {cases.slice(0, 3).map((item) => (
               <CaseCard key={item.id} item={item} locale={locale} actionVariant="button" />
             ))}
           </div>
         </section>
 
-        <section className="rise-report-band border-y border-[color:var(--color-border)] bg-white py-14">
+        <section className="rise-report-band border-y border-[color:var(--color-border)] py-14">
           <div className="page-shell grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
@@ -522,13 +542,13 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link
                   href={localizedPath("/informe-regional", locale)}
-                  className="rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
+                  className="rise-action rounded-md bg-[color:var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
                 >
                   {dict.home.readOnline}
                 </Link>
                 <Link
                   href={localizedPath("/metodologia", locale)}
-                  className="rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"
+                  className="rise-action rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"
                 >
                   {dict.home.learnMethodology}
                 </Link>
@@ -536,7 +556,7 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
             </div>
             <div className="grid gap-4 md:grid-cols-3">
               {dict.home.findings.map((finding) => (
-                <div key={finding} className="rounded-lg bg-[color:var(--color-surface-muted)] p-4 text-sm leading-6">
+                <div key={finding} className="rounded-lg border border-[color:var(--color-border)] bg-white p-4 text-sm leading-6 shadow-sm">
                   {finding}
                 </div>
               ))}
@@ -660,7 +680,7 @@ export async function StoriesPageView({ locale, currentPath }: PublicPageProps) 
 
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {stories.map((story) => (
-            <article key={story.id} className="overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white">
+            <article key={story.id} className="rise-card overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white">
               <StoryMedia fallbackLabel={dict.stories.videoPlaceholder} story={story} />
               <div className="p-5">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
@@ -849,7 +869,7 @@ export async function CountryProfilesPageView({ locale, currentPath }: PublicPag
 
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {countries.map((country) => (
-            <article key={country.slug} className="rounded-lg border border-[color:var(--color-border)] bg-white p-5">
+            <article key={country.slug} className="rise-card rounded-lg border border-[color:var(--color-border)] bg-white p-5">
               <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
                 {country.territory}
               </p>
