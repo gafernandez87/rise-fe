@@ -1,6 +1,12 @@
+import type { EditorialMetadata } from "@/types/editorial";
 export type CaseSeverity = "low" | "medium" | "high" | "critical";
 
-export type CaseStatus = "draft" | "published" | "hidden";
+export type CaseStatus =
+  | "draft"
+  | "review"
+  | "published"
+  | "archived"
+  | "hidden";
 
 export type Category = {
   id: string;
@@ -17,16 +23,26 @@ export type CaseImage = {
   isCover: boolean;
 };
 
-export type AdaptationCase = {
+export type AdaptationCase = EditorialMetadata & {
   id: string;
   title: string;
   slug: string;
   shortDescription: string;
   fullDescription: string;
-  severity: CaseSeverity;
+  severity: CaseSeverity | null;
   status: CaseStatus;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
+  riskMethod?: string | null;
+  riskSourceUrl?: string | null;
+  coordinatePrecision?: string | null;
+  locationMethod?: string | null;
+  implementationStage?: string | null;
+  sector?: string | null;
+  threatTermId?: string | null;
+  measureTermId?: string | null;
+  environmentTermId?: string | null;
+  sectorTermId?: string | null;
   country?: string | null;
   region?: string | null;
   locality?: string | null;
@@ -66,8 +82,6 @@ export type MapCase = Pick<
   | "slug"
   | "shortDescription"
   | "severity"
-  | "latitude"
-  | "longitude"
   | "country"
   | "region"
   | "locality"
@@ -80,5 +94,10 @@ export type MapCase = Pick<
   | "youthRole"
 > & {
   category: Category;
+  latitude: number;
+  longitude: number;
+  threatAliases?: string[];
+  measureAliases?: string[];
   coverImageUrl?: string | null;
+  searchText?: string;
 };

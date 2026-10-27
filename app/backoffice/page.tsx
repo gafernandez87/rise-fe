@@ -1,7 +1,11 @@
+import { TaxonomyPanel } from "@/components/backoffice/taxonomy-panel";
+import { EditorialFields } from "@/components/backoffice/editorial-fields";
+import { WorkbookPanel } from "@/components/backoffice/workbook-panel";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, FileText, Pencil, Plus } from "lucide-react";
 import {
+  getBackofficeUser,
   getBackofficeCases,
   getBackofficeCountryProfiles,
   getBackofficeStories,
@@ -9,6 +13,8 @@ import {
 } from "@/lib/backoffice-api";
 import type { AdaptationCase, CaseSeverity, CaseStatus } from "@/types/cases";
 import type { CountryProfile } from "@/types/country-profiles";
+import { countryProfileSections, countryProfileSectionValue } from "@/lib/country-profiles";
+import { getDictionary } from "@/lib/i18n";
 import type { ResilienceStory } from "@/types/stories";
 import {
   createCountryProfile,
@@ -29,6 +35,7 @@ export const runtime = "nodejs";
 
 type BackofficePageProps = {
   searchParams: Promise<{
+    detail?: string;
     created?: string;
     deleted?: string;
     edit?: string;
@@ -42,6 +49,7 @@ type BackofficePageProps = {
     profileUpdated?: string;
     save?: string;
     section?: string;
+    measureTab?: string;
     storyCreated?: string;
     storyEdit?: string;
     storyMode?: string;
@@ -60,6 +68,7 @@ type FieldProps = {
   step?: string;
   type?: string;
   placeholder?: string;
+  readOnly?: boolean;
   value?: string | number | null;
 };
 
@@ -67,6 +76,8 @@ const statusLabels: Record<CaseStatus, string> = {
   draft: "Borrador",
   published: "Publicado",
   hidden: "Oculto",
+  review: "En revisión",
+  archived: "Archivado",
 };
 
 const severityLabels: Record<CaseSeverity, string> = {
@@ -76,12 +87,13 @@ const severityLabels: Record<CaseSeverity, string> = {
   critical: "Crítica",
 };
 
-function Field({ label, name, required, step, type = "text", placeholder, value }: FieldProps) {
+function Field({ label, name, required, step, type = "text", placeholder, readOnly, value }: FieldProps) {
   return (
     <label className="grid gap-1 text-sm font-medium">
       {label}
       <input
         className="rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-normal outline-none transition focus:border-[color:var(--color-primary)]"
+        readOnly={readOnly}
         defaultValue={value ?? undefined}
         name={name}
         placeholder={placeholder}
@@ -159,6 +171,7 @@ function LoginView({ error }: { error?: string }) {
               {message}
             </p>
           ) : null}
+          <Field label="Email (opcional para la cuenta principal)" name="email" type="email" />
           <Field label="Clave" name="password" required type="password" />
           <SubmitButton fullWidth icon="lock" pendingLabel="Ingresando...">
             Ingresar
@@ -189,7 +202,7 @@ function Notice({
   const article = gender === "masculine" ? "el" : "la";
   const createdSuffix = gender === "masculine" ? "creado" : "creada";
   const updatedSuffix = gender === "masculine" ? "actualizado" : "actualizada";
-  const deletedSuffix = gender === "masculine" ? "eliminado" : "eliminada";
+  const deletedSuffix = gender === "masculine" ? "archivado" : "archivada";
 
   if (created === "1") {
     return (
@@ -246,23 +259,35 @@ function casePhotoUrl(item?: AdaptationCase) {
   return item?.photoUrl ?? item?.images.find((image) => image.isCover)?.url ?? item?.images[0]?.url ?? null;
 }
 
-function MeasureFields({ measure }: { measure?: AdaptationCase }) {
+function MeasureFields({ measure, canPublish }: { canPublish: boolean; measure?: AdaptationCase }) {
   return (
     <>
       <section className="grid gap-4 md:grid-cols-2">
         <Field label="Título" name="title" required value={measure?.title} />
-        <Field label="Slug" name="slug" placeholder="se-genera-si-queda-vacio" value={measure?.slug} />
+        <Field readOnly={Boolean(measure)} label="Slug" name="slug" placeholder="se-genera-si-queda-vacio" value={measure?.slug} />
         <SelectField label="Estado" name="status" value={measure?.status ?? "draft"}>
           <option value="draft">Borrador</option>
-          <option value="published">Publicado</option>
+          <option value="review">En revisión</option>
+          <option value="published" disabled={!canPublish}>Publicado</option>
+          <option value="archived">Archivado</option>
           <option value="hidden">Oculto</option>
         </SelectField>
-        <SelectField label="Severidad para mapa" name="severity" value={measure?.severity ?? "medium"}>
+        <SelectField label="Nivel de riesgo (requiere método y fuente)" name="severity" value={measure?.severity ?? ""}>
+          <option value="">No evaluado</option>
           <option value="medium">Media</option>
           <option value="low">Baja</option>
           <option value="high">Alta</option>
           <option value="critical">Crítica</option>
         </SelectField>
+        <Field label="Método de evaluación del riesgo" name="riskMethod" value={measure?.riskMethod} />
+        <Field label="Fuente de evaluación del riesgo" name="riskSourceUrl" type="url" value={measure?.riskSourceUrl} />
+        <SelectField label="Precisión de la ubicación" name="coordinatePrecision" value={measure?.coordinatePrecision ?? ""}>
+          <option value="">No indicada</option><option value="country">País</option><option value="region">Región</option><option value="locality">Localidad</option><option value="exact">Ubicación exacta documentada</option>
+        </SelectField>
+        <Field label="Fuente o criterio de ubicación" name="locationMethod" value={measure?.locationMethod} />
+        <Field label="Etapa de implementación" name="implementationStage" value={measure?.implementationStage} />
+        <Field label="Sector" name="sector" value={measure?.sector} />
+        <input name="originalPhotoUrl" type="hidden" value={casePhotoUrl(measure) ?? ""} />
         <Field label="País" name="country" value={measure?.country} />
         <Field label="Localidad" name="locality" value={measure?.locality} />
         <Field
@@ -271,18 +296,18 @@ function MeasureFields({ measure }: { measure?: AdaptationCase }) {
           value={measure?.subnationalJurisdiction ?? measure?.region}
         />
         <Field label="Ecorregión" name="ecoregion" value={measure?.ecoregion} />
-        <Field label="Latitud" name="latitude" required step="any" type="number" value={measure?.latitude} />
-        <Field label="Longitud" name="longitude" required step="any" type="number" value={measure?.longitude} />
+        <Field label="Latitud" name="latitude" step="any" type="number" value={measure?.latitude} />
+        <Field label="Longitud" name="longitude" step="any" type="number" value={measure?.longitude} />
         <Field label="Fecha de implementación" name="implementationDate" value={measure?.implementationDate} />
         <Field label="Foto URL" name="photoUrl" type="url" value={casePhotoUrl(measure)} />
         <Field label="Amenaza" name="threat" value={measure?.threat} />
-        <Field label="Sector / tipo de medida" name="measureType" value={measure?.measureType ?? measure?.category.name} />
+        <Field label="Tipo de medida" name="measureType" value={measure?.measureType ?? measure?.category.name} />
         <Field label="Alcance" name="scope" value={measure?.scope} />
         <Field label="Enfoque adaptativo" name="adaptationFocus" value={measure?.adaptationFocus} />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <TextArea label="Resumen de la medida" name="shortDescription" required value={measure?.shortDescription} />
+        <TextArea label="Resumen de la medida" name="shortDescription" value={measure?.shortDescription} />
         <TextArea label="Descripción completa" name="fullDescription" value={measure?.fullDescription} />
         <TextArea
           label="Perfil de vulnerabilidad nacional"
@@ -317,17 +342,20 @@ function MeasureFields({ measure }: { measure?: AdaptationCase }) {
   );
 }
 
-function StoryFields({ story }: { story?: ResilienceStory }) {
+function StoryFields({ story, canPublish, cases }: { canPublish: boolean; cases: AdaptationCase[]; story?: ResilienceStory }) {
   return (
     <>
       <section className="grid gap-4 md:grid-cols-2">
         <Field label="Título" name="storyTitle" required value={story?.title} />
-        <Field label="Slug" name="storySlug" placeholder="se-genera-si-queda-vacio" value={story?.slug} />
+        <Field readOnly={Boolean(story)} label="Slug" name="storySlug" placeholder="se-genera-si-queda-vacio" value={story?.slug} />
         <SelectField label="Estado" name="storyStatus" value={story?.status ?? "draft"}>
           <option value="draft">Borrador</option>
-          <option value="published">Publicado</option>
+          <option value="review">En revisión</option>
+          <option value="published" disabled={!canPublish}>Publicado</option>
+          <option value="archived">Archivado</option>
           <option value="hidden">Oculto</option>
         </SelectField>
+        <SelectField label="Medida vinculada (opcional)" name="storyCaseId" value={story?.caseId ?? ""}><option value="">Sin vincular</option>{cases.map((item) => <option key={item.id} value={item.id}>{item.title} · {item.country}</option>)}</SelectField>
         <Field label="País" name="storyCountry" value={story?.country} />
         <Field label="Territorio" name="storyTerritory" value={story?.territory} />
         <Field label="Riesgo principal" name="storyMainRisk" value={story?.mainRisk} />
@@ -337,46 +365,49 @@ function StoryFields({ story }: { story?: ResilienceStory }) {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <TextArea label="Resumen" name="storySummary" required value={story?.summary} />
-        <TextArea label="Historia completa" name="storyContent" required value={story?.content} />
+        <TextArea label="Resumen" name="storySummary" value={story?.summary} />
+        <TextArea label="Historia completa" name="storyContent" value={story?.content} />
       </section>
     </>
   );
 }
 
-function CountryProfileFields({ profile }: { profile?: CountryProfile }) {
+function CountryProfileFields({ profile, canPublish }: { canPublish: boolean; profile?: CountryProfile }) {
+  const sectionLabels = getDictionary("es").profiles.sections;
   return (
     <>
       <section className="grid gap-4 md:grid-cols-2">
         <Field label="País" name="profileName" required value={profile?.name} />
-        <Field label="Slug" name="profileSlug" placeholder="se-genera-si-queda-vacio" value={profile?.slug} />
+        <Field readOnly={Boolean(profile)} label="Slug" name="profileSlug" placeholder="se-genera-si-queda-vacio" value={profile?.slug} />
         <SelectField label="Estado" name="profileStatus" value={profile?.status ?? "draft"}>
           <option value="draft">Borrador</option>
-          <option value="published">Publicado</option>
+          <option value="review">En revisión</option>
+          <option value="published" disabled={!canPublish}>Publicado</option>
+          <option value="archived">Archivado</option>
           <option value="hidden">Oculto</option>
         </SelectField>
-        <Field label="Riesgo principal" name="profileMainRisk" required value={profile?.mainRisk} />
-        <Field label="Territorio priorizado" name="profileTerritory" required value={profile?.territory} />
-        <Field label="Sector más afectado" name="profileSector" required value={profile?.sector} />
+        <Field label="Riesgo principal" name="profileMainRisk" value={profile?.mainRisk} />
+        <Field label="Territorio priorizado" name="profileTerritory" value={profile?.territory} />
+        <Field label="Sector más afectado" name="profileSector" value={profile?.sector} />
         <Field label="Medidas identificadas" name="profileMeasuresCount" type="number" value={profile?.measuresCount} />
         <Field label="Título de historia destacada" name="profileStoryTitle" value={profile?.storyTitle} />
         <Field label="Imagen principal URL" name="profileHeroImageUrl" type="url" value={profile?.heroImageUrl} />
         <Field label="Perfil PDF URL" name="profilePdfUrl" type="url" value={profile?.profilePdfUrl} />
+        <TextArea label="Riesgos para el listado (uno por línea)" name="profileRisks" value={profile?.risks.join("\n")} />
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
-        <TextArea label="Resumen del perfil" name="profileSummary" required value={profile?.summary} />
-        <TextArea label="Riesgos prioritarios (uno por línea)" name="profileRisks" value={profile?.risks.join("\n")} />
-        <TextArea label="Análisis de riesgo y vulnerabilidad" name="profileRiskAnalysis" value={profile?.riskAnalysis} />
-        <TextArea label="Amenazas climáticas" name="profileClimateThreats" value={profile?.climateThreats} />
-        <TextArea
-          label="Exposición y vulnerabilidades"
-          name="profileExposureAndVulnerabilities"
-          value={profile?.exposureAndVulnerabilities}
-        />
-        <TextArea label="Medidas de adaptación identificadas" name="profileAdaptationMeasures" value={profile?.adaptationMeasures} />
-        <TextArea label="Historia destacada" name="profileFeaturedStory" value={profile?.featuredStory} />
-        <TextArea label="Fuentes y referencias" name="profileSources" value={profile?.sources} />
+      <section className="space-y-4">
+        <div>
+          <h3 className="text-lg font-semibold">Contenido de los recuadros del perfil</h3>
+          <p className="mt-1 text-sm text-[color:var(--color-muted)]">
+            Cada campo corresponde al recuadro con el mismo título en la web, en este mismo orden. Separá los párrafos con una línea en blanco.
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {countryProfileSections.map(({ field, formName }) => (
+            <TextArea key={field} label={sectionLabels[field]} name={formName} value={countryProfileSectionValue(profile, field)} />
+          ))}
+        </div>
       </section>
     </>
   );
@@ -426,7 +457,7 @@ function CasesTable({ activeId, cases }: { activeId?: string; cases: AdaptationC
                 </td>
                 <td className="px-4 py-3 align-top text-[color:var(--color-muted)]">{location}</td>
                 <td className="px-4 py-3 align-top text-[color:var(--color-muted)]">
-                  {item.threat ?? severityLabels[item.severity]}
+                  {item.threat ?? (item.severity ? severityLabels[item.severity] : "No evaluado")}
                 </td>
                 <td className="px-4 py-3 align-top text-[color:var(--color-muted)]">
                   {item.measureType ?? item.category.name}
@@ -586,6 +617,7 @@ function CountryProfilesTable({ activeId, profiles }: { activeId?: string; profi
 }
 
 function MeasureForm({
+  canPublish,
   action,
   errorPath,
   icon,
@@ -594,6 +626,7 @@ function MeasureForm({
   submitLabel,
   title,
 }: {
+  canPublish: boolean;
   action: (formData: FormData) => Promise<void>;
   errorPath?: string;
   icon?: ReactNode;
@@ -602,6 +635,7 @@ function MeasureForm({
   submitLabel: string;
   title: string;
 }) {
+  const readOnly = !canPublish && measure?.status === "published";
   return (
     <form action={action} className="space-y-6 rounded-lg border border-[color:var(--color-border)] bg-white p-5">
       {errorPath ? <input name="backofficeErrorPath" type="hidden" value={errorPath} /> : null}
@@ -612,15 +646,20 @@ function MeasureForm({
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {secondaryAction}
-          <SubmitButton icon="save" pendingLabel="Guardando...">
+          <SubmitButton disabled={readOnly} icon="save" pendingLabel="Guardando...">
             Guardar
           </SubmitButton>
         </div>
       </div>
 
-      <MeasureFields measure={measure} />
+      {measure ? <Link className="rise-action rounded-md border px-4 py-2 text-sm font-semibold" href={`/backoffice/preview/measures/${measure.id}`} target="_blank">Vista previa interna</Link> : null}
+      {readOnly ? <p className="text-sm">Solo lectura: un publicador debe realizar los cambios sobre contenido publicado.</p> : null}
+      <fieldset disabled={readOnly} className="space-y-6 disabled:opacity-70">
+        <MeasureFields measure={measure} canPublish={canPublish} />
+        <EditorialFields record={measure} />
+      </fieldset>
 
-      <SubmitButton icon="save" pendingLabel="Guardando...">
+      <SubmitButton disabled={readOnly} icon="save" pendingLabel="Guardando...">
         {submitLabel}
       </SubmitButton>
     </form>
@@ -628,6 +667,8 @@ function MeasureForm({
 }
 
 function StoryForm({
+  canPublish,
+  cases,
   action,
   errorPath,
   icon,
@@ -636,6 +677,8 @@ function StoryForm({
   submitLabel,
   title,
 }: {
+  canPublish: boolean;
+  cases: AdaptationCase[];
   action: (formData: FormData) => Promise<void>;
   errorPath?: string;
   icon?: ReactNode;
@@ -644,6 +687,7 @@ function StoryForm({
   submitLabel: string;
   title: string;
 }) {
+  const readOnly = !canPublish && story?.status === "published";
   return (
     <form action={action} className="space-y-6 rounded-lg border border-[color:var(--color-border)] bg-white p-5">
       {errorPath ? <input name="backofficeErrorPath" type="hidden" value={errorPath} /> : null}
@@ -654,15 +698,20 @@ function StoryForm({
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {secondaryAction}
-          <SubmitButton icon="save" pendingLabel="Guardando...">
+          <SubmitButton disabled={readOnly} icon="save" pendingLabel="Guardando...">
             Guardar
           </SubmitButton>
         </div>
       </div>
 
-      <StoryFields story={story} />
+      {story ? <Link className="rise-action rounded-md border px-4 py-2 text-sm font-semibold" href={`/backoffice/preview/stories/${story.id}`} target="_blank">Vista previa interna</Link> : null}
+      {readOnly ? <p className="text-sm">Solo lectura: un publicador debe realizar los cambios sobre contenido publicado.</p> : null}
+      <fieldset disabled={readOnly} className="space-y-6 disabled:opacity-70">
+        <StoryFields story={story} canPublish={canPublish} cases={cases} />
+        <EditorialFields record={story} />
+      </fieldset>
 
-      <SubmitButton icon="save" pendingLabel="Guardando...">
+      <SubmitButton disabled={readOnly} icon="save" pendingLabel="Guardando...">
         {submitLabel}
       </SubmitButton>
     </form>
@@ -670,6 +719,7 @@ function StoryForm({
 }
 
 function CountryProfileForm({
+  canPublish,
   action,
   errorPath,
   icon,
@@ -678,6 +728,7 @@ function CountryProfileForm({
   submitLabel,
   title,
 }: {
+  canPublish: boolean;
   action: (formData: FormData) => Promise<void>;
   errorPath?: string;
   icon?: ReactNode;
@@ -686,6 +737,7 @@ function CountryProfileForm({
   submitLabel: string;
   title: string;
 }) {
+  const readOnly = !canPublish && profile?.status === "published";
   return (
     <form action={action} className="space-y-6 rounded-lg border border-[color:var(--color-border)] bg-white p-5">
       {errorPath ? <input name="backofficeErrorPath" type="hidden" value={errorPath} /> : null}
@@ -696,15 +748,20 @@ function CountryProfileForm({
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {secondaryAction}
-          <SubmitButton icon="save" pendingLabel="Guardando...">
+          <SubmitButton disabled={readOnly} icon="save" pendingLabel="Guardando...">
             Guardar
           </SubmitButton>
         </div>
       </div>
 
-      <CountryProfileFields profile={profile} />
+      {profile ? <Link className="rise-action rounded-md border px-4 py-2 text-sm font-semibold" href={`/backoffice/preview/profiles/${profile.id}`} target="_blank">Vista previa interna</Link> : null}
+      {readOnly ? <p className="text-sm">Solo lectura: un publicador debe realizar los cambios sobre contenido publicado.</p> : null}
+      <fieldset disabled={readOnly} className="space-y-6 disabled:opacity-70">
+        <CountryProfileFields profile={profile} canPublish={canPublish} />
+        <EditorialFields record={profile} />
+      </fieldset>
 
-      <SubmitButton icon="save" pendingLabel="Guardando...">
+      <SubmitButton disabled={readOnly} icon="save" pendingLabel="Guardando...">
         {submitLabel}
       </SubmitButton>
     </form>
@@ -892,6 +949,10 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
     return <LoginView error={params.error} />;
   }
 
+  const user = await getBackofficeUser(token);
+  if (!user) return <LoginView error="session" />;
+  const canPublish = user.role === "publisher";
+
   const [casesResult, profilesResult, storiesResult] = await Promise.all([
     getBackofficeCases(token),
     getBackofficeCountryProfiles(token),
@@ -923,6 +984,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
   const isCreating = isCreatingMeasure || isCreatingProfile || isCreatingStory;
   const isEditing = isEditingMeasure || isEditingProfile || isEditingStory;
   const isFormScreen = isCreating || isEditing;
+  const measureTab = !isFormScreen && ["import", "export", "synonyms"].includes(params.measureTab ?? "") ? params.measureTab : "measures";
   const activeItems =
     activeSection === "profiles" ? countryProfiles : activeSection === "stories" ? stories : cases;
   const activeError =
@@ -998,12 +1060,27 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
               </div>
             </div>
 
+        <p className="text-sm text-[color:var(--color-muted)]">Sesión de {user.name} · {canPublish ? "Publicador" : "Editor: puede preparar borradores y enviarlos a revisión. La publicación y los cambios sobre contenido publicado requieren un publicador."}</p>
+        {params.detail ? <p role="alert" className="rounded-md border border-[color:var(--color-border)] bg-white p-4 text-sm text-[color:var(--color-primary)]">{params.detail}</p> : null}
+        {!isFormScreen && activeSection === "measures" ? (
+          <nav aria-label="Secciones de medidas" className="flex flex-wrap gap-2 border-b border-[color:var(--color-border)]">
+            {[["measures", "MEDIDAS"], ["import", "IMPORTAR"], ["export", "EXPORTAR"]].map(([value, label]) => (
+              <Link key={value} href={`/backoffice?section=measures&measureTab=${value}`} aria-current={measureTab === value ? "page" : undefined}
+                className={`border-b-2 px-4 py-3 text-sm font-semibold ${measureTab === value ? "border-[color:var(--color-primary)] text-[color:var(--color-primary)]" : "border-transparent text-[color:var(--color-muted)]"}`}>
+                {label}
+              </Link>
+            ))}
+          </nav>
+        ) : null}
+        {!isFormScreen && activeSection !== "measures" ? <WorkbookPanel key={activeSection} kind={activeSection} /> : null}
+        {!isFormScreen && activeSection === "measures" && (measureTab === "import" || measureTab === "export") ? <WorkbookPanel key={measureTab} kind="measures" mode={measureTab} /> : null}
+        {!isFormScreen && activeSection === "measures" && measureTab === "synonyms" ? <TaxonomyPanel canPublish={canPublish} expanded /> : null}
         {activeSection === "profiles" ? (
           <Notice
             created={params.profileCreated}
             deleted={params.profileDeleted}
             entityLabel="Ficha de perfil"
-            missingMessage="Completa país, resumen, riesgo principal, territorio y sector."
+            missingMessage="Completa el país. Puedes guardar un borrador con el resto de los campos incompletos."
             save={params.profileSave}
             updated={params.profileUpdated}
           />
@@ -1011,7 +1088,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
           <Notice
             created={params.storyCreated}
             entityLabel="Historia"
-            missingMessage="Completa título, resumen e historia completa."
+            missingMessage="Completa el título. Puedes guardar un borrador con el resto del contenido incompleto."
             save={params.storySave}
             updated={params.storyUpdated}
           />
@@ -1020,7 +1097,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
             created={params.created}
             deleted={params.deleted}
             entityLabel="Medida"
-            missingMessage="Completa título, resumen, latitud y longitud."
+            missingMessage="Completa el título. Las coordenadas son opcionales; debes cargar ambas o dejar ambas vacías."
             save={params.save}
             updated={params.updated}
           />
@@ -1034,6 +1111,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
 
         {isCreatingMeasure ? (
           <MeasureForm
+            canPublish={canPublish}
             action={createMeasure}
             errorPath="/backoffice?mode=create"
             secondaryAction={
@@ -1048,6 +1126,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
 
         {isCreatingProfile ? (
           <CountryProfileForm
+            canPublish={canPublish}
             action={createCountryProfile}
             errorPath="/backoffice?section=profiles&profileMode=create"
             secondaryAction={
@@ -1062,6 +1141,8 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
 
         {isCreatingStory ? (
           <StoryForm
+            cases={cases}
+            canPublish={canPublish}
             action={createStory}
             errorPath="/backoffice?section=stories&storyMode=create"
             secondaryAction={
@@ -1078,6 +1159,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
           editingMeasure ? (
             <section className="space-y-4">
               <MeasureForm
+            canPublish={canPublish}
                 action={updateMeasure.bind(null, editingMeasure.id)}
                 errorPath={`/backoffice?edit=${encodeURIComponent(editingMeasure.id)}`}
                 icon={<Pencil size={18} aria-hidden="true" />}
@@ -1124,6 +1206,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
           editingProfile ? (
             <section className="space-y-4">
               <CountryProfileForm
+            canPublish={canPublish}
                 action={updateCountryProfile.bind(null, editingProfile.id)}
                 errorPath={`/backoffice?section=profiles&profileEdit=${encodeURIComponent(editingProfile.id)}`}
                 icon={<Pencil size={18} aria-hidden="true" />}
@@ -1169,6 +1252,8 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
         {activeSection === "stories" && params.storyEdit ? (
           editingStory ? (
             <StoryForm
+            cases={cases}
+            canPublish={canPublish}
               action={updateStory.bind(null, editingStory.id)}
               errorPath={`/backoffice?section=stories&storyEdit=${encodeURIComponent(editingStory.id)}`}
               icon={<Pencil size={18} aria-hidden="true" />}
@@ -1212,7 +1297,7 @@ export default async function BackofficePage({ searchParams }: BackofficePagePro
             </div>
             <StoriesTable activeId={editingStory?.id} stories={stories} />
           </section>
-        ) : !isFormScreen ? (
+        ) : !isFormScreen && measureTab === "measures" ? (
           <section className="space-y-3">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import L from "leaflet";
 import Image from "next/image";
 import Link from "next/link";
@@ -25,6 +25,7 @@ const latinAmericaViewBounds: L.LatLngBoundsExpression = [
 
 const latinAmericaFitPadding = L.point(24, 24);
 const latinAmericaPreviewCenter: L.LatLngExpression = [-17, -66];
+const navigationBounds = L.latLngBounds(latinAmericaViewBounds);
 
 const createClusterIcon = (cluster: { getChildCount: () => number }) => {
   const count = cluster.getChildCount();
@@ -48,6 +49,22 @@ function MapSizeHandler({ layoutSignal }: { layoutSignal: boolean }) {
       window.cancelAnimationFrame(animationFrame);
       animationFrame = window.requestAnimationFrame(() => {
         map.invalidateSize({ pan: false });
+
+        const size = map.getSize();
+        if (!size.x || !size.y) return;
+
+        // Round upward so even the widest/tallest layout stays inside the tiles.
+        const worldSize = map.getPixelWorldBounds(0).getSize();
+        const zoomSnap = map.options.zoomSnap || 1;
+        const minimumZoom = Math.max(
+          0,
+          Math.ceil(
+            Math.log2(Math.max(size.x / worldSize.x, size.y / worldSize.y)) /
+              zoomSnap,
+          ) * zoomSnap,
+        );
+        map.setMinZoom(minimumZoom);
+        map.panInsideBounds(navigationBounds, { animate: false });
       });
     };
 
@@ -82,18 +99,56 @@ function CaseMarker({
   dict,
   item,
   locale,
+  selected,
+  onSelect,
 }: {
   dict: ReturnType<typeof getDictionary>;
   item: MapCase;
   locale: Locale;
+  selected?: boolean;
+  onSelect?: (id: string) => void;
 }) {
+  const markerRef = useRef<L.Marker>(null);
+  const map = useMap();
+  useEffect(() => {
+    if (!selected) return;
+    const marker = markerRef.current;
+    if (!marker) return;
+    let revealed = false;
+    map.eachLayer((layer) => {
+      const group = layer as L.Layer & {
+        zoomToShowLayer?: (marker: L.Marker, callback: () => void) => void;
+      };
+      if (group.zoomToShowLayer) {
+        revealed = true;
+        group.zoomToShowLayer(marker, () => marker.openPopup());
+      }
+    });
+    if (!revealed) {
+      map.setView(marker.getLatLng(), Math.max(map.getZoom(), 6));
+      marker.openPopup();
+    }
+  }, [selected, map]);
   const countrySlug = getCountrySlugFromName(item.country);
 
   return (
     <Marker
+      ref={markerRef}
+      eventHandlers={{ click: () => onSelect?.(item.id) }}
       key={item.id}
       position={[item.latitude, item.longitude]}
-      icon={markerIcon}
+      title={item.title}
+      alt={item.title}
+      icon={
+        selected
+          ? L.divIcon({
+              className: "rise-marker rise-marker--selected",
+              iconSize: [34, 34],
+              iconAnchor: [17, 17],
+              popupAnchor: [0, -17],
+            })
+          : markerIcon
+      }
     >
       <Popup
         autoPan
@@ -104,7 +159,9 @@ function CaseMarker({
         maxWidth={560}
         minWidth={280}
       >
-        <div className={`rise-map-popup__content${item.coverImageUrl ? " rise-map-popup__content--with-image" : ""}`}>
+        <div
+          className={`rise-map-popup__content${item.coverImageUrl ? " rise-map-popup__content--with-image" : ""}`}
+        >
           {item.coverImageUrl ? (
             <Image
               className="rise-map-popup__image"
@@ -117,12 +174,17 @@ function CaseMarker({
           ) : null}
           <div className="rise-map-popup__body">
             <p className="rise-map-popup__title">{item.title}</p>
-            <p className="rise-map-popup__description">{item.shortDescription}</p>
+            <p className="rise-map-popup__description">
+              {item.shortDescription}
+            </p>
             <dl className="rise-map-popup__meta">
               <div>
                 <dt>{dict.mapPopup.country}</dt>
                 <dd>
-                  <CountryLabel country={item.country} fallback={dict.common.tbd} />
+                  <CountryLabel
+                    country={item.country}
+                    fallback={dict.common.tbd}
+                  />
                 </dd>
               </div>
               <div>
@@ -155,18 +217,28 @@ export function CasesMap({
   cases,
   layoutSignal,
   locale,
+  selectedId,
+  onSelect,
+  onError,
 }: {
   cases: MapCase[];
   layoutSignal: boolean;
   locale: Locale;
+  selectedId?: string | null;
+  onSelect?: (id: string) => void;
+  onError?: () => void;
 }) {
   const dict = getDictionary(locale);
+  const failedTiles = useRef(0);
 
   return (
     <MapContainer
       bounds={latinAmericaViewBounds}
       boundsOptions={{ padding: latinAmericaFitPadding }}
       className="rise-map"
+      bounceAtZoomLimits={false}
+      maxBounds={navigationBounds}
+      maxBoundsViscosity={1}
       scrollWheelZoom
       worldCopyJump={false}
       zoomDelta={0.5}
@@ -174,6 +246,14 @@ export function CasesMap({
     >
       <MapSizeHandler layoutSignal={layoutSignal} />
       <TileLayer
+        eventHandlers={{
+          tileload: () => {
+            failedTiles.current = 0;
+          },
+          tileerror: () => {
+            if (++failedTiles.current >= 3) onError?.();
+          },
+        }}
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         className="rise-map-tile-layer"
         noWrap
@@ -188,7 +268,14 @@ export function CasesMap({
         spiderfyDistanceMultiplier={1.4}
       >
         {cases.map((item) => (
-          <CaseMarker key={item.id} dict={dict} item={item} locale={locale} />
+          <CaseMarker
+            key={item.id}
+            dict={dict}
+            item={item}
+            locale={locale}
+            selected={selectedId === item.id}
+            onSelect={onSelect}
+          />
         ))}
       </MarkerClusterGroup>
     </MapContainer>

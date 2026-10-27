@@ -41,7 +41,7 @@ export function CaseCard({ item, locale, actionVariant = "link" }: CaseCardProps
             <CountryLabel country={item.country} fallback={dict.common.latinAmerica} />
             <span aria-hidden="true">·</span>
             <span>
-              {item.category.name} · {item.severity}
+              {item.category.name}{item.severity ? ` · ${item.severity}` : ""}
             </span>
           </span>
         </p>

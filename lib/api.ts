@@ -1,10 +1,4 @@
-import {
-  placeholderCases,
-  placeholderCategories,
-  placeholderCountryProfiles,
-  placeholderMapCases,
-  placeholderResilienceStories,
-} from "@/lib/placeholders";
+import { notFound } from "next/navigation";
 import { siteConfig } from "@/lib/site";
 import type { AdaptationCase, Category, MapCase } from "@/types/cases";
 import type { CountryProfile } from "@/types/country-profiles";
@@ -31,36 +25,38 @@ async function getJson<T>(path: string, fallback: T): Promise<T> {
 }
 
 export function getMapCases() {
-  return getJson<MapCase[]>("/cases/map", placeholderMapCases);
+  return getJson<MapCase[]>("/cases/map", []);
 }
 
 export function getCategories() {
-  return getJson<Category[]>("/categories", placeholderCategories);
+  return getJson<Category[]>("/categories", []);
 }
 
 export async function getCaseBySlug(slug: string) {
-  const fallback = placeholderCases.find((item) => item.slug === slug) ?? placeholderCases[0];
-  return getJson<AdaptationCase>(`/cases/${slug}`, fallback);
+  const fallback = null;
+  const item = await getJson<AdaptationCase | null>(`/cases/${slug}`, fallback);
+  if (!item) notFound();
+  return item;
 }
 
 export function getPublishedCases() {
-  return getJson<AdaptationCase[]>("/cases", placeholderCases);
+  return getJson<AdaptationCase[]>("/cases", []);
 }
 
 export function getPublishedStories() {
-  return getJson<ResilienceStory[]>("/stories", placeholderResilienceStories);
+  return getJson<ResilienceStory[]>("/stories", []);
 }
 
 export function getPublishedCountryProfiles() {
-  return getJson<CountryProfile[]>("/country-profiles", placeholderCountryProfiles);
+  return getJson<CountryProfile[]>("/country-profiles", []);
 }
 
 export function getCountryProfileBySlug(slug: string) {
-  const fallback = placeholderCountryProfiles.find((item) => item.slug === slug) ?? null;
+  const fallback = null;
   return getJson<CountryProfile | null>(`/country-profiles/${slug}`, fallback);
 }
 
 export function getStoryBySlug(slug: string) {
-  const fallback = placeholderResilienceStories.find((item) => item.slug === slug) ?? null;
+  const fallback = null;
   return getJson<ResilienceStory | null>(`/stories/${slug}`, fallback);
 }

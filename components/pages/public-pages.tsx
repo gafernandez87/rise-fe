@@ -18,9 +18,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CaseActions } from "@/components/cases/case-actions";
+import { EditorialDetails, TranslationNotice } from "@/components/editorial-details";
 import { getUiCopy } from "@/lib/ui-copy";
 import { CaseCard } from "@/components/cases/case-card";
 import { CountryLabel } from "@/components/countries/country-label";
+import { CountryProfileSections } from "@/components/countries/country-profile-sections";
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MapPreviewLoader } from "@/components/map/map-loader";
@@ -46,9 +48,9 @@ import {
   localizedPath,
   type Locale,
 } from "@/lib/i18n";
+import { normalizeFilterValue } from "@/lib/map-search";
 import { mapFilterPath, type MapInitialFilters } from "@/lib/map-filters";
 import { getCountrySlugFromName, organizations, type OrganizationLogo } from "@/lib/rise-content";
-import type { CountryProfile } from "@/types/country-profiles";
 import type { ResilienceStory } from "@/types/stories";
 import type { AdaptationCase } from "@/types/cases";
 
@@ -64,9 +66,7 @@ function uniqueLabels(labels: Array<string | null | undefined>) {
 }
 
 function getCaseRiskLabel(item: AdaptationCase, locale: Locale) {
-  const dict = getDictionary(locale);
-
-  return item.threat ?? dict.mapExplorer.riskBySeverity[item.severity];
+  return item.threat ?? getUiCopy(locale).unknownThreat;
 }
 
 function getCaseMeasureLabels(item: AdaptationCase) {
@@ -80,34 +80,12 @@ function normalizeText(value: string) {
     .toLowerCase();
 }
 
-function normalizeLinkedLabel(value?: string | null) {
-  const normalizedValue = value?.trim();
-
-  return normalizedValue ? normalizeText(normalizedValue) : undefined;
-}
-
-function getCountryLinkKey(value?: string | null) {
-  return getCountrySlugFromName(value) ?? normalizeLinkedLabel(value);
-}
-
 function getRelatedStoryForCase(item: AdaptationCase, stories: ResilienceStory[]) {
-  const caseCountryKey = getCountryLinkKey(item.country);
-
-  if (!caseCountryKey) {
-    return undefined;
-  }
-
-  return stories.find((story) => getCountryLinkKey(story.country) === caseCountryKey);
+  return stories.find((story) => story.caseId === item.id);
 }
 
 function getRelatedCasesForStory(story: ResilienceStory, cases: AdaptationCase[]) {
-  const storyCountryKey = getCountryLinkKey(story.country);
-
-  if (!storyCountryKey) {
-    return [];
-  }
-
-  return cases.filter((item) => getCountryLinkKey(item.country) === storyCountryKey);
+  return story.caseId ? cases.filter((item) => item.id === story.caseId) : [];
 }
 
 function StoryThemeIcon({ story }: { story: ResilienceStory }) {
@@ -148,6 +126,17 @@ function PublicChrome({ locale, currentPath, children }: PublicPageProps & { chi
     <div className="rise-public">
       <SiteHeader locale={locale} currentPath={currentPath} />
       <LanguageSwitcher locale={locale} currentPath={currentPath} />
+      <nav aria-label="RISE" className="border-b border-[color:var(--color-border)] bg-white">
+        <div className="page-shell flex flex-wrap gap-x-5 gap-y-2 py-3 text-sm font-semibold">
+          {[
+            ["/mapa", { es: "Explorar", en: "Explore", pt: "Explorar" }],
+            ["/historias", { es: "Historias", en: "Stories", pt: "Histórias" }],
+            ["/perfiles", { es: "Países", en: "Countries", pt: "Países" }],
+            ["/metodologia", { es: "Aprender", en: "Learn", pt: "Aprender" }],
+            ["/#sobre-rise", { es: "Acerca de RISE", en: "About RISE", pt: "Sobre o RISE" }],
+          ].map(([href, labels]) => <Link key={href as string} href={localizedPath(href as string, locale)} aria-current={currentPath === href ? "page" : undefined}>{(labels as Record<Locale, string>)[locale]}</Link>)}
+        </div>
+      </nav>
       {children}
       <SiteFooter locale={locale} />
     </div>
@@ -198,28 +187,6 @@ function SiteFooter({ locale }: { locale: Locale }) {
   );
 }
 
-function fallbackProfileContent(country: CountryProfile, dict: ReturnType<typeof getDictionary>) {
-  return `${dict.profiles.placeholderPrefix} ${country.name}. ${dict.profiles.placeholderSuffix}`;
-}
-
-function profileSectionContent(country: CountryProfile, sectionIndex: number, dict: ReturnType<typeof getDictionary>) {
-  const fallback = fallbackProfileContent(country, dict);
-  const contents = [
-    country.summary,
-    country.climateThreats ?? country.risks.join(", "),
-    country.exposureAndVulnerabilities,
-    country.riskAnalysis,
-    null,
-    country.sector,
-    country.territory,
-    country.adaptationMeasures,
-    country.featuredStory ?? country.storyTitle,
-    country.sources,
-  ];
-
-  return contents[sectionIndex] || fallback;
-}
-
 function LogoGroup({ title, items }: { title: string; items: OrganizationLogo[] }) {
   return (
     <div className="rise-logo-group">
@@ -265,10 +232,10 @@ function StoryMedia({
   story: ResilienceStory;
 }) {
   const ui = getUiCopy(locale);
-  if (story.mediaUrl && isLikelyImageUrl(story.mediaUrl)) {
+  if (story.mediaUrl && (story.mediaMetadata?.format === "image" || isLikelyImageUrl(story.mediaUrl))) {
     return (
       <div
-        aria-label={story.mediaAlt ?? story.title}
+        aria-label={story.mediaMetadata?.alt ?? story.mediaAlt ?? story.title}
         className="rise-story-thumbnail aspect-video bg-[color:var(--color-surface-muted)] bg-cover bg-center"
         role="img"
         style={{ backgroundImage: `url("${story.mediaUrl.replace(/"/g, '\\"')}")` }}
@@ -367,15 +334,18 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
               <p className="max-w-2xl text-lg leading-8 text-[color:var(--color-muted)]">
                 {dict.home.intro}
               </p>
+              <form action={localizedPath("/mapa", locale)} method="get" className="space-y-3">
+                <label className="grid gap-2 text-lg font-semibold">
+                  {{ es: "Encuentra experiencias para adaptar tu territorio", en: "Find experiences to adapt your territory", pt: "Encontre experiências para adaptar seu território" }[locale]}
+                  <input name="q" type="search" className="min-w-0 w-full rounded border border-[color:var(--color-border)] bg-white px-3 py-3 text-base font-normal" placeholder={dict.mapExplorer.searchPlaceholder} />
+                </label>
+                <button type="submit" className="rise-action rounded bg-[color:var(--color-primary)] px-5 py-3 text-sm font-semibold text-white">{dict.mapExplorer.search}</button>
+              </form>
             </div>
             <article className="rise-map-card overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white shadow-sm">
-              <div
-                className="rise-map-preview relative aspect-[4/3] bg-[#a9d7e6]"
-                role="img"
-                aria-label={dict.home.mapCardTitle}
-              >
+              <Link href={localizedPath("/mapa", locale)} className="rise-map-preview relative block aspect-[4/3] bg-[#a9d7e6]" aria-label={dict.home.mapCardTitle}>
                 <MapPreviewLoader cases={localizedMapCases} locale={locale} />
-              </div>
+              </Link>
               <div className="border-t border-[color:var(--color-border)] bg-[color:var(--color-brand-cream)] p-5">
                 <p className="text-sm font-semibold text-[color:var(--color-primary)]">
                   {dict.common.latinAmerica}
@@ -709,7 +679,9 @@ export async function StoriesPageView({ locale, currentPath }: PublicPageProps) 
 
 export async function StoryPageView({ locale, currentPath, slug }: PublicPageProps & { slug: string }) {
   const dict = getDictionary(locale);
-  const [story, publishedCases] = await Promise.all([getStoryBySlug(slug), getPublishedCases()]);
+  const [originalStory, publishedCases] = await Promise.all([getStoryBySlug(slug), getPublishedCases()]);
+  const saved = originalStory?.translations?.find((entry) => entry.language === locale && entry.status === "complete");
+  const story = originalStory ? { ...originalStory, title: saved?.title ?? originalStory.title, summary: saved?.summary ?? originalStory.summary, content: saved?.content ?? originalStory.content } : null;
 
   if (!story) {
     notFound();
@@ -725,6 +697,7 @@ export async function StoryPageView({ locale, currentPath, slug }: PublicPagePro
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
       <main>
+        <TranslationNotice record={story} locale={locale} />
         <section className="rise-detail-hero bg-white">
           <div className="page-shell grid gap-8 py-10 lg:grid-cols-[0.95fr_1.05fr]">
             <div>
@@ -847,6 +820,7 @@ export async function StoryPageView({ locale, currentPath, slug }: PublicPagePro
             </div>
           </div>
         </section>
+        <EditorialDetails record={story} locale={locale} />
       </main>
     </PublicChrome>
   );
@@ -905,7 +879,9 @@ export async function CountryProfilesPageView({ locale, currentPath }: PublicPag
 
 export async function CountryProfilePageView({ locale, currentPath, slug }: PublicPageProps & { slug: string }) {
   const dict = getDictionary(locale);
-  const country = await getCountryProfileBySlug(slug);
+  const [originalCountry, mapCases] = await Promise.all([getCountryProfileBySlug(slug), getMapCases()]);
+  const saved = originalCountry?.translations?.find((entry) => entry.language === locale && entry.status === "complete");
+  const country = originalCountry ? { ...originalCountry, summary: saved?.summary ?? originalCountry.summary } : null;
 
   if (!country) {
     notFound();
@@ -920,10 +896,11 @@ export async function CountryProfilePageView({ locale, currentPath, slug }: Publ
               <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
                 {dict.profiles.nationalProfile}
               </p>
+              <TranslationNotice record={country} locale={locale} />
               <h1 className="mt-2 text-4xl font-semibold">
                 <CountryLabel country={country.name} />
               </h1>
-              <p className="mt-4 text-lg leading-8 text-[color:var(--color-muted)]">{country.summary}</p>
+              <p className="mt-4 whitespace-pre-line break-words text-lg leading-8 text-[color:var(--color-muted)]">{country.summary}</p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href={mapFilterPath(locale, "country", country.name)}
@@ -960,26 +937,19 @@ export async function CountryProfilePageView({ locale, currentPath, slug }: Publ
                 <dt className="text-sm font-semibold">{dict.common.identifiedMeasures}</dt>
                 <dd className="mt-1 text-sm text-[color:var(--color-muted)]">{country.measuresCount}</dd>
               </div>
+              <div>
+                <dt className="text-sm font-semibold">{getUiCopy(locale).publishedCases}</dt>
+                <dd className="mt-1 text-sm"><Link className="underline" href={mapFilterPath(locale, "country", country.name)}>{mapCases.filter((item) => normalizeFilterValue(item.country ?? "") === normalizeFilterValue(country.name)).length}</Link></dd>
+                <p className="mt-2 text-xs text-[color:var(--color-muted)]">{getUiCopy(locale).coverageNote}</p>
+              </div>
             </dl>
           </div>
         </section>
 
-        <section className="page-shell grid gap-5 py-10 md:grid-cols-2">
-          {dict.profiles.sections.map((section, index) => (
-            <article key={section} className="rounded-lg border border-[color:var(--color-border)] bg-white p-5">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-xl font-semibold">{section}</h2>
-                <CountryLabel
-                  country={country.name}
-                  className="text-sm font-semibold text-[color:var(--color-primary)]"
-                />
-              </div>
-              <p className="mt-3 text-sm leading-6 text-[color:var(--color-muted)]">
-                {profileSectionContent(country, index, dict)}
-              </p>
-            </article>
-          ))}
+        <section className="page-shell py-10">
+          <CountryProfileSections profile={country} locale={locale} />
         </section>
+        <EditorialDetails record={country} locale={locale} />
       </main>
     </PublicChrome>
   );
@@ -1087,6 +1057,11 @@ export function MethodologyPageView({ locale, currentPath }: PublicPageProps) {
           </p>
         </div>
 
+        <p className="rounded-lg border border-[color:var(--color-border)] bg-white p-5 text-sm leading-7">{{
+          es: "RISE reúne casos documentados. La presencia de un caso no demuestra por sí sola que una intervención haya causado los resultados descritos. La ausencia de casos en un territorio no significa ausencia de iniciativas o de riesgo. Consulta las fuentes y sus fechas en cada ficha; el catálogo no es un censo ni una evaluación comparativa de los países.",
+          en: "RISE brings together documented cases. A case does not by itself prove that an intervention caused the reported outcomes. An area without cases may still have initiatives or climate risks. Check the sources and dates on each record; this catalogue is neither a census nor a comparative assessment of countries.",
+          pt: "O RISE reúne casos documentados. A presença de um caso não comprova por si só que uma intervenção tenha causado os resultados descritos. A ausência de casos em um território não significa ausência de iniciativas ou riscos. Consulte as fontes e datas de cada ficha; o catálogo não é um censo nem uma avaliação comparativa dos países.",
+        }[locale]}</p>
         <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {content.methodologySteps.map((step, index) => (
             <article key={step.title} className="rounded-lg border border-[color:var(--color-border)] bg-white p-5">
@@ -1166,12 +1141,13 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        <TranslationNotice record={item} locale={locale} />
         <section className="rise-detail-hero page-shell grid gap-8 py-10 lg:grid-cols-[0.95fr_1.05fr]">
           {cover ? (
             <Image
               className="aspect-[4/3] w-full rounded-lg object-cover"
               src={cover.url}
-              alt={cover.altText}
+              alt={item.mediaMetadata?.alt ?? cover.altText}
               width={960}
               height={720}
               priority
@@ -1204,28 +1180,18 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
               ))}
             </div>
             <dl className="grid gap-3 rounded-lg border border-[color:var(--color-border)] bg-white p-5 text-sm md:grid-cols-2">
-              <div>
-                <dt className="font-semibold">{dict.common.country}</dt>
-                <dd className="text-[color:var(--color-muted)]">
-                  <CountryLabel country={item.country} fallback={dict.common.tbd} />
-                </dd>
-              </div>
-              <div>
-                <dt className="font-semibold">{dict.common.region}</dt>
-                <dd className="text-[color:var(--color-muted)]">{item.region ?? dict.common.tbd}</dd>
-              </div>
-              <div>
-                <dt className="font-semibold">{dict.common.latitude}</dt>
-                <dd className="text-[color:var(--color-muted)]">{item.latitude}</dd>
-              </div>
-              <div>
-                <dt className="font-semibold">{dict.common.longitude}</dt>
-                <dd className="text-[color:var(--color-muted)]">{item.longitude}</dd>
-              </div>
+              {[
+                [getUiCopy(locale).problem, item.localClimateProblem || item.threat],
+                [getUiCopy(locale).action, item.proposedSolutions || item.measureType],
+                [getUiCopy(locale).place, [item.locality, item.region, item.country].filter(Boolean).join(", ")],
+                [getUiCopy(locale).stage, item.implementationStage],
+                [getUiCopy(locale).youthRole, item.youthRole],
+              ].filter((entry) => entry[1]?.trim()).map(([label, value]) => <div key={label}><dt className="font-semibold">{label}</dt><dd className="whitespace-pre-line text-[color:var(--color-muted)]">{value}</dd></div>)}
             </dl>
           </div>
         </section>
-        <CaseActions title={item.title} locale={locale} sourceUrl={item.sourceUrl} />
+        <EditorialDetails record={item} locale={locale} />
+        <CaseActions title={item.title} locale={locale} sourceUrl={item.referenceRecords?.find((source) => source.reviewed)?.url ?? item.sourceUrl} />
         <section className="page-shell pb-14">
           <div className="grid gap-6 lg:grid-cols-[0.7fr_1.3fr]">
             <aside className="h-fit rounded-lg border border-[color:var(--color-border)] bg-white p-5">
@@ -1289,18 +1255,18 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                     <h3 className="font-semibold">{dict.case.measureSummary}</h3>
                     <p className="mt-2 leading-8 text-[color:var(--color-muted)]">{item.fullDescription}</p>
                   </div>
-                  <div>
+                  {item.objectives ? <div>
                     <h3 className="font-semibold">{dict.case.measureObjectives}</h3>
                     <p className="mt-2 leading-8 text-[color:var(--color-muted)]">
-                      {dict.case.measureObjectivesText}
+                      {item.objectives}
                     </p>
-                  </div>
-                  <div>
+                  </div> : null}
+                  {item.beneficiaryCommunities ? <div>
                     <h3 className="font-semibold">{dict.case.beneficiaryCommunities}</h3>
                     <p className="mt-2 leading-8 text-[color:var(--color-muted)]">
-                      {dict.case.beneficiaryCommunitiesText}
+                      {item.beneficiaryCommunities}
                     </p>
-                  </div>
+                  </div> : null}
                 </div>
               </section>
 
@@ -1342,19 +1308,22 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                 )}
               </section>
 
-              <section className="rounded-lg border border-[color:var(--color-border)] bg-white p-6">
+              {[
+                [dict.case.complementarySections[0], item.strategicAlliances],
+                [dict.case.complementarySections[1], item.enablingFactors],
+                [dict.case.complementarySections[2], item.scalability],
+                [dict.case.complementarySections[3], item.longTermSustainability],
+              ].some((entry) => entry[1]) ? <section className="rounded-lg border border-[color:var(--color-border)] bg-white p-6">
                 <h2 className="text-2xl font-semibold">{dict.case.complementaryInfo}</h2>
                 <div className="mt-5 grid gap-4 md:grid-cols-2">
-                  {dict.case.complementarySections.map((title) => (
-                    <article key={title} className="rounded-md bg-[color:var(--color-surface-muted)] p-4">
-                      <h3 className="font-semibold">{title}</h3>
-                      <p className="mt-2 text-sm leading-6 text-[color:var(--color-muted)]">
-                        {dict.case.complementaryPlaceholder}
-                      </p>
-                    </article>
-                  ))}
+                  {[
+                    [{ es: "Alianzas", en: "Alliances", pt: "Alianças" }[locale], item.strategicAlliances],
+                    [{ es: "Factores facilitadores", en: "Enabling factors", pt: "Fatores facilitadores" }[locale], item.enablingFactors],
+                    [{ es: "Escalabilidad", en: "Scalability", pt: "Escalabilidade" }[locale], item.scalability],
+                    [{ es: "Sostenibilidad a largo plazo", en: "Long-term sustainability", pt: "Sustentabilidade a longo prazo" }[locale], item.longTermSustainability],
+                  ].filter((entry) => entry[1]).map(([title, value]) => <article key={title} className="rounded-md bg-[color:var(--color-surface-muted)] p-4"><h3 className="font-semibold">{title}</h3><p className="mt-2 whitespace-pre-line text-sm leading-6">{value}</p></article>)}
                 </div>
-              </section>
+              </section> : null}
             </div>
           </div>
         </section>

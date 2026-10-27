@@ -105,3 +105,10 @@ export async function getBackofficeCountryProfiles(token: string) {
     return { countryProfiles: [] as CountryProfile[], unauthorized: false, error: true };
   }
 }
+
+export async function getBackofficeUser(token: string): Promise<{ id: string; name: string; role: string } | null> {
+  try {
+    const response = await fetchBackofficeApi(`${siteConfig.apiUrl}/auth/me`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
+    return response.ok ? await response.json() : null;
+  } catch { return null; }
+}

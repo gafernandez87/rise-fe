@@ -7,6 +7,7 @@ import { backofficeTokenCookie, fetchBackofficeApi, getBackofficeToken } from "@
 import { siteConfig } from "@/lib/site";
 import type { CaseSeverity, CaseStatus } from "@/types/cases";
 import type { CountryProfileStatus } from "@/types/country-profiles";
+import { countryProfileSectionsPayload } from "@/lib/country-profiles";
 import type { StoryStatus } from "@/types/stories";
 
 const backofficeAdminEmail = process.env.BACKOFFICE_ADMIN_EMAIL ?? "backoffice@rise.local";
@@ -87,8 +88,18 @@ function formLines(formData: FormData, key: string) {
 
 function removeEmptyValues<T extends Record<string, unknown>>(value: T) {
   return Object.fromEntries(
-    Object.entries(value).filter(([, entry]) => entry !== undefined && entry !== ""),
+    Object.entries(value).filter(([, entry]) => entry !== undefined),
   ) as Partial<T>;
+}
+
+function editorialPayload(formData: FormData) {
+  try {
+    return {
+      referenceRecords: JSON.parse(formText(formData, "referenceRecords") ?? "[]"),
+      mediaMetadata: JSON.parse(formText(formData, "mediaMetadata") ?? "{}"),
+      translations: JSON.parse(formText(formData, "translations") ?? "[]"),
+    };
+  } catch { throw new Error("Los metadatos editoriales no son válidos."); }
 }
 
 function buildMeasurePayload(formData: FormData) {
@@ -97,35 +108,42 @@ function buildMeasurePayload(formData: FormData) {
   const latitude = formNumber(formData, "latitude");
   const longitude = formNumber(formData, "longitude");
 
-  if (!title || !shortDescription || latitude === undefined || longitude === undefined) {
+  if (!title) {
     return null;
   }
 
   const status = (formText(formData, "status") ?? "draft") as CaseStatus;
-  const severity = (formText(formData, "severity") ?? "medium") as CaseSeverity;
+  const severity = (formText(formData, "severity") ?? null) as CaseSeverity | null;
   const slug = formText(formData, "slug") ?? slugify(title);
   const subnationalJurisdiction = formText(formData, "subnationalJurisdiction");
   const fullDescription = formText(formData, "fullDescription") ?? shortDescription;
   const photoUrl = formText(formData, "photoUrl");
 
   return removeEmptyValues({
+    ...editorialPayload(formData),
     title,
     slug,
-    shortDescription,
-    fullDescription,
+    shortDescription: shortDescription ?? "",
+    fullDescription: fullDescription ?? "",
     status,
     severity,
-    latitude,
-    longitude,
+    latitude: latitude ?? null,
+    longitude: longitude ?? null,
     country: formText(formData, "country"),
     region: subnationalJurisdiction,
     locality: formText(formData, "locality"),
     subnationalJurisdiction,
     ecoregion: formText(formData, "ecoregion"),
     implementationDate: formText(formData, "implementationDate"),
-    photoUrl,
+    photoUrl: photoUrl ?? null,
     threat: formText(formData, "threat"),
     measureType: formText(formData, "measureType"),
+    riskMethod: formNullableText(formData, "riskMethod"),
+    riskSourceUrl: formNullableText(formData, "riskSourceUrl"),
+    coordinatePrecision: formNullableText(formData, "coordinatePrecision"),
+    locationMethod: formNullableText(formData, "locationMethod"),
+    implementationStage: formNullableText(formData, "implementationStage"),
+    sector: formNullableText(formData, "sector"),
     scope: formText(formData, "scope"),
     adaptationFocus: formText(formData, "adaptationFocus"),
     nationalVulnerabilityProfile: formText(formData, "nationalVulnerabilityProfile"),
@@ -145,16 +163,16 @@ function buildMeasurePayload(formData: FormData) {
     longTermSustainability: formText(formData, "longTermSustainability"),
     downloadableDocuments: formText(formData, "downloadableDocuments"),
     sourceUrl: formText(formData, "sourceUrl"),
-    images: photoUrl
+    images: photoUrl && formText(formData, "originalPhotoUrl") !== photoUrl
       ? [
           {
             url: photoUrl,
-            altText: `Imagen de ${title}`,
+            altText: editorialPayload(formData).mediaMetadata.alt ?? `Imagen de ${title}`,
             isCover: true,
             sortOrder: 0,
           },
         ]
-      : [],
+      : undefined,
   });
 }
 
@@ -163,23 +181,25 @@ function buildStoryPayload(formData: FormData) {
   const summary = formText(formData, "storySummary");
   const content = formText(formData, "storyContent");
 
-  if (!title || !summary || !content) {
+  if (!title) {
     return null;
   }
 
   const mediaUrl = formText(formData, "storyMediaUrl");
 
   return removeEmptyValues({
+    ...editorialPayload(formData),
     title,
     slug: formText(formData, "storySlug") ?? slugify(title),
-    summary,
-    content,
+    summary: summary ?? "",
+    content: content ?? "",
     status: (formText(formData, "storyStatus") ?? "draft") as StoryStatus,
     country: formText(formData, "storyCountry"),
     territory: formText(formData, "storyTerritory"),
     mainRisk: formText(formData, "storyMainRisk"),
-    mediaUrl,
-    mediaAlt: formText(formData, "storyMediaAlt") ?? (mediaUrl ? `Material audiovisual de ${title}` : undefined),
+    caseId: formNullableText(formData, "storyCaseId"),
+    mediaUrl: mediaUrl ?? null,
+    mediaAlt: formNullableText(formData, "storyMediaAlt"),
     sourceUrl: formText(formData, "storySourceUrl"),
   });
 }
@@ -192,35 +212,38 @@ function buildCountryProfilePayload(formData: FormData, options: { clearOptional
   const sector = formText(formData, "profileSector");
   const optionalText = options.clearOptionalFields ? formNullableText : formText;
 
-  if (!name || !summary || !mainRisk || !territory || !sector) {
+  if (!name) {
     return null;
   }
 
   return removeEmptyValues({
+    ...editorialPayload(formData),
     name,
     slug: formText(formData, "profileSlug") ?? slugify(name),
-    summary,
+    summary: summary ?? "",
     status: (formText(formData, "profileStatus") ?? "draft") as CountryProfileStatus,
-    mainRisk,
-    territory,
-    sector,
+    mainRisk: mainRisk ?? "",
+    territory: territory ?? "",
+    sector: sector ?? "",
     measuresCount: formNumber(formData, "profileMeasuresCount"),
     storyTitle: optionalText(formData, "profileStoryTitle"),
     risks: formLines(formData, "profileRisks"),
     heroImageUrl: optionalText(formData, "profileHeroImageUrl"),
     profilePdfUrl: optionalText(formData, "profilePdfUrl"),
-    riskAnalysis: optionalText(formData, "profileRiskAnalysis"),
-    climateThreats: optionalText(formData, "profileClimateThreats"),
-    exposureAndVulnerabilities: optionalText(formData, "profileExposureAndVulnerabilities"),
-    adaptationMeasures: optionalText(formData, "profileAdaptationMeasures"),
-    featuredStory: optionalText(formData, "profileFeaturedStory"),
-    sources: optionalText(formData, "profileSources"),
+    ...countryProfileSectionsPayload(formData),
   });
 }
 
 async function clearBackofficeSession() {
   const cookieStore = await cookies();
   cookieStore.delete(backofficeTokenCookie);
+}
+
+async function backendMessage(response: Response) {
+  try {
+    const body = await response.json();
+    return (Array.isArray(body.message) ? body.message.join("; ") : String(body.message ?? "No se pudo guardar.")).slice(0, 1200);
+  } catch { return "No se pudo guardar."; }
 }
 
 async function requireBackofficeToken() {
@@ -249,7 +272,7 @@ export async function loginBackoffice(formData: FormData) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: backofficeAdminEmail,
+        email: formText(formData, "email") ?? backofficeAdminEmail,
         password,
       }),
       cache: "no-store",
@@ -313,10 +336,12 @@ export async function createMeasure(formData: FormData) {
   }
 
   if (!response.ok) {
-    redirect(appendQueryParam(errorPath, "save", "error"));
+    const message = await backendMessage(response);
+    redirect(appendQueryParam(appendQueryParam(errorPath, "save", "error"), "detail", encodeURIComponent(message)));
   }
 
   revalidatePath(backofficePath);
+  revalidatePath("/", "layout");
   redirect(`${backofficePath}?created=1`);
 }
 
@@ -351,10 +376,12 @@ export async function updateMeasure(id: string, formData: FormData) {
   }
 
   if (!response.ok) {
-    redirect(appendQueryParam(errorPath, "save", "error"));
+    const message = await backendMessage(response);
+    redirect(appendQueryParam(appendQueryParam(errorPath, "save", "error"), "detail", encodeURIComponent(message)));
   }
 
   revalidatePath(backofficePath);
+  revalidatePath("/", "layout");
   redirect(`${backofficePath}?updated=1`);
 }
 
@@ -385,6 +412,7 @@ export async function deleteMeasure(id: string, formData: FormData) {
   }
 
   revalidatePath(backofficePath);
+  revalidatePath("/", "layout");
   redirect(`${backofficePath}?deleted=1`);
 }
 
@@ -419,11 +447,13 @@ export async function createCountryProfile(formData: FormData) {
   }
 
   if (!response.ok) {
-    redirect(appendQueryParam(errorPath, "profileSave", "error"));
+    const message = await backendMessage(response);
+    redirect(appendQueryParam(appendQueryParam(errorPath, "profileSave", "error"), "detail", encodeURIComponent(message)));
   }
 
   revalidatePath(backofficePath);
   revalidatePath("/perfiles");
+  revalidatePath("/", "layout");
   redirect(`${profilesBackofficePath}&profileCreated=1`);
 }
 
@@ -461,11 +491,13 @@ export async function updateCountryProfile(id: string, formData: FormData) {
   }
 
   if (!response.ok) {
-    redirect(appendQueryParam(errorPath, "profileSave", "error"));
+    const message = await backendMessage(response);
+    redirect(appendQueryParam(appendQueryParam(errorPath, "profileSave", "error"), "detail", encodeURIComponent(message)));
   }
 
   revalidatePath(backofficePath);
   revalidatePath("/perfiles");
+  revalidatePath("/", "layout");
   redirect(`${profilesBackofficePath}&profileUpdated=1`);
 }
 
@@ -500,6 +532,7 @@ export async function deleteCountryProfile(id: string, formData: FormData) {
 
   revalidatePath(backofficePath);
   revalidatePath("/perfiles");
+  revalidatePath("/", "layout");
   redirect(`${profilesBackofficePath}&profileDeleted=1`);
 }
 
@@ -534,11 +567,13 @@ export async function createStory(formData: FormData) {
   }
 
   if (!response.ok) {
-    redirect(appendQueryParam(errorPath, "storySave", "error"));
+    const message = await backendMessage(response);
+    redirect(appendQueryParam(appendQueryParam(errorPath, "storySave", "error"), "detail", encodeURIComponent(message)));
   }
 
   revalidatePath(backofficePath);
   revalidatePath("/historias");
+  revalidatePath("/", "layout");
   redirect(`${storiesBackofficePath}&storyCreated=1`);
 }
 
@@ -576,10 +611,12 @@ export async function updateStory(id: string, formData: FormData) {
   }
 
   if (!response.ok) {
-    redirect(appendQueryParam(errorPath, "storySave", "error"));
+    const message = await backendMessage(response);
+    redirect(appendQueryParam(appendQueryParam(errorPath, "storySave", "error"), "detail", encodeURIComponent(message)));
   }
 
   revalidatePath(backofficePath);
   revalidatePath("/historias");
+  revalidatePath("/", "layout");
   redirect(`${storiesBackofficePath}&storyUpdated=1`);
 }

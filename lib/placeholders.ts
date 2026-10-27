@@ -131,14 +131,14 @@ export const placeholderCases: AdaptationCase[] = [
   },
 ];
 
-export const placeholderMapCases: MapCase[] = placeholderCases.map((item) => ({
+export const placeholderMapCases: MapCase[] = placeholderCases.filter((item) => item.latitude !== null && item.longitude !== null).map((item) => ({
   id: item.id,
   title: item.title,
   slug: item.slug,
   shortDescription: item.shortDescription,
   severity: item.severity,
-  latitude: item.latitude,
-  longitude: item.longitude,
+  latitude: Number(item.latitude),
+  longitude: Number(item.longitude),
   country: item.country,
   region: item.region,
   category: item.category,

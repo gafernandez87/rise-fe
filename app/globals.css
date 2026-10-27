@@ -1266,3 +1266,5 @@ button {
   .rise-public a { text-decoration: underline; overflow-wrap: anywhere; }
   .rise-case-actions { break-inside: avoid; }
 }
+
+.rise-marker--selected { outline: 3px solid var(--color-primary); outline-offset: 4px; }

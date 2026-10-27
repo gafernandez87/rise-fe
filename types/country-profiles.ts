@@ -1,8 +1,9 @@
+import type { EditorialMetadata } from "@/types/editorial";
 import type { CaseStatus } from "@/types/cases";
 
 export type CountryProfileStatus = CaseStatus;
 
-export type CountryProfile = {
+export type CountryProfile = EditorialMetadata & {
   id: string;
   name: string;
   slug: string;
@@ -19,6 +20,11 @@ export type CountryProfile = {
   riskAnalysis?: string | null;
   climateThreats?: string | null;
   exposureAndVulnerabilities?: string | null;
+  exposure?: string | null;
+  vulnerability?: string | null;
+  institutionalFramework?: string | null;
+  criticalSectors?: string | null;
+  prioritizedZones?: string | null;
   adaptationMeasures?: string | null;
   featuredStory?: string | null;
   sources?: string | null;

@@ -9,6 +9,7 @@ type SubmitButtonVariant = "danger" | "primary" | "secondary";
 type SubmitButtonProps = {
   children: string;
   fullWidth?: boolean;
+  disabled?: boolean;
   icon: SubmitButtonIcon;
   pendingLabel: string;
   variant?: SubmitButtonVariant;
@@ -32,6 +33,7 @@ const variantClasses: Record<SubmitButtonVariant, string> = {
 export function SubmitButton({
   children,
   fullWidth = false,
+  disabled = false,
   icon,
   pendingLabel,
   variant = "primary",
@@ -44,7 +46,7 @@ export function SubmitButton({
       className={`rise-action inline-flex cursor-pointer items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition disabled:cursor-wait disabled:opacity-75 ${
         fullWidth ? "w-full" : ""
       } ${variantClasses[variant]}`}
-      disabled={pending}
+      disabled={pending || disabled}
       type="submit"
     >
       <Icon className={pending ? "animate-spin" : undefined} size={16} aria-hidden="true" />
