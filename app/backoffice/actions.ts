@@ -143,7 +143,7 @@ function buildMeasurePayload(formData: FormData) {
     coordinatePrecision: formNullableText(formData, "coordinatePrecision"),
     locationMethod: formNullableText(formData, "locationMethod"),
     implementationStage: formNullableText(formData, "implementationStage"),
-    sector: formNullableText(formData, "sector"),
+    sector: formText(formData, "sector") ?? formText(formData, "measureType"),
     scope: formText(formData, "scope"),
     adaptationFocus: formText(formData, "adaptationFocus"),
     nationalVulnerabilityProfile: formText(formData, "nationalVulnerabilityProfile"),
@@ -272,7 +272,7 @@ export async function loginBackoffice(formData: FormData) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: formText(formData, "email") ?? backofficeAdminEmail,
+        email: backofficeAdminEmail,
         password,
       }),
       cache: "no-store",

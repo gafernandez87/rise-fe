@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 type PreviewRow = {
   row: number;
+  sheet?: string;
   id: string;
   operation: string;
   data: Record<string, unknown>;
@@ -103,8 +104,7 @@ export function WorkbookPanel({
           </summary>
           <div className="mt-4 space-y-4">
             <p className="text-sm text-[color:var(--color-muted)]">
-              Descarga la plantilla, completa los registros y selecciona el
-              archivo. “Validar y ver vista previa” comprueba los datos y
+              {kind === "measures" ? "Usa el archivo del cliente o descarga la plantilla con las solapas Medida 1 a Medida 4. Completa las respuestas en la columna C; los campos de la columna A pueden estar en cualquier orden. Carga un archivo por país. " : "Descarga la plantilla, completa los registros y selecciona el archivo. "}“Validar y ver vista previa” comprueba los datos y
               muestra qué registros se crearán o actualizarán y los errores que
               debes corregir. Los datos se guardan solo al confirmar la
               importación.
@@ -160,7 +160,7 @@ export function WorkbookPanel({
                   <table className="w-full text-left text-sm">
                     <thead>
                       <tr>
-                        <th className="p-2">Fila</th>
+                        <th className="p-2">Ubicación</th>
                         <th className="p-2">Registro</th>
                         <th className="p-2">Acción</th>
                         <th className="p-2">Revisión</th>
@@ -169,7 +169,7 @@ export function WorkbookPanel({
                     <tbody>
                       {rows.map((row, index) => (
                         <tr key={index} className="border-t">
-                          <td className="p-2">{row.row}</td>
+                          <td className="p-2">{row.sheet ?? `Fila ${row.row}`}</td>
                           <td className="p-2">
                             <details>
                               <summary className="cursor-pointer">

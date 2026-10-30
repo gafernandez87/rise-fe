@@ -1199,14 +1199,17 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
               <dl className="mt-4 grid gap-3 text-sm">
                 <div>
                   <dt className="font-semibold">{dict.case.locality}</dt>
-                  <dd className="text-[color:var(--color-muted)]">{item.region ?? dict.common.toComplete}</dd>
+                  <dd className="text-[color:var(--color-muted)]">{item.locality ?? item.region ?? dict.common.toComplete}</dd>
                 </div>
+                {item.subnationalJurisdiction ? <div><dt className="font-semibold">{ { es: "Jurisdicción subnacional", en: "Subnational jurisdiction", pt: "Jurisdição subnacional" }[locale]}</dt><dd>{item.subnationalJurisdiction}</dd></div> : null}
                 <div>
                   <dt className="font-semibold">{dict.common.country}</dt>
                   <dd className="text-[color:var(--color-muted)]">
                     <CountryLabel country={item.country} fallback={dict.common.toComplete} />
                   </dd>
                 </div>
+                {item.ecoregion ? <div><dt className="font-semibold">{ { es: "Ecorregión", en: "Ecoregion", pt: "Ecorregião" }[locale]}</dt><dd>{item.ecoregion}</dd></div> : null}
+                {item.implementationDate ? <div><dt className="font-semibold">{ { es: "Fecha de implementación", en: "Implementation date", pt: "Data de implementação" }[locale]}</dt><dd>{item.implementationDate}</dd></div> : null}
                 <div>
                   <dt className="font-semibold">{dict.case.threat}</dt>
                   <dd className="mt-1">
@@ -1232,6 +1235,7 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                     ))}
                   </dd>
                 </div>
+                {item.scope ? <div><dt className="font-semibold">{ { es: "Alcance", en: "Scope", pt: "Abrangência" }[locale]}</dt><dd>{item.scope}</dd></div> : null}
                 <div>
                   <dt className="font-semibold">{dict.case.source}</dt>
                   <dd className="text-[color:var(--color-muted)]">
@@ -1253,20 +1257,26 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                 <div className="mt-5 grid gap-5">
                   <div>
                     <h3 className="font-semibold">{dict.case.measureSummary}</h3>
-                    <p className="mt-2 leading-8 text-[color:var(--color-muted)]">{item.fullDescription}</p>
+                    <p className="mt-2 whitespace-pre-line leading-8 text-[color:var(--color-muted)]">{item.shortDescription}</p>
                   </div>
+                  {item.fullDescription && item.fullDescription !== item.shortDescription ? <div><h3 className="font-semibold">{{ es: "Descripción completa adicional", en: "Additional description", pt: "Descrição adicional" }[locale]}</h3><p className="mt-2 whitespace-pre-line leading-8 text-[color:var(--color-muted)]">{item.fullDescription}</p></div> : null}
+                  {item.nationalVulnerabilityProfile ? <div><h3 className="font-semibold">{{ es: "Perfil de vulnerabilidad nacional", en: "National vulnerability profile", pt: "Perfil de vulnerabilidade nacional" }[locale]}</h3><p className="mt-2 whitespace-pre-line leading-8 text-[color:var(--color-muted)]">{item.nationalVulnerabilityProfile}</p></div> : null}
                   {item.objectives ? <div>
                     <h3 className="font-semibold">{dict.case.measureObjectives}</h3>
                     <p className="mt-2 leading-8 text-[color:var(--color-muted)]">
                       {item.objectives}
                     </p>
                   </div> : null}
+                  {item.proposedSolutions ? <div><h3 className="font-semibold">{{ es: "Soluciones propuestas", en: "Proposed solutions", pt: "Soluções propostas" }[locale]}</h3><p className="mt-2 whitespace-pre-line leading-8 text-[color:var(--color-muted)]">{item.proposedSolutions}</p></div> : null}
                   {item.beneficiaryCommunities ? <div>
                     <h3 className="font-semibold">{dict.case.beneficiaryCommunities}</h3>
                     <p className="mt-2 leading-8 text-[color:var(--color-muted)]">
                       {item.beneficiaryCommunities}
                     </p>
                   </div> : null}
+                  {item.youthRole ? <div><h3 className="font-semibold">{{ es: "Rol de la juventud", en: "Role of youth", pt: "Papel da juventude" }[locale]}</h3><p className="mt-2 whitespace-pre-line leading-8 text-[color:var(--color-muted)]">{item.youthRole}</p></div> : null}
+                  {item.results ? <div><h3 className="font-semibold">{{ es: "Resultados obtenidos", en: "Results", pt: "Resultados obtidos" }[locale]}</h3><p className="mt-2 whitespace-pre-line leading-8 text-[color:var(--color-muted)]">{item.results}</p></div> : null}
+                  {item.contact ? <div><h3 className="font-semibold">{{ es: "Contacto con referente", en: "Contact", pt: "Contato" }[locale]}</h3><p className="mt-2 whitespace-pre-line leading-8 text-[color:var(--color-muted)]">{item.contact}</p></div> : null}
                 </div>
               </section>
 
@@ -1309,6 +1319,7 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
               </section>
 
               {[
+                ["financing", item.financingType], ["problem", item.localClimateProblem], ["context", item.nationalSocioPoliticalContext], ["benefits", item.coBenefits], ["documents", item.downloadableDocuments],
                 [dict.case.complementarySections[0], item.strategicAlliances],
                 [dict.case.complementarySections[1], item.enablingFactors],
                 [dict.case.complementarySections[2], item.scalability],
@@ -1317,10 +1328,15 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                 <h2 className="text-2xl font-semibold">{dict.case.complementaryInfo}</h2>
                 <div className="mt-5 grid gap-4 md:grid-cols-2">
                   {[
-                    [{ es: "Alianzas", en: "Alliances", pt: "Alianças" }[locale], item.strategicAlliances],
-                    [{ es: "Factores facilitadores", en: "Enabling factors", pt: "Fatores facilitadores" }[locale], item.enablingFactors],
+                    [{ es: "Tipo de financiamiento", en: "Funding type", pt: "Tipo de financiamento" }[locale], item.financingType],
+                    [{ es: "Problemática climática local", en: "Local climate problem", pt: "Problema climático local" }[locale], item.localClimateProblem],
+                    [{ es: "Contexto socio-político nacional", en: "National sociopolitical context", pt: "Contexto sociopolítico nacional" }[locale], item.nationalSocioPoliticalContext],
+                    [{ es: "Alianzas estratégicas", en: "Strategic alliances", pt: "Alianças estratégicas" }[locale], item.strategicAlliances],
+                    [{ es: "Factores habilitantes y condicionantes", en: "Enabling and limiting factors", pt: "Fatores facilitadores e limitantes" }[locale], item.enablingFactors],
+                    [{ es: "Co-beneficios", en: "Co-benefits", pt: "Cobenefícios" }[locale], item.coBenefits],
                     [{ es: "Escalabilidad", en: "Scalability", pt: "Escalabilidade" }[locale], item.scalability],
-                    [{ es: "Sostenibilidad a largo plazo", en: "Long-term sustainability", pt: "Sustentabilidade a longo prazo" }[locale], item.longTermSustainability],
+                    [{ es: "Sostenibilidad en el tiempo", en: "Long-term sustainability", pt: "Sustentabilidade a longo prazo" }[locale], item.longTermSustainability],
+                    [{ es: "Documentos descargables + referencias bibliográficas", en: "Documents and references", pt: "Documentos e referências" }[locale], item.downloadableDocuments],
                   ].filter((entry) => entry[1]).map(([title, value]) => <article key={title} className="rounded-md bg-[color:var(--color-surface-muted)] p-4"><h3 className="font-semibold">{title}</h3><p className="mt-2 whitespace-pre-line text-sm leading-6">{value}</p></article>)}
                 </div>
               </section> : null}

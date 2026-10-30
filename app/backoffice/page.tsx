@@ -171,7 +171,6 @@ function LoginView({ error }: { error?: string }) {
               {message}
             </p>
           ) : null}
-          <Field label="Email (opcional para la cuenta principal)" name="email" type="email" />
           <Field label="Clave" name="password" required type="password" />
           <SubmitButton fullWidth icon="lock" pendingLabel="Ingresando...">
             Ingresar
@@ -260,84 +259,77 @@ function casePhotoUrl(item?: AdaptationCase) {
 }
 
 function MeasureFields({ measure, canPublish }: { canPublish: boolean; measure?: AdaptationCase }) {
+  const distinctDescription = measure?.fullDescription && measure.fullDescription !== measure.shortDescription;
   return (
     <>
-      <section className="grid gap-4 md:grid-cols-2">
-        <Field label="Título" name="title" required value={measure?.title} />
-        <Field readOnly={Boolean(measure)} label="Slug" name="slug" placeholder="se-genera-si-queda-vacio" value={measure?.slug} />
-        <SelectField label="Estado" name="status" value={measure?.status ?? "draft"}>
-          <option value="draft">Borrador</option>
-          <option value="review">En revisión</option>
-          <option value="published" disabled={!canPublish}>Publicado</option>
-          <option value="archived">Archivado</option>
-          <option value="hidden">Oculto</option>
-        </SelectField>
-        <SelectField label="Nivel de riesgo (requiere método y fuente)" name="severity" value={measure?.severity ?? ""}>
-          <option value="">No evaluado</option>
-          <option value="medium">Media</option>
-          <option value="low">Baja</option>
-          <option value="high">Alta</option>
-          <option value="critical">Crítica</option>
-        </SelectField>
-        <Field label="Método de evaluación del riesgo" name="riskMethod" value={measure?.riskMethod} />
-        <Field label="Fuente de evaluación del riesgo" name="riskSourceUrl" type="url" value={measure?.riskSourceUrl} />
-        <SelectField label="Precisión de la ubicación" name="coordinatePrecision" value={measure?.coordinatePrecision ?? ""}>
-          <option value="">No indicada</option><option value="country">País</option><option value="region">Región</option><option value="locality">Localidad</option><option value="exact">Ubicación exacta documentada</option>
-        </SelectField>
-        <Field label="Fuente o criterio de ubicación" name="locationMethod" value={measure?.locationMethod} />
-        <Field label="Etapa de implementación" name="implementationStage" value={measure?.implementationStage} />
-        <Field label="Sector" name="sector" value={measure?.sector} />
-        <input name="originalPhotoUrl" type="hidden" value={casePhotoUrl(measure) ?? ""} />
-        <Field label="País" name="country" value={measure?.country} />
-        <Field label="Localidad" name="locality" value={measure?.locality} />
-        <Field
-          label="Jurisdicción subnacional"
-          name="subnationalJurisdiction"
-          value={measure?.subnationalJurisdiction ?? measure?.region}
-        />
-        <Field label="Ecorregión" name="ecoregion" value={measure?.ecoregion} />
-        <Field label="Latitud" name="latitude" step="any" type="number" value={measure?.latitude} />
-        <Field label="Longitud" name="longitude" step="any" type="number" value={measure?.longitude} />
-        <Field label="Fecha de implementación" name="implementationDate" value={measure?.implementationDate} />
-        <Field label="Foto URL" name="photoUrl" type="url" value={casePhotoUrl(measure)} />
-        <Field label="Amenaza" name="threat" value={measure?.threat} />
-        <Field label="Tipo de medida" name="measureType" value={measure?.measureType ?? measure?.category.name} />
-        <Field label="Alcance" name="scope" value={measure?.scope} />
-        <Field label="Enfoque adaptativo" name="adaptationFocus" value={measure?.adaptationFocus} />
+      <input name="originalPhotoUrl" type="hidden" value={casePhotoUrl(measure) ?? ""} />
+      <section className="space-y-4">
+        <h3 className="text-lg font-semibold">Bloque 1: Clasificación de la medida</h3>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Field label="Título" name="title" required value={measure?.title} />
+          <Field label="Localidad" name="locality" value={measure?.locality} />
+          <Field label="Jurisdicción subnacional" name="subnationalJurisdiction" value={measure?.subnationalJurisdiction ?? measure?.region} />
+          <Field label="País" name="country" value={measure?.country} />
+          <Field label="Ecorregión" name="ecoregion" value={measure?.ecoregion} />
+          <Field label="Fecha de implementación" name="implementationDate" value={measure?.implementationDate} />
+          <Field label="Foto (URL)" name="photoUrl" type="url" value={casePhotoUrl(measure)} />
+          <Field label="Amenaza" name="threat" value={measure?.threat} />
+          <Field label="Sector / tipo de medida" name="measureType" value={measure?.measureType ?? measure?.sector ?? measure?.category.name} />
+          <Field label="Alcance" name="scope" value={measure?.scope} />
+        </div>
       </section>
-
-      <section className="grid gap-4 lg:grid-cols-2">
-        <TextArea label="Resumen de la medida" name="shortDescription" value={measure?.shortDescription} />
-        <TextArea label="Descripción completa" name="fullDescription" value={measure?.fullDescription} />
-        <TextArea
-          label="Perfil de vulnerabilidad nacional"
-          name="nationalVulnerabilityProfile"
-          value={measure?.nationalVulnerabilityProfile}
-        />
-        <TextArea label="Objetivos de la medida" name="objectives" value={measure?.objectives} />
-        <TextArea label="Soluciones propuestas" name="proposedSolutions" value={measure?.proposedSolutions} />
-        <TextArea label="Comunidades beneficiarias" name="beneficiaryCommunities" value={measure?.beneficiaryCommunities} />
-        <TextArea label="Rol de la juventud" name="youthRole" value={measure?.youthRole} />
-        <TextArea label="Resultados obtenidos" name="results" value={measure?.results} />
-        <TextArea label="Contacto con referente" name="contact" value={measure?.contact} />
-        <TextArea label="Problemática climática local" name="localClimateProblem" value={measure?.localClimateProblem} />
-        <TextArea
-          label="Contexto sociopolítico nacional"
-          name="nationalSocioPoliticalContext"
-          value={measure?.nationalSocioPoliticalContext}
-        />
-        <TextArea label="Alianzas estratégicas" name="strategicAlliances" value={measure?.strategicAlliances} />
-        <TextArea label="Factores habilitantes y condicionantes" name="enablingFactors" value={measure?.enablingFactors} />
-        <TextArea label="Cobeneficios" name="coBenefits" value={measure?.coBenefits} />
-        <TextArea label="Escalabilidad" name="scalability" value={measure?.scalability} />
-        <TextArea label="Sostenibilidad en el tiempo" name="longTermSustainability" value={measure?.longTermSustainability} />
+      <section className="space-y-4">
+        <h3 className="text-lg font-semibold">Bloque 2: Información base</h3>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <TextArea label="Resumen de la medida" name="shortDescription" value={measure?.shortDescription} />
+          <TextArea label="Perfil de vulnerabilidad nacional" name="nationalVulnerabilityProfile" value={measure?.nationalVulnerabilityProfile} />
+          <TextArea label="Objetivos de la medida" name="objectives" value={measure?.objectives} />
+          <TextArea label="Soluciones propuestas" name="proposedSolutions" value={measure?.proposedSolutions} />
+          <TextArea label="Comunidades beneficiarias" name="beneficiaryCommunities" value={measure?.beneficiaryCommunities} />
+          <TextArea label="Rol de la juventud" name="youthRole" value={measure?.youthRole} />
+          <TextArea label="Resultados obtenidos" name="results" value={measure?.results} />
+          <TextArea label="Contacto con referente" name="contact" value={measure?.contact} />
+        </div>
       </section>
-
-      <section className="grid gap-4 md:grid-cols-2">
-        <Field label="Tipo de financiamiento" name="financingType" value={measure?.financingType} />
-        <Field label="Fuente URL" name="sourceUrl" type="url" value={measure?.sourceUrl} />
-        <TextArea label="Documentos descargables + referencias" name="downloadableDocuments" value={measure?.downloadableDocuments} />
+      <section className="space-y-4">
+        <h3 className="text-lg font-semibold">Bloque 3: Información complementaria</h3>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <TextArea label="Tipo de financiamiento" name="financingType" value={measure?.financingType} />
+          <TextArea label="Problemática climática local" name="localClimateProblem" value={measure?.localClimateProblem} />
+          <TextArea label="Contexto socio-político nacional" name="nationalSocioPoliticalContext" value={measure?.nationalSocioPoliticalContext} />
+          <TextArea label="Alianzas estratégicas" name="strategicAlliances" value={measure?.strategicAlliances} />
+          <TextArea label="Factores habilitantes y condicionantes" name="enablingFactors" value={measure?.enablingFactors} />
+          <TextArea label="Co-beneficios" name="coBenefits" value={measure?.coBenefits} />
+          <TextArea label="Escalabilidad" name="scalability" value={measure?.scalability} />
+          <TextArea label="Sostenibilidad en el tiempo" name="longTermSustainability" value={measure?.longTermSustainability} />
+          <TextArea label="Documentos descargables + referencias bibliográficas" name="downloadableDocuments" value={measure?.downloadableDocuments} />
+        </div>
       </section>
+      <details className="rounded-lg border border-[color:var(--color-border)] p-4">
+        <summary className="cursor-pointer font-semibold">Opciones adicionales de publicación y ubicación</summary>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <Field readOnly={Boolean(measure)} label="Enlace permanente" name="slug" placeholder="Se genera automáticamente" value={measure?.slug} />
+          <SelectField label="Estado" name="status" value={measure?.status ?? "draft"}>
+            <option value="draft">Borrador</option><option value="review">En revisión</option><option value="published" disabled={!canPublish}>Publicado</option><option value="archived">Archivado</option><option value="hidden">Oculto</option>
+          </SelectField>
+          <SelectField label="Nivel de riesgo (requiere método y fuente)" name="severity" value={measure?.severity ?? ""}>
+            <option value="">No evaluado</option><option value="medium">Media</option><option value="low">Baja</option><option value="high">Alta</option><option value="critical">Crítica</option>
+          </SelectField>
+          <Field label="Método de evaluación del riesgo" name="riskMethod" value={measure?.riskMethod} />
+          <Field label="Fuente de evaluación del riesgo" name="riskSourceUrl" type="url" value={measure?.riskSourceUrl} />
+          <Field label="Latitud" name="latitude" step="any" type="number" value={measure?.latitude} />
+          <Field label="Longitud" name="longitude" step="any" type="number" value={measure?.longitude} />
+          <SelectField label="Precisión de la ubicación" name="coordinatePrecision" value={measure?.coordinatePrecision ?? ""}>
+            <option value="">No indicada</option><option value="country">País</option><option value="region">Región</option><option value="locality">Localidad</option><option value="exact">Ubicación exacta documentada</option>
+          </SelectField>
+          <Field label="Fuente o criterio de ubicación" name="locationMethod" value={measure?.locationMethod} />
+          <Field label="Etapa de implementación" name="implementationStage" value={measure?.implementationStage} />
+          {measure?.sector && measure.sector !== measure.measureType ? <Field label="Sector adicional" name="sector" value={measure.sector} /> : null}
+          <Field label="Enfoque adaptativo" name="adaptationFocus" value={measure?.adaptationFocus} />
+          <Field label="Fuente URL" name="sourceUrl" type="url" value={measure?.sourceUrl} />
+          {distinctDescription ? <TextArea label="Descripción completa adicional" name="fullDescription" value={measure?.fullDescription} /> : null}
+        </div>
+      </details>
     </>
   );
 }
