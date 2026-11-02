@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { siteConfig } from "@/lib/site";
+import { hasValidMapCoordinates } from "@/lib/map-coordinates";
 import type { AdaptationCase, Category, MapCase } from "@/types/cases";
 import type { CountryProfile } from "@/types/country-profiles";
 import type { ResilienceStory } from "@/types/stories";
@@ -24,8 +25,9 @@ async function getJson<T>(path: string, fallback: T): Promise<T> {
   }
 }
 
-export function getMapCases() {
-  return getJson<MapCase[]>("/cases/map", []);
+export async function getMapCases() {
+  const cases = await getJson<MapCase[]>("/cases/map", []);
+  return cases.filter(hasValidMapCoordinates);
 }
 
 export function getCategories() {
