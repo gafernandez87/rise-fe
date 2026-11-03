@@ -42,12 +42,15 @@ const createClusterIcon = (cluster: { getChildCount: () => number }) => {
 
 function MapSizeHandler({ layoutSignal }: { layoutSignal: boolean }) {
   const map = useMap();
+  const fitted = useRef(false);
 
   useEffect(() => {
     let animationFrame = 0;
     const updateBounds = () => {
       window.cancelAnimationFrame(animationFrame);
       animationFrame = window.requestAnimationFrame(() => {
+        const container = map.getContainer();
+        if (!container.clientWidth || !container.clientHeight) return;
         map.invalidateSize({ pan: false });
 
         const size = map.getSize();
@@ -64,6 +67,10 @@ function MapSizeHandler({ layoutSignal }: { layoutSignal: boolean }) {
           ) * zoomSnap,
         );
         map.setMinZoom(minimumZoom);
+        if (!fitted.current && size.x > 48 && size.y > 48) {
+          map.fitBounds(latinAmericaViewBounds, { padding: latinAmericaFitPadding });
+          fitted.current = true;
+        }
         map.panInsideBounds(navigationBounds, { animate: false });
       });
     };
@@ -233,8 +240,8 @@ export function CasesMap({
 
   return (
     <MapContainer
-      bounds={latinAmericaViewBounds}
-      boundsOptions={{ padding: latinAmericaFitPadding }}
+      center={latinAmericaPreviewCenter}
+      zoom={2.5}
       className="rise-map"
       bounceAtZoomLimits={false}
       maxBounds={navigationBounds}
