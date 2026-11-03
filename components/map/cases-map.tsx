@@ -226,17 +226,14 @@ export function CasesMap({
   locale,
   selectedId,
   onSelect,
-  onError,
 }: {
   cases: MapCase[];
   layoutSignal: boolean;
   locale: Locale;
   selectedId?: string | null;
   onSelect?: (id: string) => void;
-  onError?: () => void;
 }) {
   const dict = getDictionary(locale);
-  const failedTiles = useRef(0);
 
   return (
     <MapContainer
@@ -253,14 +250,6 @@ export function CasesMap({
     >
       <MapSizeHandler layoutSignal={layoutSignal} />
       <TileLayer
-        eventHandlers={{
-          tileload: () => {
-            failedTiles.current = 0;
-          },
-          tileerror: () => {
-            if (++failedTiles.current >= 3) onError?.();
-          },
-        }}
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         className="rise-map-tile-layer"
         noWrap

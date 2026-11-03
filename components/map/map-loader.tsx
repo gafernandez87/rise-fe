@@ -67,7 +67,6 @@ export function MapLoader({
         locale={locale}
         selectedId={selectedId}
         onSelect={onSelect}
-        onError={onError}
       />
       <noscript>{getUiCopy(locale).mapFailed}</noscript>
     </MapBoundary>
