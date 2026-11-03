@@ -110,7 +110,7 @@ export default async function EditorialPreview({
           </ul>
         ) : (
           <p className="mt-2">
-            Sin fuentes estructuradas. Completa y revisa una antes de publicar.
+            Sin fuentes estructuradas. Puedes agregarlas de forma opcional.
           </p>
         )}
       </section>

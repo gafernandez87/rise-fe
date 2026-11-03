@@ -49,9 +49,8 @@ export function EditorialFields({ record }: { record?: EditorialMetadata }) {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Fuentes y evidencia</h3>
         <p className="text-sm text-[color:var(--color-muted)]">
-          Puedes guardar el borrador incompleto. Para publicar debe haber al
-          menos una fuente completa y revisada. La fuente URL anterior sigue
-          disponible y se puede trasladar a esta lista.
+          Las fuentes son opcionales. Las que marques como revisadas podrán
+          mostrarse públicamente.
         </p>
         {sources.map((source, index) => (
           <fieldset

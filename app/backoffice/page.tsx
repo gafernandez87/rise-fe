@@ -312,7 +312,7 @@ function MeasureFields({ measure, canPublish }: { canPublish: boolean; measure?:
           <SelectField label="Estado" name="status" value={measure?.status ?? "draft"}>
             <option value="draft">Borrador</option><option value="review">En revisión</option><option value="published" disabled={!canPublish}>Publicado</option><option value="archived">Archivado</option><option value="hidden">Oculto</option>
           </SelectField>
-          <SelectField label="Nivel de riesgo (requiere método y fuente)" name="severity" value={measure?.severity ?? ""}>
+          <SelectField label="Nivel de riesgo (requiere método)" name="severity" value={measure?.severity ?? ""}>
             <option value="">No evaluado</option><option value="medium">Media</option><option value="low">Baja</option><option value="high">Alta</option><option value="critical">Crítica</option>
           </SelectField>
           <Field label="Método de evaluación del riesgo" name="riskMethod" value={measure?.riskMethod} />
