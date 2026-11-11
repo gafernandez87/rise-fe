@@ -19,7 +19,7 @@ export function EditorialFields({ record }: { record?: EditorialMetadata }) {
   const [media, setMedia] = useState<MediaMetadata>(
     record?.mediaMetadata ?? {},
   );
-  const [translations, setTranslations] = useState<ContentTranslation[]>(
+  const [translations] = useState<ContentTranslation[]>(
     record?.translations ?? [],
   );
   const json = (value: unknown) =>
@@ -28,19 +28,6 @@ export function EditorialFields({ record }: { record?: EditorialMetadata }) {
     setSources((items) =>
       items.map((item, i) => (i === index ? { ...item, ...patch } : item)),
     );
-  const translation = (language: string) =>
-    translations.find((item) => item.language === language) ?? {
-      language,
-      status: "pending",
-    };
-  const changeTranslation = (
-    language: string,
-    patch: Partial<ContentTranslation>,
-  ) =>
-    setTranslations((items) => [
-      ...items.filter((item) => item.language !== language),
-      { ...translation(language), ...patch },
-    ]);
   return (
     <section className="space-y-6 border-t border-[color:var(--color-border)] pt-6">
       <input type="hidden" name="referenceRecords" value={json(sources)} />
@@ -171,56 +158,6 @@ export function EditorialFields({ record }: { record?: EditorialMetadata }) {
             />
           </label>
         </div>
-      </details>
-      <details className="rounded-lg border border-[color:var(--color-border)] p-4">
-        <summary className="cursor-pointer font-semibold">Traducciones</summary>
-        <p className="mt-2 text-sm text-[color:var(--color-muted)]">
-          Marca una traducción como terminada solo cuando tenga título, resumen
-          y contenido completo.
-        </p>
-        {(["es", "en", "pt"] as const).map((language) => {
-          const item = translation(language);
-          return (
-            <fieldset key={language} className="mt-4 grid gap-3">
-              <legend className="font-semibold">
-                {{ es: "Español", en: "Inglés", pt: "Portugués" }[language]}
-              </legend>
-              <label className="grid gap-1 text-sm">
-                Estado
-                <select
-                  className={inputClass}
-                  value={item.status}
-                  onChange={(event) =>
-                    changeTranslation(language, { status: event.target.value })
-                  }
-                >
-                  <option value="pending">Pendiente</option>
-                  <option value="in_progress">En proceso</option>
-                  <option value="complete">Terminada</option>
-                </select>
-              </label>
-              {(["title", "summary", "content"] as const).map((key) => (
-                <label key={key} className="grid gap-1 text-sm">
-                  {
-                    {
-                      title: "Título",
-                      summary: "Resumen",
-                      content: "Contenido",
-                    }[key]
-                  }
-                  <textarea
-                    className={inputClass}
-                    rows={key === "content" ? 5 : 2}
-                    value={item[key] ?? ""}
-                    onChange={(event) =>
-                      changeTranslation(language, { [key]: event.target.value })
-                    }
-                  />
-                </label>
-              ))}
-            </fieldset>
-          );
-        })}
       </details>
     </section>
   );

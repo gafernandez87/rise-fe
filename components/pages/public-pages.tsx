@@ -1,3 +1,4 @@
+import { localizeRecord } from "@/lib/content-translations";
 import type { ReactNode } from "react";
 import {
   AlertTriangle,
@@ -302,11 +303,12 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
   const dict = getDictionary(locale);
   const content = getLocalizedContentLists(locale);
   const countries = getLocalizedCountries(locale);
-  const [publishedCases, stories, mapCases] = await Promise.all([
+  const [publishedCases, originalStories, mapCases] = await Promise.all([
     getPublishedCases(),
     getPublishedStories(),
     getMapCases(),
   ]);
+  const stories = originalStories.map((item) => localizeRecord(item, locale));
   const cases = localizeCases(publishedCases, locale);
   const localizedMapCases = localizeMapCases(mapCases, locale);
 
@@ -599,7 +601,9 @@ export async function MapPageView({
   const dict = getDictionary(locale);
   const [cases, categories] = await Promise.all([getMapCases(), getCategories()]);
   const localizedCases = localizeMapCases(cases, locale);
-  const localizedCategories = localizeCategories(categories, locale);
+  const localizedCategories = localizeCategories(categories, locale)
+    .filter((category) => localizedCases.some((item) => item.category.id === category.id))
+    .map((category) => localizedCases.find((item) => item.category.id === category.id)?.category ?? category);
 
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
@@ -629,7 +633,7 @@ export async function MapPageView({
 
 export async function StoriesPageView({ locale, currentPath }: PublicPageProps) {
   const dict = getDictionary(locale);
-  const stories = await getPublishedStories();
+  const stories = (await getPublishedStories()).map((item) => localizeRecord(item, locale));
 
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
@@ -674,8 +678,7 @@ export async function StoriesPageView({ locale, currentPath }: PublicPageProps) 
 export async function StoryPageView({ locale, currentPath, slug }: PublicPageProps & { slug: string }) {
   const dict = getDictionary(locale);
   const [originalStory, publishedCases] = await Promise.all([getStoryBySlug(slug), getPublishedCases()]);
-  const saved = originalStory?.translations?.find((entry) => entry.language === locale && entry.status === "complete");
-  const story = originalStory ? { ...originalStory, title: saved?.title ?? originalStory.title, summary: saved?.summary ?? originalStory.summary, content: saved?.content ?? originalStory.content } : null;
+  const story = originalStory ? localizeRecord(originalStory, locale) : null;
 
   if (!story) {
     notFound();
@@ -822,7 +825,7 @@ export async function StoryPageView({ locale, currentPath, slug }: PublicPagePro
 
 export async function CountryProfilesPageView({ locale, currentPath }: PublicPageProps) {
   const dict = getDictionary(locale);
-  const countries = await getPublishedCountryProfiles();
+  const countries = (await getPublishedCountryProfiles()).map((item) => localizeRecord(item, locale));
 
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
@@ -874,8 +877,7 @@ export async function CountryProfilesPageView({ locale, currentPath }: PublicPag
 export async function CountryProfilePageView({ locale, currentPath, slug }: PublicPageProps & { slug: string }) {
   const dict = getDictionary(locale);
   const [originalCountry, mapCases] = await Promise.all([getCountryProfileBySlug(slug), getMapCases()]);
-  const saved = originalCountry?.translations?.find((entry) => entry.language === locale && entry.status === "complete");
-  const country = originalCountry ? { ...originalCountry, summary: saved?.summary ?? originalCountry.summary } : null;
+  const country = originalCountry ? localizeRecord(originalCountry, locale) : null;
 
   if (!country) {
     notFound();
@@ -933,7 +935,7 @@ export async function CountryProfilePageView({ locale, currentPath, slug }: Publ
               </div>
               <div>
                 <dt className="text-sm font-semibold">{getUiCopy(locale).publishedCases}</dt>
-                <dd className="mt-1 text-sm"><Link className="underline" href={mapFilterPath(locale, "country", country.name)}>{mapCases.filter((item) => normalizeFilterValue(item.country ?? "") === normalizeFilterValue(country.name)).length}</Link></dd>
+                <dd className="mt-1 text-sm"><Link className="underline" href={mapFilterPath(locale, "country", country.name)}>{mapCases.filter((item) => normalizeFilterValue(item.country ?? "") === normalizeFilterValue(originalCountry?.name ?? country.name)).length}</Link></dd>
                 <p className="mt-2 text-xs text-[color:var(--color-muted)]">{getUiCopy(locale).coverageNote}</p>
               </div>
             </dl>
@@ -1100,7 +1102,7 @@ export function MethodologyPageView({ locale, currentPath }: PublicPageProps) {
 
 export async function CasePageView({ locale, currentPath, slug }: PublicPageProps & { slug: string }) {
   const dict = getDictionary(locale);
-  const [caseItem, stories] = await Promise.all([getCaseBySlug(slug), getPublishedStories()]);
+  const [caseItem, originalStories] = await Promise.all([getCaseBySlug(slug), getPublishedStories()]);
   const item = localizeCase(caseItem, locale);
 
   if (!item) {
@@ -1110,7 +1112,7 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
   const cover = item.images.find((image) => image.isCover) ?? item.images[0];
   const caseRisk = getCaseRiskLabel(item, locale);
   const measureLabels = getCaseMeasureLabels(item);
-  const relatedStory = getRelatedStoryForCase(item, stories);
+  const relatedStory = getRelatedStoryForCase(item, originalStories.map((story) => localizeRecord(story, locale)));
   const classificationChips = [
     { href: mapFilterPath(locale, "risk", caseRisk), label: caseRisk },
     ...measureLabels.map((label) => ({ href: mapFilterPath(locale, "measure", label), label })),

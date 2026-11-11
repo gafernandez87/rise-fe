@@ -69,10 +69,10 @@ export function filterMapCases(
       .join(" ");
     return (
       (!query || normalizeFilterValue(text).includes(query)) &&
-      matches(filters.country, [item.country]) &&
+      matches(filters.country, [item.country, ...(item.countryAliases ?? [])]) &&
       matches(filters.risk, [risk, ...(item.threatAliases ?? [])]) &&
       matches(filters.measure, [...measures, ...(item.measureAliases ?? [])]) &&
-      matches(filters.territory, [getCaseTerritory(item)]) &&
+      matches(filters.territory, [getCaseTerritory(item), ...(item.territoryAliases ?? [])]) &&
       matches(filters.actor, [item.youthRole], true)
     );
   });

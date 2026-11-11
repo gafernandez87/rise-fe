@@ -1,3 +1,5 @@
+import { Field, TextArea, SelectField } from "@/components/backoffice/form-fields";
+import { MultilingualFields } from "@/components/backoffice/multilingual-fields";
 import { TaxonomyPanel } from "@/components/backoffice/taxonomy-panel";
 import { EditorialFields } from "@/components/backoffice/editorial-fields";
 import { WorkbookPanel } from "@/components/backoffice/workbook-panel";
@@ -61,17 +63,6 @@ type BackofficePageProps = {
 
 type BackofficeSection = "measures" | "profiles" | "stories";
 
-type FieldProps = {
-  label: string;
-  name: string;
-  required?: boolean;
-  step?: string;
-  type?: string;
-  placeholder?: string;
-  readOnly?: boolean;
-  value?: string | number | null;
-};
-
 const statusLabels: Record<CaseStatus, string> = {
   draft: "Borrador",
   published: "Publicado",
@@ -86,63 +77,6 @@ const severityLabels: Record<CaseSeverity, string> = {
   high: "Alta",
   critical: "Crítica",
 };
-
-function Field({ label, name, required, step, type = "text", placeholder, readOnly, value }: FieldProps) {
-  return (
-    <label className="grid gap-1 text-sm font-medium">
-      {label}
-      <input
-        className="rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-normal outline-none transition focus:border-[color:var(--color-primary)]"
-        readOnly={readOnly}
-        defaultValue={value ?? undefined}
-        name={name}
-        placeholder={placeholder}
-        required={required}
-        step={step}
-        type={type}
-      />
-    </label>
-  );
-}
-
-function TextArea({ label, name, required, value }: Omit<FieldProps, "type" | "placeholder" | "step">) {
-  return (
-    <label className="grid gap-1 text-sm font-medium">
-      {label}
-      <textarea
-        className="min-h-28 rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-normal leading-6 outline-none transition focus:border-[color:var(--color-primary)]"
-        defaultValue={value ?? undefined}
-        name={name}
-        required={required}
-      />
-    </label>
-  );
-}
-
-function SelectField({
-  label,
-  name,
-  children,
-  value,
-}: {
-  label: string;
-  name: string;
-  children: ReactNode;
-  value?: string | null;
-}) {
-  return (
-    <label className="grid gap-1 text-sm font-medium">
-      {label}
-      <select
-        className="rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-normal outline-none transition focus:border-[color:var(--color-primary)]"
-        defaultValue={value ?? undefined}
-        name={name}
-      >
-        {children}
-      </select>
-    </label>
-  );
-}
 
 function LoginView({ error }: { error?: string }) {
   const message =
@@ -657,7 +591,9 @@ function MeasureForm({
       {measure ? <Link className="rise-action rounded-md border px-4 py-2 text-sm font-semibold" href={`/backoffice/preview/measures/${measure.id}`} target="_blank">Vista previa interna</Link> : null}
       {readOnly ? <p className="text-sm">Solo lectura: un publicador debe realizar los cambios sobre contenido publicado.</p> : null}
       <fieldset disabled={readOnly} className="space-y-6 disabled:opacity-70">
+        <MultilingualFields record={measure}>
         <MeasureFields measure={measure} canPublish={canPublish} />
+        </MultilingualFields>
         <EditorialFields record={measure} />
       </fieldset>
 
@@ -709,7 +645,9 @@ function StoryForm({
       {story ? <Link className="rise-action rounded-md border px-4 py-2 text-sm font-semibold" href={`/backoffice/preview/stories/${story.id}`} target="_blank">Vista previa interna</Link> : null}
       {readOnly ? <p className="text-sm">Solo lectura: un publicador debe realizar los cambios sobre contenido publicado.</p> : null}
       <fieldset disabled={readOnly} className="space-y-6 disabled:opacity-70">
+        <MultilingualFields record={story}>
         <StoryFields story={story} canPublish={canPublish} cases={cases} />
+        </MultilingualFields>
         <EditorialFields record={story} />
       </fieldset>
 
@@ -759,7 +697,9 @@ function CountryProfileForm({
       {profile ? <Link className="rise-action rounded-md border px-4 py-2 text-sm font-semibold" href={`/backoffice/preview/profiles/${profile.id}`} target="_blank">Vista previa interna</Link> : null}
       {readOnly ? <p className="text-sm">Solo lectura: un publicador debe realizar los cambios sobre contenido publicado.</p> : null}
       <fieldset disabled={readOnly} className="space-y-6 disabled:opacity-70">
+        <MultilingualFields record={profile}>
         <CountryProfileFields profile={profile} canPublish={canPublish} />
+        </MultilingualFields>
         <EditorialFields record={profile} />
       </fieldset>
 

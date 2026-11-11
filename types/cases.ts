@@ -77,6 +77,7 @@ export type AdaptationCase = EditorialMetadata & {
 
 export type MapCase = Pick<
   AdaptationCase,
+  | "translations"
   | "id"
   | "title"
   | "slug"
@@ -96,6 +97,8 @@ export type MapCase = Pick<
   category: Category;
   latitude: number;
   longitude: number;
+  countryAliases?: string[];
+  territoryAliases?: string[];
   threatAliases?: string[];
   measureAliases?: string[];
   coverImageUrl?: string | null;

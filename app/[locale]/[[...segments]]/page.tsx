@@ -1,3 +1,4 @@
+import { localizeRecord } from "@/lib/content-translations";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
@@ -127,7 +128,8 @@ export async function generateMetadata({ params }: LocalizedPageProps): Promise<
   }
 
   if (segments.length === 2 && segments[0] === "perfiles") {
-    const country = await getCountryProfileBySlug(segments[1]);
+    const originalCountry = await getCountryProfileBySlug(segments[1]);
+    const country = originalCountry ? localizeRecord(originalCountry, locale) : null;
 
     if (!country) {
       return {};
@@ -143,7 +145,8 @@ export async function generateMetadata({ params }: LocalizedPageProps): Promise<
   }
 
   if (segments.length === 2 && segments[0] === "historias") {
-    const story = await getStoryBySlug(segments[1]);
+    const originalStory = await getStoryBySlug(segments[1]);
+    const story = originalStory ? localizeRecord(originalStory, locale) : null;
 
     if (!story) {
       return {};

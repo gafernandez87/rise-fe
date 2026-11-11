@@ -1,3 +1,4 @@
+import { localizeRecord } from "@/lib/content-translations";
 import {
   actors,
   adaptationMeasureTypes,
@@ -1064,80 +1065,6 @@ const categoryTranslations: Record<string, Record<Locale, string>> = {
   },
 };
 
-const caseTranslations: Record<
-  string,
-  Record<Locale, Pick<AdaptationCase, "title" | "shortDescription" | "fullDescription">>
-> = {
-  "gestion-comunitaria-agua-sequia": {
-    es: {
-      title: "Gestión comunitaria del agua en contexto de sequía",
-      shortDescription:
-        "Caso placeholder sobre gobernanza local del agua y resiliencia hídrica en territorios expuestos a sequía.",
-      fullDescription:
-        "Contenido placeholder. Esta página quedará conectada al backoffice para mostrar información completa, imágenes, fuentes y datos complementarios del caso.",
-    },
-    en: {
-      title: "Community water management in a drought context",
-      shortDescription:
-        "Placeholder case about local water governance and water resilience in territories exposed to drought.",
-      fullDescription:
-        "Placeholder content. This page will be connected to the backoffice to show full information, images, sources and complementary case data.",
-    },
-    pt: {
-      title: "Gestao comunitaria da agua em contexto de seca",
-      shortDescription:
-        "Caso placeholder sobre governanca local da agua e resiliencia hidrica em territorios expostos a seca.",
-      fullDescription:
-        "Conteudo placeholder. Esta pagina sera conectada ao backoffice para mostrar informacao completa, imagens, fontes e dados complementares do caso.",
-    },
-  },
-  "corredores-verdes-islas-calor": {
-    es: {
-      title: "Corredores verdes contra islas de calor",
-      shortDescription:
-        "Caso placeholder sobre infraestructura verde urbana y adaptación frente al calor extremo.",
-      fullDescription:
-        "Contenido placeholder. Luego se reemplazará por el relato completo del caso, ubicación, imágenes y datos institucionales.",
-    },
-    en: {
-      title: "Green corridors against heat islands",
-      shortDescription:
-        "Placeholder case about urban green infrastructure and adaptation to extreme heat.",
-      fullDescription:
-        "Placeholder content. It will later be replaced by the complete case story, location, images and institutional data.",
-    },
-    pt: {
-      title: "Corredores verdes contra ilhas de calor",
-      shortDescription:
-        "Caso placeholder sobre infraestrutura verde urbana e adaptacao frente ao calor extremo.",
-      fullDescription:
-        "Conteudo placeholder. Depois sera substituido pelo relato completo do caso, localizacao, imagens e dados institucionais.",
-    },
-  },
-  "agricultura-resiliente-inundaciones": {
-    es: {
-      title: "Agricultura resiliente frente a inundaciones",
-      shortDescription:
-        "Caso placeholder sobre prácticas productivas resilientes ante inundaciones y variabilidad climática.",
-      fullDescription:
-        "Contenido placeholder. El backoffice permitirá editar esta información y administrar múltiples imágenes.",
-    },
-    en: {
-      title: "Resilient agriculture facing floods",
-      shortDescription:
-        "Placeholder case about resilient productive practices for floods and climate variability.",
-      fullDescription:
-        "Placeholder content. The backoffice will allow this information to be edited and multiple images to be managed.",
-    },
-    pt: {
-      title: "Agricultura resiliente frente a inundacoes",
-      shortDescription:
-        "Caso placeholder sobre praticas produtivas resilientes diante de inundacoes e variabilidade climatica.",
-      fullDescription:
-        "Conteudo placeholder. O backoffice permitira editar esta informacao e administrar multiplas imagens.",
-    },
-  },
-};
 
 type Dictionary = (typeof dictionaries)[Locale];
 
@@ -1170,16 +1097,16 @@ export function localizeCategories(categories: Category[], locale: Locale) {
   return categories.map((category) => localizeCategory(category, locale));
 }
 
-export function localizeCase(item: AdaptationCase, locale: Locale): AdaptationCase {
-  const saved = item.translations?.find((entry) => entry.language === locale && entry.status === "complete");
-  const translation = saved ? { title: saved.title, shortDescription: saved.summary, fullDescription: saved.content } : caseTranslations[item.slug]?.[locale];
+function localizeCaseCategory(item: Pick<AdaptationCase, "category" | "measureType">, locale: Locale) {
+  const category = localizeCategory(item.category, locale);
+  return { ...category, name: item.measureType || category.name };
+}
 
+export function localizeCase(item: AdaptationCase, locale: Locale): AdaptationCase {
+  const localized = localizeRecord(item, locale);
   return {
-    ...item,
-    title: translation?.title ?? item.title,
-    shortDescription: translation?.shortDescription ?? item.shortDescription,
-    fullDescription: translation?.fullDescription ?? item.fullDescription,
-    category: localizeCategory(item.category, locale),
+    ...localized,
+    category: localizeCaseCategory(localized, locale),
   };
 }
 
@@ -1188,13 +1115,16 @@ export function localizeCases(cases: AdaptationCase[], locale: Locale) {
 }
 
 export function localizeMapCase(item: MapCase, locale: Locale): MapCase {
-  const translation = caseTranslations[item.slug]?.[locale];
-
+  const localized = localizeRecord(item, locale);
+  const texts = item.translations ?? [];
   return {
-    ...item,
-    title: translation?.title ?? item.title,
-    shortDescription: translation?.shortDescription ?? item.shortDescription,
-    category: localizeCategory(item.category, locale),
+    ...localized,
+    category: localizeCaseCategory(localized, locale),
+    countryAliases: [item.country, ...texts.map((entry) => entry.country)].filter((value): value is string => Boolean(value)),
+    threatAliases: [...(item.threatAliases ?? []), item.threat, ...texts.map((entry) => entry.threat)].filter((value): value is string => Boolean(value)),
+    measureAliases: [...(item.measureAliases ?? []), item.measureType, item.category.name, ...texts.map((entry) => entry.measureType)].filter((value): value is string => Boolean(value)),
+    territoryAliases: [item.ecoregion ?? item.locality ?? item.region, ...texts.map((entry) => entry.ecoregion || entry.locality || entry.region)].filter((value): value is string => Boolean(value)),
+    searchText: [item.searchText, ...texts.flatMap((entry) => [entry.title, entry.shortDescription, entry.fullDescription, entry.objectives, entry.proposedSolutions])].filter(Boolean).join(" "),
   };
 }
 

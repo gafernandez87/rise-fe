@@ -97,7 +97,15 @@ function editorialPayload(formData: FormData) {
     return {
       referenceRecords: JSON.parse(formText(formData, "referenceRecords") ?? "[]"),
       mediaMetadata: JSON.parse(formText(formData, "mediaMetadata") ?? "{}"),
-      translations: JSON.parse(formText(formData, "translations") ?? "[]"),
+      translations: ["en", "pt"].map((language) => {
+        const previous = (JSON.parse(formText(formData, "translations") ?? "[]") as Array<Record<string, string>>).find((item) => item.language === language);
+        const entries = [...formData.entries()].filter(([key]) => key.startsWith(`translation.${language}.`)).map(([key, value]) => [key.split(".")[2], String(value).trim()]);
+        const translation = { ...previous, ...Object.fromEntries(entries), language, status: String(Object.fromEntries(entries).status ?? previous?.status ?? "pending") };
+        if ("shortDescription" in translation) translation.summary = translation.shortDescription;
+        if ("fullDescription" in translation) translation.content = translation.fullDescription || translation.shortDescription;
+        else if ("shortDescription" in translation) translation.content = translation.shortDescription;
+        return translation;
+      }),
     };
   } catch { throw new Error("Los metadatos editoriales no son válidos."); }
 }

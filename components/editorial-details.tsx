@@ -1,3 +1,4 @@
+import { hasContentTranslation } from "@/lib/content-translations";
 import type { Locale } from "@/lib/i18n";
 import type { EditorialMetadata } from "@/types/editorial";
 
@@ -111,9 +112,7 @@ export function TranslationNotice({
 }) {
   if (
     locale === "es" ||
-    record.translations?.some(
-      (entry) => entry.language === locale && entry.status === "complete",
-    )
+    hasContentTranslation(record, locale)
   )
     return null;
   const message = {
