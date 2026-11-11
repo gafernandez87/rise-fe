@@ -224,24 +224,51 @@ export function MapExplorer({ cases, categories, locale }: MapExplorerProps) {
     <div
       className={`rise-map-explorer${filtersVisible ? "" : " rise-map-explorer--collapsed"}`}
     >
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 xl:col-span-full">
+      <div className="mb-4 space-y-3 xl:col-span-full">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-pressed={view === "list"}
+            onClick={() => setView("list")}
+            className="rise-action flex-1 whitespace-nowrap rounded-md border border-[color:var(--color-border)] bg-white px-2 py-2 text-sm font-semibold sm:flex-none sm:px-4"
+          >
+            {ui.listView}
+          </button>
+          {!mapFailed ? (
+            <button
+              type="button"
+              aria-pressed={view === "map"}
+              onClick={() => setView("map")}
+              className="rise-action flex-1 whitespace-nowrap rounded-md border border-[color:var(--color-border)] bg-white px-2 py-2 text-sm font-semibold sm:flex-none sm:px-4"
+            >
+              {ui.mapView}
+            </button>
+          ) : null}
+          <button
+            ref={filtersToggleRef}
+            type="button"
+            onClick={() => setFiltersVisible((current) => !current)}
+            className="rise-action inline-flex flex-1 items-center gap-1 whitespace-nowrap rounded-md border border-[color:var(--color-border)] bg-white px-2 py-2 text-sm font-semibold sm:ml-auto sm:flex-none sm:gap-2 sm:px-4"
+            aria-label={filtersVisible ? dict.mapExplorer.hideFilters : dict.mapExplorer.showFilters}
+            aria-expanded={filtersVisible}
+            aria-controls={filtersPanelId}
+          >
+            <SlidersHorizontal size={16} className="shrink-0" aria-hidden="true" />
+            <span className="sm:hidden">{dict.mapExplorer.filters}</span>
+            <span className="hidden sm:inline">
+              {filtersVisible
+                ? dict.mapExplorer.hideFilters
+                : dict.mapExplorer.showFilters}
+            </span>
+          </button>
+        </div>
         <p role="status" className="text-sm text-[color:var(--color-muted)]">
-          {filteredCases.length} {dict.mapExplorer.of} {cases.length}{" "}
-          {dict.mapExplorer.visibleCases}
+          {activeFilters.length > 0 ? (
+            <>{filteredCases.length} {dict.mapExplorer.of} {cases.length} {dict.mapExplorer.visibleCases}</>
+          ) : (
+            <>{cases.length} {dict.common.publishedCases}</>
+          )}
         </p>
-        <button
-          ref={filtersToggleRef}
-          type="button"
-          onClick={() => setFiltersVisible((current) => !current)}
-          className="rise-action inline-flex items-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-4 py-2 text-sm font-semibold"
-          aria-expanded={filtersVisible}
-          aria-controls={filtersPanelId}
-        >
-          <SlidersHorizontal size={16} aria-hidden="true" />
-          {filtersVisible
-            ? dict.mapExplorer.hideFilters
-            : dict.mapExplorer.showFilters}
-        </button>
       </div>
 
       <div
@@ -260,10 +287,6 @@ export function MapExplorer({ cases, categories, locale }: MapExplorerProps) {
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
                     {dict.mapExplorer.filters}
-                  </p>
-                  <p className="mt-1 text-sm text-[color:var(--color-muted)]">
-                    {filteredCases.length} {dict.mapExplorer.of} {cases.length}{" "}
-                    {dict.mapExplorer.visibleCases}
                   </p>
                 </div>
               </div>
@@ -309,26 +332,6 @@ export function MapExplorer({ cases, categories, locale }: MapExplorerProps) {
         <p className="rounded-md bg-[color:var(--color-surface-muted)] p-3 text-sm">
           {ui.mapNote}
         </p>
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            aria-pressed={view === "list"}
-            onClick={() => setView("list")}
-            className="rise-action rounded border bg-white px-4 py-2 text-sm font-semibold"
-          >
-            {ui.listView}
-          </button>
-          {!mapFailed ? (
-            <button
-              type="button"
-              aria-pressed={view === "map"}
-              onClick={() => setView("map")}
-              className="rise-action rounded border bg-white px-4 py-2 text-sm font-semibold"
-            >
-              {ui.mapView}
-            </button>
-          ) : null}
-        </div>
         {activeFilters.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {activeFilters.map((filter) => (

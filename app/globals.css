@@ -62,6 +62,13 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   font-weight: 400;
   text-rendering: optimizeLegibility;
+  overflow-wrap: anywhere;
+}
+
+/* Let form controls shrink with their grid/flex column, including long options. */
+:where(input, select, textarea) {
+  min-width: 0;
+  max-width: 100%;
 }
 
 ::selection {
@@ -79,6 +86,7 @@ a {
 }
 
 .page-shell {
+  min-width: 0;
   width: min(var(--page-max-width), calc(100% - (var(--space-page-x) * 2)));
   margin-inline: auto;
 }
@@ -135,8 +143,10 @@ a {
   display: inline-flex;
   min-width: 44px;
   min-height: 44px;
+  max-width: 100%;
   align-items: center;
   justify-content: center;
+  text-align: center;
   transition:
     background-color 180ms ease,
     border-color 180ms ease,
@@ -173,12 +183,13 @@ a {
   }
 }
 
-.rise-public :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+:is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline: 2px solid var(--color-water);
   outline-offset: 3px;
 }
 
-.rise-section--stories :is(a, button, [tabindex]):focus-visible {
+.rise-section--stories :is(a, button, [tabindex]):focus-visible,
+.rise-public footer :is(a, button, [tabindex]):focus-visible {
   outline-color: var(--color-white);
 }
 
@@ -388,9 +399,15 @@ a {
 .rise-map-preview {
   isolation: isolate;
   overflow: hidden;
+  width: 100%;
+  height: auto;
 }
 
-.rise-map-preview,
+/* Keep the keyboard outline visible inside the card's clipped corners. */
+.rise-map-preview:focus-visible {
+  outline-offset: -3px;
+}
+
 .rise-map-preview__loading,
 .rise-map-card .leaflet-container.rise-map--static {
   min-height: 0;
@@ -602,6 +619,7 @@ a {
   display: grid;
   justify-items: end;
   gap: 8px;
+  max-width: calc(100vw - 2.5rem);
 }
 
 .language-switcher__panel {
@@ -609,6 +627,10 @@ a {
   display: flex;
   gap: 16px;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 100%;
+  order: 1;
   padding: 8px;
   /* background: #beb8b8; */
   background: linear-gradient(to bottom, #beb8b8, #ffffff);
@@ -648,6 +670,7 @@ a {
 }
 
 .language-switcher__trigger {
+  order: 2;
   border: 0;
   background: #120004;
   color: #ffffff;
@@ -809,12 +832,13 @@ a {
   width: 170px;
   position: absolute;
   top: calc(100% + 2px);
-  left: 5px;
+  right: 0;
   padding: 8px 0;
   background: rgb(255 255 255 / 92%);
   box-shadow: 0 10px 24px rgb(0 0 0 / 14%);
   z-index: 2;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
   transform: translateY(6px);
   transition:
@@ -822,10 +846,9 @@ a {
     transform 160ms ease;
 }
 
-.claac-header__menu:hover .claac-header__submenu,
-.claac-header__menu:focus-within .claac-header__submenu,
 .claac-header__menu--open .claac-header__submenu {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
   transform: translateY(0);
 }
@@ -866,13 +889,17 @@ a {
 }
 
 @media (max-width: 720px) {
+  :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+    font-size: 1rem;
+  }
+
   .claac-header {
     min-height: 90px;
   }
 
   .claac-header__content {
     position: relative;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     justify-items: stretch;
     min-height: 90px;
     padding: 12px 18px;
@@ -910,6 +937,9 @@ a {
     flex-direction: column;
     align-items: stretch;
     width: auto;
+    max-height: calc(100dvh - 100% - 1.5rem);
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
     padding: 8px 0;
     border: 1px solid rgb(127 127 127 / 24%);
     background: #ffffff;
@@ -927,6 +957,7 @@ a {
     width: 100%;
     min-height: 42px;
     padding: 11px 18px;
+    white-space: normal;
   }
 
   .claac-header__menu {
@@ -958,6 +989,7 @@ a {
   .claac-header__submenu-link {
     padding: 9px 18px 9px 30px;
     font-size: 0.7rem;
+    white-space: normal;
   }
 
   .claac-header__nav > .claac-header__link:not(:last-child)::before,

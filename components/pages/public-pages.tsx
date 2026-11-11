@@ -17,6 +17,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { RiseLogo } from "@/components/brand/rise-logo";
 import { CaseActions } from "@/components/cases/case-actions";
 import { EditorialDetails, TranslationNotice } from "@/components/editorial-details";
 import { getUiCopy } from "@/lib/ui-copy";
@@ -320,14 +321,10 @@ export async function HomePageView({ locale, currentPath }: PublicPageProps) {
               </p>
               <div className="space-y-3">
                 <h1>
-                  <Image
-                    src="/brand/elements/rise-logo.svg"
-                    alt="RISE - Resilience through Innovation, Science and Empowerment"
-                    width={1164}
-                    height={407}
-                    priority
+                  <RiseLogo
+                    locale={locale}
+                    preload
                     className="h-auto w-full max-w-[430px]"
-                    unoptimized
                   />
                 </h1>
               </div>
@@ -617,9 +614,6 @@ export async function MapPageView({
               {dict.map.text}
             </p>
           </div>
-          <p className="text-sm text-[color:var(--color-muted)]">
-            {localizedCases.length} {dict.common.publishedCases}
-          </p>
         </div>
 
         <MapExplorer
@@ -983,14 +977,10 @@ export function RegionalReportPageView({ locale, currentPath }: PublicPageProps)
               </div>
             </div>
             <div className="rise-report-cover grid aspect-[3/4] place-items-center rounded-lg bg-[color:var(--color-surface-muted)] p-8 text-center">
-              <Image
-                src="/brand/elements/rise-logo.svg"
-                alt=""
-                width={1164}
-                height={407}
+              <RiseLogo
+                locale={locale}
                 className="rise-report-cover__logo h-auto w-full max-w-[320px]"
-                aria-hidden="true"
-                unoptimized
+                decorative
               />
               <div className="rise-report-cover__content">
                 <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">

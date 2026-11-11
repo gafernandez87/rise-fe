@@ -12,12 +12,23 @@ export default function AdminLoginPage() {
             </p>
             <h1 className="mt-2 text-3xl font-semibold">Ingresar</h1>
           </div>
-          <input className="w-full rounded-md border px-3 py-2" placeholder="Email" type="email" />
-          <input
-            className="w-full rounded-md border px-3 py-2"
-            placeholder="Password"
-            type="password"
-          />
+          <label className="grid gap-2 text-sm font-medium">
+            Correo electrónico
+            <input
+              className="w-full rounded-md border px-3 py-2 text-base"
+              autoComplete="username"
+              placeholder="Email"
+              type="email"
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-medium">
+            Contraseña
+            <input
+              className="w-full rounded-md border px-3 py-2 text-base"
+              autoComplete="current-password"
+              type="password"
+            />
+          </label>
           <button className="rise-action w-full rounded-md bg-[color:var(--color-primary)] px-4 py-2 font-semibold text-white">
             Iniciar sesión
           </button>

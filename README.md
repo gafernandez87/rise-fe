@@ -1,5 +1,17 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Pruebas de responsive y teclado
+
+Con el frontend y la API ya en ejecución, gestionados manualmente, ejecutar:
+
+```bash
+PLAYWRIGHT_CHANNEL=chrome npm run test:responsive
+```
+
+Usa Google Chrome instalado. Si Playwright ya tiene Chromium instalado, se puede omitir `PLAYWRIGHT_CHANNEL=chrome`. Para otra URL, definir `PLAYWRIGHT_BASE_URL`.
+
+Estas pruebas **no inician servidores ni ejecutan builds**. Comprueban 360 y 390 px en español, inglés y portugués, fichas publicadas de cada tipo, anchos próximos a los cambios de diseño, textos largos, etiquetas y navegación por teclado. Los carruseles y las tablas pueden desplazarse dentro de su propio contenedor; la página no debe tener desbordamiento horizontal. Las trazas de fallos quedan en `test-results/`.
+
 ## Getting Started
 
 First, run the development server:

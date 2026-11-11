@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -93,11 +93,11 @@ export function SiteHeader({ locale = defaultLocale, currentPath }: SiteHeaderPr
   const navId = useId();
   const academiaSubmenuId = useId();
   const riseSubmenuId = useId();
+  const menuToggleRef = useRef<HTMLButtonElement>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState<"academia" | "rise" | null>(null);
   const isAcademiaSubmenuOpen = openSubmenu === "academia";
   const isRiseSubmenuOpen = openSubmenu === "rise";
-  const isRiseSectionActive = riseNavItems.some((item) => isRisePathActive(currentPath, item.href));
 
   function closeMenus() {
     setIsMenuOpen(false);
@@ -105,7 +105,27 @@ export function SiteHeader({ locale = defaultLocale, currentPath }: SiteHeaderPr
   }
 
   return (
-    <header className={`claac-header${isMenuOpen ? " claac-header--menu-open" : ""}`}>
+    <header
+      className={`claac-header${isMenuOpen ? " claac-header--menu-open" : ""}`}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) closeMenus();
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== "Escape") return;
+        if (openSubmenu) {
+          event.preventDefault();
+          const trigger = event.currentTarget.querySelector<HTMLButtonElement>(
+            `[aria-controls="${openSubmenu === "academia" ? academiaSubmenuId : riseSubmenuId}"]`,
+          );
+          setOpenSubmenu(null);
+          trigger?.focus();
+        } else if (isMenuOpen) {
+          event.preventDefault();
+          closeMenus();
+          menuToggleRef.current?.focus();
+        }
+      }}
+    >
       <div className="claac-header__overlay" />
       <div className="claac-header__content">
         <Link
@@ -125,12 +145,16 @@ export function SiteHeader({ locale = defaultLocale, currentPath }: SiteHeaderPr
           />
         </Link>
         <button
+          ref={menuToggleRef}
           className="rise-action claac-header__toggle"
           type="button"
           aria-controls={navId}
           aria-expanded={isMenuOpen}
           aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}
-          onClick={() => setIsMenuOpen((current) => !current)}
+          onClick={() => {
+            setIsMenuOpen((current) => !current);
+            setOpenSubmenu(null);
+          }}
         >
           {isMenuOpen ? <X size={24} aria-hidden="true" /> : <Menu size={24} aria-hidden="true" />}
         </button>

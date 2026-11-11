@@ -9,7 +9,7 @@ export default async function AdminCasesPage() {
     <>
       <SiteHeader />
       <main className="page-shell space-y-6 py-10">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
               Backoffice
@@ -23,8 +23,13 @@ export default async function AdminCasesPage() {
             Nuevo caso
           </Link>
         </div>
-        <div className="overflow-hidden rounded-lg border border-[color:var(--color-border)] bg-white">
-          <table className="w-full text-left text-sm">
+        <div
+          className="overflow-x-auto rounded-lg border border-[color:var(--color-border)] bg-white"
+          role="region"
+          aria-label="Casos publicados"
+          tabIndex={0}
+        >
+          <table className="w-full min-w-[40rem] text-left text-sm">
             <thead className="bg-[color:var(--color-surface-muted)]">
               <tr>
                 <th className="p-3">Título</th>
