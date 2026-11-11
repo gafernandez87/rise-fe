@@ -263,6 +263,11 @@ function MeasureFields({ measure, canPublish }: { canPublish: boolean; measure?:
   return (
     <>
       <input name="originalPhotoUrl" type="hidden" value={casePhotoUrl(measure) ?? ""} />
+      <div className="max-w-sm">
+        <SelectField label="Estado" name="status" value={measure?.status ?? "draft"}>
+          <option value="draft">Borrador</option><option value="review">En revisión</option><option value="published" disabled={!canPublish}>Publicado</option><option value="archived">Archivado</option><option value="hidden">Oculto</option>
+        </SelectField>
+      </div>
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">Bloque 1: Clasificación de la medida</h3>
         <div className="grid gap-4 md:grid-cols-2">
@@ -309,9 +314,6 @@ function MeasureFields({ measure, canPublish }: { canPublish: boolean; measure?:
         <summary className="cursor-pointer font-semibold">Opciones adicionales de publicación y ubicación</summary>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <Field readOnly={Boolean(measure)} label="Enlace permanente" name="slug" placeholder="Se genera automáticamente" value={measure?.slug} />
-          <SelectField label="Estado" name="status" value={measure?.status ?? "draft"}>
-            <option value="draft">Borrador</option><option value="review">En revisión</option><option value="published" disabled={!canPublish}>Publicado</option><option value="archived">Archivado</option><option value="hidden">Oculto</option>
-          </SelectField>
           <SelectField label="Nivel de riesgo (requiere método)" name="severity" value={measure?.severity ?? ""}>
             <option value="">No evaluado</option><option value="medium">Media</option><option value="low">Baja</option><option value="high">Alta</option><option value="critical">Crítica</option>
           </SelectField>
@@ -416,11 +418,19 @@ function CasesTable({ activeId, cases }: { activeId?: string; cases: AdaptationC
 
   return (
     <div className="overflow-x-auto rounded-lg border border-[color:var(--color-border)] bg-white">
-      <table className="w-full min-w-[920px] border-collapse text-left text-sm">
+      <table className="w-full min-w-[1100px] table-fixed border-collapse text-left text-sm [&_td]:break-words">
+        <colgroup>
+          <col className="w-[30%]" />
+          <col className="w-[18%]" />
+          <col />
+          <col />
+          <col className="w-36" />
+          <col className="w-36" />
+        </colgroup>
         <thead className="border-b border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)] text-xs font-semibold uppercase tracking-wide text-[color:var(--color-muted)]">
           <tr>
             <th className="px-4 py-3">Medida</th>
-            <th className="px-4 py-3">Ubicacion</th>
+            <th className="px-4 py-3">Ubicación</th>
             <th className="px-4 py-3">Amenaza</th>
             <th className="px-4 py-3">Tipo</th>
             <th className="px-4 py-3">Estado</th>
@@ -455,7 +465,7 @@ function CasesTable({ activeId, cases }: { activeId?: string; cases: AdaptationC
                   {item.measureType ?? item.category.name}
                 </td>
                 <td className="px-4 py-3 align-top">
-                  <span className="inline-flex rounded-md bg-[color:var(--color-surface-muted)] px-2.5 py-1 text-xs font-semibold">
+                  <span className="inline-flex whitespace-nowrap rounded-md bg-[color:var(--color-surface-muted)] px-2.5 py-1 text-sm font-semibold">
                     {statusLabels[item.status]}
                   </span>
                 </td>
@@ -464,7 +474,7 @@ function CasesTable({ activeId, cases }: { activeId?: string; cases: AdaptationC
                     className="rise-action inline-flex items-center justify-center gap-2 rounded-md border border-[color:var(--color-border)] bg-white px-3 py-2 text-sm font-semibold transition hover:border-[color:var(--color-primary)] hover:text-[color:var(--color-primary)]"
                     href={`/backoffice?edit=${encodeURIComponent(item.id)}`}
                   >
-                    <Pencil size={15} aria-hidden="true" />
+                    <Pencil className="shrink-0" size={15} aria-hidden="true" />
                     Editar
                   </Link>
                 </td>
