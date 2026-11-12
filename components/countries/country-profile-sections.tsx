@@ -1,5 +1,5 @@
 import { CountryLabel } from "@/components/countries/country-label";
-import { countryProfileSections, countryProfileSectionValue } from "@/lib/country-profiles";
+import { visibleCountryProfileSections, countryProfileSectionValue } from "@/lib/country-profiles";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import type { CountryProfile } from "@/types/country-profiles";
 
@@ -9,7 +9,7 @@ export function CountryProfileSections({ profile, locale }: { profile: CountryPr
 
   return (
     <div className="grid gap-5 md:grid-cols-2">
-      {countryProfileSections.filter(({ field }) => field !== "summary").map(({ field }) => (
+      {visibleCountryProfileSections.filter(({ field }) => field !== "summary").map(({ field }) => (
         <article key={field} className="min-w-0 rounded-lg border border-[color:var(--color-border)] bg-white p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-semibold">{dict.sections[field]}</h2>

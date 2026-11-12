@@ -4,7 +4,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { loadTypeScript as load } from './helpers/typescript.mjs';
 
-const { countryProfileSections, countryProfileSectionValue, countryProfileSectionsPayload } = load('lib/country-profiles.ts');
+const { countryProfileSections, visibleCountryProfileSections, countryProfileSectionValue, countryProfileSectionsPayload } = load('lib/country-profiles.ts');
 const { CountryProfileSections } = load('components/countries/country-profile-sections.tsx');
 const { getDictionary } = load('lib/i18n.ts');
 const legacy = {
@@ -31,9 +31,10 @@ test('detail sections render in all locales without repeating the introductory s
   for (const locale of ['es', 'en', 'pt']) {
     const html = renderToStaticMarkup(createElement(CountryProfileSections, { profile, locale }));
     const articles = [...html.matchAll(/<article\b[^>]*>([\s\S]*?)<\/article>/g)].map((match) => match[1]);
-    assert.equal(articles.length, 9);
+    assert.equal(articles.length, 6);
+    for (const field of ['adaptationMeasures', 'featuredStory', 'sources']) assert.ok(!html.includes(`Texto ${field}`));
     assert.ok(!html.includes('Texto summary'));
-    for (const [index, { field }] of countryProfileSections.filter(({ field }) => field !== 'summary').entries()) {
+    for (const [index, { field }] of visibleCountryProfileSections.filter(({ field }) => field !== 'summary').entries()) {
       assert.ok(articles[index].includes(getDictionary(locale).profiles.sections[field]));
       assert.ok(articles[index].includes(`Texto ${field}\n\nSegundo párrafo`));
       assert.ok(articles[index].includes('whitespace-pre-line'));

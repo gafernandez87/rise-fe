@@ -15,7 +15,7 @@ import {
 } from "@/lib/backoffice-api";
 import type { AdaptationCase, CaseSeverity, CaseStatus } from "@/types/cases";
 import type { CountryProfile } from "@/types/country-profiles";
-import { countryProfileSections, countryProfileSectionValue } from "@/lib/country-profiles";
+import { visibleCountryProfileSections, countryProfileSectionValue } from "@/lib/country-profiles";
 import { getDictionary } from "@/lib/i18n";
 import type { ResilienceStory } from "@/types/stories";
 import {
@@ -318,7 +318,6 @@ function CountryProfileFields({ profile, canPublish }: { canPublish: boolean; pr
         <Field label="Territorio priorizado" name="profileTerritory" value={profile?.territory} />
         <Field label="Sector más afectado" name="profileSector" value={profile?.sector} />
         <Field label="Medidas identificadas" name="profileMeasuresCount" type="number" value={profile?.measuresCount} />
-        <Field label="Título de historia destacada" name="profileStoryTitle" value={profile?.storyTitle} />
         <Field label="Imagen principal URL" name="profileHeroImageUrl" type="url" value={profile?.heroImageUrl} />
         <Field label="Perfil PDF URL" name="profilePdfUrl" type="url" value={profile?.profilePdfUrl} />
         <TextArea label="Riesgos para el listado (uno por línea)" name="profileRisks" value={profile?.risks.join("\n")} />
@@ -332,7 +331,7 @@ function CountryProfileFields({ profile, canPublish }: { canPublish: boolean; pr
           </p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          {countryProfileSections.map(({ field, formName }) => (
+          {visibleCountryProfileSections.map(({ field, formName }) => (
             <TextArea key={field} label={sectionLabels[field]} name={formName} value={countryProfileSectionValue(profile, field)} />
           ))}
         </div>

@@ -14,6 +14,11 @@ export const countryProfileSections = [
   { field: "sources", formName: "profileSources" },
 ] as const;
 
+// Hidden sections remain in the data model so existing content is preserved.
+export const visibleCountryProfileSections = countryProfileSections.filter(
+  ({ field }) => field !== "adaptationMeasures" && field !== "featuredStory" && field !== "sources",
+);
+
 export type CountryProfileSectionField = (typeof countryProfileSections)[number]["field"];
 
 export function countryProfileSectionValue(profile: CountryProfile | undefined, field: CountryProfileSectionField): string {

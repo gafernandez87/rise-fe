@@ -234,7 +234,6 @@ function buildCountryProfilePayload(formData: FormData, options: { clearOptional
     territory: territory ?? "",
     sector: sector ?? "",
     measuresCount: formNumber(formData, "profileMeasuresCount"),
-    storyTitle: optionalText(formData, "profileStoryTitle"),
     risks: formLines(formData, "profileRisks"),
     heroImageUrl: optionalText(formData, "profileHeroImageUrl"),
     profilePdfUrl: optionalText(formData, "profilePdfUrl"),
