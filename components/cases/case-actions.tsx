@@ -42,15 +42,17 @@ export function CaseActions({ title, locale, sourceUrl }: { title: string; local
   }
 
   return (
-    <section className="rise-case-actions page-shell mb-8 rounded-lg border border-[color:var(--color-border)] bg-white p-5" aria-label={ui.citation}>
-      <div className="rise-print-hide flex flex-wrap gap-3">
+    <section className="rise-case-actions page-shell" aria-label={ui.citation}>
+      <div className="rise-print-hide fixed bottom-4 left-4 z-40 flex max-w-[calc(100vw-2rem)] flex-wrap gap-2 rounded-xl border border-[color:var(--color-border)] bg-white p-2 shadow-lg">
         <button type="button" onClick={copyLink} className="rise-action gap-2 rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"><Copy size={16} aria-hidden="true" />{ui.copyLink}</button>
         <button type="button" onClick={print} className="rise-action gap-2 rounded-md border border-[color:var(--color-border)] px-4 py-2 text-sm font-semibold"><Printer size={16} aria-hidden="true" />{ui.print}</button>
-      </div>
+      <div className={status === "idle" ? "sr-only" : "basis-full"}>
       <p role="status" className="rise-print-hide mt-2 text-sm">{status === "copied" ? ui.copied : status === "error" ? ui.copyFailed : ""}</p>
       {status === "error" ? <input aria-label={ui.copyLink} readOnly value={url} onFocus={(event) => event.currentTarget.select()} className="rise-print-hide mt-2 w-full rounded border p-2 text-sm" /> : null}
-      {reference ? <p className="mt-3 break-words text-sm leading-6"><strong>{ui.citation}: </strong>{reference}</p> : null}
-      {sourceUrl ? <p className="mt-2 break-words text-sm"><strong>{ui.source}: </strong><a href={sourceUrl} target="_blank" rel="noreferrer" className="underline">{sourceUrl}</a></p> : null}
+      </div>
+      </div>
+      {reference ? <p className="hidden print:block mt-3 break-words text-sm leading-6"><strong>{ui.citation}: </strong>{reference}</p> : null}
+      {sourceUrl?.trim() ? <p className="mb-6 mt-2 break-words text-sm"><strong>{ui.source}: </strong><a href={sourceUrl} target="_blank" rel="noreferrer" className="underline">{sourceUrl}</a></p> : null}
     </section>
   );
 }

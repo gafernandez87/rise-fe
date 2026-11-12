@@ -1,3 +1,4 @@
+import { LinkedText } from "@/components/cases/linked-text";
 import { riseNavItems } from "@/lib/rise-navigation";
 import { localizeRecord } from "@/lib/content-translations";
 import type { ReactNode } from "react";
@@ -1116,6 +1117,17 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
     { href: mapFilterPath(locale, "risk", caseRisk), label: caseRisk },
     ...measureLabels.map((label) => ({ href: mapFilterPath(locale, "measure", label), label })),
   ];
+  const baseSections = [
+    [dict.case.measureSummary, item.shortDescription],
+    [{ es: "Descripción completa", en: "Full description", pt: "Descrição completa" }[locale], item.fullDescription !== item.shortDescription ? item.fullDescription : null],
+    [{ es: "Perfil de vulnerabilidad nacional", en: "National vulnerability profile", pt: "Perfil de vulnerabilidade nacional" }[locale], item.nationalVulnerabilityProfile],
+    [dict.case.measureObjectives, item.objectives],
+    [{ es: "Soluciones propuestas", en: "Proposed solutions", pt: "Soluções propostas" }[locale], item.proposedSolutions],
+    [dict.case.beneficiaryCommunities, item.beneficiaryCommunities],
+    [{ es: "Rol de la juventud", en: "Role of youth", pt: "Papel da juventude" }[locale], item.youthRole],
+    [{ es: "Resultados obtenidos", en: "Results", pt: "Resultados obtidos" }[locale], item.results],
+    [{ es: "Contacto con referente", en: "Contact", pt: "Contato" }[locale], item.contact],
+  ].filter(([, value]) => value?.trim());
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -1127,80 +1139,83 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
 
   return (
     <PublicChrome locale={locale} currentPath={currentPath}>
-      <main className="rise-case-page">
+      <main className="rise-case-page pb-24 print:pb-0">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <TranslationNotice record={item} locale={locale} />
-        <section className="rise-detail-hero page-shell grid gap-8 py-10 lg:grid-cols-[0.95fr_1.05fr]">
-          {cover ? (
-            <Image
-              className="aspect-[4/3] w-full rounded-lg object-cover"
-              src={cover.url}
-              alt={item.mediaMetadata?.alt ?? cover.altText}
-              width={960}
-              height={720}
-              priority
-              unoptimized
-            />
-          ) : null}
-          <div className="space-y-5">
+        <section className={`rise-detail-hero page-shell grid items-start gap-8 py-10 ${cover ? "lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]" : ""}`}>
+          <div className="min-w-0 space-y-5">
             <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
               <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
-                {item.country ? <CountryLabel country={item.country} /> : null}
-                {item.country ? <span aria-hidden="true">·</span> : null}
+                {item.country?.trim() ? <CountryLabel country={item.country} /> : null}
+                {item.country?.trim() ? <span aria-hidden="true">·</span> : null}
                 <span>
                   {item.category.name} · {caseRisk}
                 </span>
               </span>
             </p>
-            <h1 className="text-4xl font-semibold leading-tight">{item.title}</h1>
-            <p className="text-lg leading-8 text-[color:var(--color-muted)]">
-              {item.shortDescription}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {classificationChips.map((chip) => (
-                <Link
-                  key={`${chip.href}-${chip.label}`}
-                  href={chip.href}
-                  className="rise-action inline-flex min-h-9 items-center rounded-full border border-[color:var(--color-primary)] bg-white px-3 py-1 text-sm font-semibold text-[color:var(--color-primary)] transition hover:bg-[color:var(--color-surface-muted)]"
-                >
-                  {chip.label}
-                </Link>
-              ))}
+            <h1 className="break-words text-3xl font-semibold leading-tight sm:text-4xl">{item.title}</h1>
+            <div className="min-w-0 space-y-5">
+                <p className="text-lg leading-8 text-[color:var(--color-muted)]">
+                  <LinkedText text={item.shortDescription} />
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {classificationChips.map((chip) => (
+                    <Link
+                      key={`${chip.href}-${chip.label}`}
+                      href={chip.href}
+                      className="rise-action inline-flex min-h-9 items-center rounded-full border border-[color:var(--color-primary)] bg-white px-3 py-1 text-sm font-semibold text-[color:var(--color-primary)] transition hover:bg-[color:var(--color-surface-muted)]"
+                    >
+                      {chip.label}
+                    </Link>
+                  ))}
+                </div>
+
             </div>
-            <dl className="grid gap-3 rounded-lg border border-[color:var(--color-border)] bg-white p-5 text-sm md:grid-cols-2">
-              {[
-                [getUiCopy(locale).problem, item.localClimateProblem || item.threat],
-                [getUiCopy(locale).action, item.proposedSolutions || item.measureType],
-                [getUiCopy(locale).place, [item.locality, item.region, item.country].filter(Boolean).join(", ")],
-                [getUiCopy(locale).stage, item.implementationStage],
-                [getUiCopy(locale).youthRole, item.youthRole],
-              ].filter((entry) => entry[1]?.trim()).map(([label, value]) => <div key={label}><dt className="font-semibold">{label}</dt><dd className="whitespace-pre-line text-[color:var(--color-muted)]">{value}</dd></div>)}
-            </dl>
           </div>
+              {cover ? (
+                <Image
+                  className="aspect-[4/3] w-full rounded-2xl object-cover lg:sticky lg:top-6"
+                  src={cover.url}
+                  alt={item.mediaMetadata?.alt ?? cover.altText}
+                  width={960}
+                  height={720}
+                  priority
+                  unoptimized
+                />
+              ) : null}
+                <dl className="grid gap-x-10 gap-y-6 lg:col-span-full border-t border-[color:var(--color-border)] pt-5 text-sm sm:grid-cols-2">
+                  {[
+                    [getUiCopy(locale).problem, item.localClimateProblem || item.threat],
+                    [getUiCopy(locale).action, item.proposedSolutions || item.measureType],
+                    [getUiCopy(locale).place, [item.locality, item.region, item.country].filter(Boolean).join(", ")],
+                    [getUiCopy(locale).stage, item.implementationStage],
+                    [getUiCopy(locale).youthRole, item.youthRole],
+                  ].filter((entry) => entry[1]?.trim()).map(([label, value]) => <div key={label}><dt className="font-semibold">{label}</dt><dd className="whitespace-pre-line text-[color:var(--color-muted)]"><LinkedText text={value ?? ""} /></dd></div>)}
+                </dl>
         </section>
         <EditorialDetails record={item} locale={locale} />
         <CaseActions title={item.title} locale={locale} sourceUrl={item.referenceRecords?.find((source) => source.reviewed)?.url ?? item.sourceUrl} />
         <section className="page-shell pb-14">
-          <div className="grid gap-6 lg:grid-cols-[0.7fr_1.3fr]">
-            <aside className="h-fit rounded-lg border border-[color:var(--color-border)] bg-white p-5">
+          <div className="space-y-10">
+            <aside className="rounded-2xl bg-[#eaf1ed] p-6 sm:p-8">
               <h2 className="text-xl font-semibold">{dict.case.classification}</h2>
-              <dl className="mt-4 grid gap-3 text-sm">
-                <div>
+              <dl className="mt-4 grid gap-x-8 gap-y-5 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                {Boolean(item.locality?.trim() || item.region?.trim()) && <div>
                   <dt className="font-semibold">{dict.case.locality}</dt>
-                  <dd className="text-[color:var(--color-muted)]">{item.locality ?? item.region ?? dict.common.toComplete}</dd>
-                </div>
-                {item.subnationalJurisdiction ? <div><dt className="font-semibold">{ { es: "Jurisdicción subnacional", en: "Subnational jurisdiction", pt: "Jurisdição subnacional" }[locale]}</dt><dd>{item.subnationalJurisdiction}</dd></div> : null}
-                <div>
+                  <dd className="text-[color:var(--color-muted)]">{item.locality?.trim() || item.region}</dd>
+                </div>}
+                {item.subnationalJurisdiction?.trim() ? <div><dt className="font-semibold">{ { es: "Jurisdicción subnacional", en: "Subnational jurisdiction", pt: "Jurisdição subnacional" }[locale]}</dt><dd><LinkedText text={item.subnationalJurisdiction} /></dd></div> : null}
+                {item.country?.trim() ? <div>
                   <dt className="font-semibold">{dict.common.country}</dt>
                   <dd className="text-[color:var(--color-muted)]">
                     <CountryLabel country={item.country} fallback={dict.common.toComplete} />
                   </dd>
-                </div>
-                {item.ecoregion ? <div><dt className="font-semibold">{ { es: "Ecorregión", en: "Ecoregion", pt: "Ecorregião" }[locale]}</dt><dd>{item.ecoregion}</dd></div> : null}
-                {item.implementationDate ? <div><dt className="font-semibold">{ { es: "Fecha de implementación", en: "Implementation date", pt: "Data de implementação" }[locale]}</dt><dd>{item.implementationDate}</dd></div> : null}
+                </div> : null}
+                {item.ecoregion?.trim() ? <div><dt className="font-semibold">{ { es: "Ecorregión", en: "Ecoregion", pt: "Ecorregião" }[locale]}</dt><dd><LinkedText text={item.ecoregion} /></dd></div> : null}
+                {item.implementationDate?.trim() ? <div><dt className="font-semibold">{ { es: "Fecha de implementación", en: "Implementation date", pt: "Data de implementação" }[locale]}</dt><dd><LinkedText text={item.implementationDate} /></dd></div> : null}
                 <div>
                   <dt className="font-semibold">{dict.case.threat}</dt>
                   <dd className="mt-1">
@@ -1226,8 +1241,8 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                     ))}
                   </dd>
                 </div>
-                {item.scope ? <div><dt className="font-semibold">{ { es: "Alcance", en: "Scope", pt: "Abrangência" }[locale]}</dt><dd>{item.scope}</dd></div> : null}
-                <div>
+                {item.scope?.trim() ? <div><dt className="font-semibold">{ { es: "Alcance", en: "Scope", pt: "Abrangência" }[locale]}</dt><dd><LinkedText text={item.scope} /></dd></div> : null}
+                {item.sourceUrl?.trim() ? <div>
                   <dt className="font-semibold">{dict.case.source}</dt>
                   <dd className="text-[color:var(--color-muted)]">
                     {item.sourceUrl ? (
@@ -1238,40 +1253,19 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                       dict.common.toComplete
                     )}
                   </dd>
-                </div>
+                </div> : null}
               </dl>
             </aside>
 
-            <div className="space-y-6">
-              <section className="rounded-lg border border-[color:var(--color-border)] bg-white p-6">
+            <div className="space-y-10">
+              {baseSections.length ? <section className="rise-case-reading">
                 <h2 className="text-2xl font-semibold">{dict.case.baseInfo}</h2>
-                <div className="mt-5 grid gap-5">
-                  <div>
-                    <h3 className="font-semibold">{dict.case.measureSummary}</h3>
-                    <p className="mt-2 whitespace-pre-line leading-8 text-[color:var(--color-muted)]">{item.shortDescription}</p>
-                  </div>
-                  {item.fullDescription && item.fullDescription !== item.shortDescription ? <div><h3 className="font-semibold">{{ es: "Descripción completa adicional", en: "Additional description", pt: "Descrição adicional" }[locale]}</h3><p className="mt-2 whitespace-pre-line leading-8 text-[color:var(--color-muted)]">{item.fullDescription}</p></div> : null}
-                  {item.nationalVulnerabilityProfile ? <div><h3 className="font-semibold">{{ es: "Perfil de vulnerabilidad nacional", en: "National vulnerability profile", pt: "Perfil de vulnerabilidade nacional" }[locale]}</h3><p className="mt-2 whitespace-pre-line leading-8 text-[color:var(--color-muted)]">{item.nationalVulnerabilityProfile}</p></div> : null}
-                  {item.objectives ? <div>
-                    <h3 className="font-semibold">{dict.case.measureObjectives}</h3>
-                    <p className="mt-2 leading-8 text-[color:var(--color-muted)]">
-                      {item.objectives}
-                    </p>
-                  </div> : null}
-                  {item.proposedSolutions ? <div><h3 className="font-semibold">{{ es: "Soluciones propuestas", en: "Proposed solutions", pt: "Soluções propostas" }[locale]}</h3><p className="mt-2 whitespace-pre-line leading-8 text-[color:var(--color-muted)]">{item.proposedSolutions}</p></div> : null}
-                  {item.beneficiaryCommunities ? <div>
-                    <h3 className="font-semibold">{dict.case.beneficiaryCommunities}</h3>
-                    <p className="mt-2 leading-8 text-[color:var(--color-muted)]">
-                      {item.beneficiaryCommunities}
-                    </p>
-                  </div> : null}
-                  {item.youthRole ? <div><h3 className="font-semibold">{{ es: "Rol de la juventud", en: "Role of youth", pt: "Papel da juventude" }[locale]}</h3><p className="mt-2 whitespace-pre-line leading-8 text-[color:var(--color-muted)]">{item.youthRole}</p></div> : null}
-                  {item.results ? <div><h3 className="font-semibold">{{ es: "Resultados obtenidos", en: "Results", pt: "Resultados obtidos" }[locale]}</h3><p className="mt-2 whitespace-pre-line leading-8 text-[color:var(--color-muted)]">{item.results}</p></div> : null}
-                  {item.contact ? <div><h3 className="font-semibold">{{ es: "Contacto con referente", en: "Contact", pt: "Contato" }[locale]}</h3><p className="mt-2 whitespace-pre-line leading-8 text-[color:var(--color-muted)]">{item.contact}</p></div> : null}
+                <div className="rise-case-base-grid mt-6">
+                  {baseSections.map(([title, value]) => <article key={title} className={`rise-case-base-block ${value === item.results ? "rise-case-base-block--results" : ""}`}><h3 className="text-lg font-semibold">{title}</h3><p className="whitespace-pre-line leading-8 text-[color:var(--color-muted)]"><LinkedText text={value ?? ""} /></p></article>)}
                 </div>
-              </section>
+              </section> : null}
 
-              <section className="rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)] p-6">
+              {relatedStory ? <section className="rounded-2xl bg-[#eaf1ed] p-6 sm:p-8">
                 <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
                   {dict.case.relatedStoryEyebrow}
                 </p>
@@ -1307,7 +1301,7 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                     <ArrowRight size={16} aria-hidden="true" />
                   </Link>
                 )}
-              </section>
+              </section> : null}
 
               {[
                 ["financing", item.financingType], ["problem", item.localClimateProblem], ["context", item.nationalSocioPoliticalContext], ["benefits", item.coBenefits], ["documents", item.downloadableDocuments],
@@ -1315,9 +1309,9 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                 [dict.case.complementarySections[1], item.enablingFactors],
                 [dict.case.complementarySections[2], item.scalability],
                 [dict.case.complementarySections[3], item.longTermSustainability],
-              ].some((entry) => entry[1]) ? <section className="rounded-lg border border-[color:var(--color-border)] bg-white p-6">
+              ].some((entry) => entry[1]?.trim()) ? <section className="rise-case-reading rounded-2xl bg-white p-6 sm:p-8">
                 <h2 className="text-2xl font-semibold">{dict.case.complementaryInfo}</h2>
-                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <div className="mt-6 space-y-7">
                   {[
                     [{ es: "Tipo de financiamiento", en: "Funding type", pt: "Tipo de financiamento" }[locale], item.financingType],
                     [{ es: "Problemática climática local", en: "Local climate problem", pt: "Problema climático local" }[locale], item.localClimateProblem],
@@ -1328,7 +1322,7 @@ export async function CasePageView({ locale, currentPath, slug }: PublicPageProp
                     [{ es: "Escalabilidad", en: "Scalability", pt: "Escalabilidade" }[locale], item.scalability],
                     [{ es: "Sostenibilidad en el tiempo", en: "Long-term sustainability", pt: "Sustentabilidade a longo prazo" }[locale], item.longTermSustainability],
                     [{ es: "Documentos descargables + referencias bibliográficas", en: "Documents and references", pt: "Documentos e referências" }[locale], item.downloadableDocuments],
-                  ].filter((entry) => entry[1]).map(([title, value]) => <article key={title} className="rounded-md bg-[color:var(--color-surface-muted)] p-4"><h3 className="font-semibold">{title}</h3><p className="mt-2 whitespace-pre-line text-sm leading-6">{value}</p></article>)}
+                  ].filter((entry) => entry[1]?.trim()).map(([title, value]) => <article key={title} className="rise-case-reading-block"><h3 className="font-semibold">{title}</h3><p className="mt-2 whitespace-pre-line text-sm leading-6"><LinkedText text={value ?? ""} /></p></article>)}
                 </div>
               </section> : null}
             </div>
