@@ -1,3 +1,4 @@
+import { riseNavItems } from "@/lib/rise-navigation";
 import { localizeRecord } from "@/lib/content-translations";
 import type { ReactNode } from "react";
 import {
@@ -130,13 +131,11 @@ function PublicChrome({ locale, currentPath, children }: PublicPageProps & { chi
       <LanguageSwitcher locale={locale} currentPath={currentPath} />
       <nav aria-label="RISE" className="border-b border-[color:var(--color-border)] bg-white">
         <div className="page-shell flex flex-wrap gap-x-5 gap-y-2 py-3 text-sm font-semibold">
-          {[
-            ["/mapa", { es: "Explorar", en: "Explore", pt: "Explorar" }],
-            ["/historias", { es: "Historias", en: "Stories", pt: "Histórias" }],
-            ["/perfiles", { es: "Países", en: "Countries", pt: "Países" }],
-            ["/metodologia", { es: "Aprender", en: "Learn", pt: "Aprender" }],
-            ["/#sobre-rise", { es: "Acerca de RISE", en: "About RISE", pt: "Sobre o RISE" }],
-          ].map(([href, labels]) => <Link key={href as string} href={localizedPath(href as string, locale)} aria-current={currentPath === href ? "page" : undefined}>{(labels as Record<Locale, string>)[locale]}</Link>)}
+          {riseNavItems.map(({ href, label }) => (
+            <Link key={href} href={localizedPath(href, locale)} aria-current={currentPath === href ? "page" : undefined}>
+              {label[locale]}
+            </Link>
+          ))}
         </div>
       </nav>
       {children}
@@ -887,7 +886,7 @@ export async function CountryProfilePageView({ locale, currentPath, slug }: Publ
     <PublicChrome locale={locale} currentPath={currentPath}>
       <main>
         <section className="rise-detail-hero bg-white">
-          <div className="page-shell grid gap-8 py-10 lg:grid-cols-[0.95fr_1.05fr]">
+          <div className="page-shell grid items-start gap-8 py-10 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
             <div>
               <p className="text-sm font-semibold uppercase tracking-wide text-[color:var(--color-primary)]">
                 {dict.profiles.nationalProfile}
@@ -916,7 +915,7 @@ export async function CountryProfilePageView({ locale, currentPath, slug }: Publ
                 ) : null}
               </div>
             </div>
-            <dl className="grid gap-4 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)] p-5 sm:grid-cols-2">
+            <dl className="grid min-w-0 gap-x-6 gap-y-6 rounded-lg border border-[color:var(--color-border)] bg-[color:var(--color-surface-muted)] p-5 sm:grid-cols-2 lg:p-6">
               <div>
                 <dt className="text-sm font-semibold">{dict.common.mainRisk}</dt>
                 <dd className="mt-1 text-sm text-[color:var(--color-muted)]">{country.mainRisk}</dd>
@@ -933,7 +932,7 @@ export async function CountryProfilePageView({ locale, currentPath, slug }: Publ
                 <dt className="text-sm font-semibold">{dict.common.identifiedMeasures}</dt>
                 <dd className="mt-1 text-sm text-[color:var(--color-muted)]">{country.measuresCount}</dd>
               </div>
-              <div>
+              <div className="border-t border-[color:var(--color-border)] pt-5 sm:col-span-2">
                 <dt className="text-sm font-semibold">{getUiCopy(locale).publishedCases}</dt>
                 <dd className="mt-1 text-sm"><Link className="underline" href={mapFilterPath(locale, "country", country.name)}>{mapCases.filter((item) => normalizeFilterValue(item.country ?? "") === normalizeFilterValue(originalCountry?.name ?? country.name)).length}</Link></dd>
                 <p className="mt-2 text-xs text-[color:var(--color-muted)]">{getUiCopy(locale).coverageNote}</p>

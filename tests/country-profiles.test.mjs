@@ -24,15 +24,16 @@ test('existing profiles keep all content in the same sections', () => {
   assert.equal(countryProfileSectionValue(legacy, 'featuredStory'), legacy.storyTitle);
 });
 
-test('each section survives form submission and renders under its own heading in all locales', () => {
+test('detail sections render in all locales without repeating the introductory summary', () => {
   const form = new FormData();
   for (const { field, formName } of countryProfileSections) form.set(formName, `Texto ${field}\n\nSegundo párrafo`);
   const profile = { ...legacy, ...countryProfileSectionsPayload(form) };
   for (const locale of ['es', 'en', 'pt']) {
     const html = renderToStaticMarkup(createElement(CountryProfileSections, { profile, locale }));
     const articles = [...html.matchAll(/<article\b[^>]*>([\s\S]*?)<\/article>/g)].map((match) => match[1]);
-    assert.equal(articles.length, 10);
-    for (const [index, { field }] of countryProfileSections.entries()) {
+    assert.equal(articles.length, 9);
+    assert.ok(!html.includes('Texto summary'));
+    for (const [index, { field }] of countryProfileSections.filter(({ field }) => field !== 'summary').entries()) {
       assert.ok(articles[index].includes(getDictionary(locale).profiles.sections[field]));
       assert.ok(articles[index].includes(`Texto ${field}\n\nSegundo párrafo`));
       assert.ok(articles[index].includes('whitespace-pre-line'));

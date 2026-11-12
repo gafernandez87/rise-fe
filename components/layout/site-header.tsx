@@ -4,6 +4,7 @@ import { useId, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { riseNavItems } from "@/lib/rise-navigation";
 import { defaultLocale, localizedPath, type Locale } from "@/lib/i18n";
 
 const navItems = [
@@ -17,60 +18,6 @@ const navItems = [
   { href: "https://www.climaps.org/", label: "CLIMAPS" },
   { href: "https://miradosveces.somosclaac.org/", label: "CAMPAÑA #MIRADOSVECES" },
 ];
-
-const riseNavItems = [
-  {
-    href: "/",
-    label: {
-      es: "Inicio RISE",
-      en: "RISE home",
-      pt: "Inicio RISE",
-    },
-  },
-  {
-    href: "/mapa",
-    label: {
-      es: "Mapa",
-      en: "Map",
-      pt: "Mapa",
-    },
-  },
-  {
-    href: "/perfiles",
-    label: {
-      es: "Perfiles",
-      en: "Profiles",
-      pt: "Perfis",
-    },
-  },
-  {
-    href: "/historias",
-    label: {
-      es: "Historias",
-      en: "Stories",
-      pt: "Historias",
-    },
-  },
-  {
-    href: "/informe-regional",
-    label: {
-      es: "Informe regional",
-      en: "Regional report",
-      pt: "Relatorio regional",
-    },
-  },
-  {
-    href: "/metodologia",
-    label: {
-      es: "Metodología",
-      en: "Methodology",
-      pt: "Metodologia",
-    },
-  },
-] satisfies {
-  href: string;
-  label: Record<Locale, string>;
-}[];
 
 type SiteHeaderProps = {
   locale?: Locale;
